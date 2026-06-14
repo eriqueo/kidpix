@@ -132,6 +132,10 @@ import "../js/stamps/stamps.js";
 // js/sounds/*
 import "../js/sounds/sounds.js";
 
+// Data-driven registries (new TS core) layered onto the legacy engine.
+// Must come AFTER sounds.js so KiddoPaint.Sounds.Library exists. See ADR-0001.
+import "./registry-init";
+
 // Initialize the application after all modules are loaded.
 // With Vite's dev server processing 100+ module imports, DOMContentLoaded
 // may fire before this module finishes evaluating. Handle both cases.
