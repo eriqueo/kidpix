@@ -1,9 +1,9 @@
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
 
 // https://vite.dev/config/
+// React was removed (ADR-0001); the app is the legacy engine loaded via
+// src/kidpix-main.js. New work is plain TS under core/ ports/ adapters/.
 export default defineConfig({
-  plugins: [react()],
   // base: process.env.NODE_ENV === "production" ? "/kidpix/" : "/", // OLD
   // base: process.env.VITE_GITHUB_PAGES === "true" ? "/kidpix/" : "/", // OLD 2
   base: "/",

@@ -1,5 +1,7 @@
-import "@testing-library/jest-dom";
 import { vi } from "vitest";
+
+// Vitest setup. (React Testing Library removed with the React skeleton — ADR-0001.)
+// Canvas + ImageData mocks remain useful for headless core/renderer tests.
 
 // Mock HTMLCanvasElement.getContext
 HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
@@ -18,7 +20,7 @@ HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
   arc: vi.fn(),
   fill: vi.fn(),
   stroke: vi.fn(),
-}));
+})) as unknown as typeof HTMLCanvasElement.prototype.getContext;
 
 // Mock ImageData constructor
 global.ImageData = class ImageData {
