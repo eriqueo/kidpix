@@ -136,6 +136,9 @@ import "../js/sounds/sounds.js";
 // Must come AFTER sounds.js so KiddoPaint.Sounds.Library exists. See ADR-0001.
 import "./registry-init";
 
+// Core tools via the strangler-fig bridge (opt-in with ?core). After tools load.
+import "./core-tools-init";
+
 // Initialize the application after all modules are loaded.
 // With Vite's dev server processing 100+ module imports, DOMContentLoaded
 // may fire before this module finishes evaluating. Handle both cases.
