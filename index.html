@@ -2,9 +2,18 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- maximum-scale/user-scalable=no: pinch-zoom interferes with drawing on iPad -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
     <meta name="msapplication-tap-highlight" content="no" />
-    <title>Justin's KidPix</title>
+    <!-- iOS standalone PWA (Add to Home Screen) -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-title" content="Kid Pix" />
+    <title>Kid Pix</title>
     <link rel="stylesheet" type="text/css" href="css/kidpix.css" />
     <link rel="icon" type="image/png" href="img/branding/kidpix.png" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
