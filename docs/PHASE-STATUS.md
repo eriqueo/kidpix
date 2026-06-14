@@ -38,6 +38,20 @@ State: **89 unit tests pass, `tsc` clean, build clean.** Default app behavior un
    and test (a) audio-unlock on first tap, (b) touch drawing, (c) offline reload. Findings →
    adapter constraints.
 
+## Housekeeping — done (2026-06-14)
+- ✅ Fixed the 0s push "failures": `deploy.yml` removed (redundant + referenced a nonexistent
+   script; its test-before-deploy intent moved into `build-and-deploy-all.yml`); `claude.yml`
+   trigger restored (valid workflow; runs only on `@claude` mentions; needs `ANTHROPIC_API_KEY`).
+- ✅ Parity gate added to `test.yml` — every PR now verifies core tools match the legacy goldens.
+- ✅ README ownership strings repointed to eriqueo.
+
+## Known issues / future builds
+- **Erasers "Black Hole" & "Count Down" are upstream placeholders** — both handlers just select
+   the plain `Eraser` and play a "todo" sound (sibling effects "Drop Out"/"Sweep" are commented
+   out in `js/submenus/eraser.js`). They erase like a normal eraser but have no special animation;
+   the effects were never implemented in this fork. NOT a regression. Implementing the real
+   black-hole/countdown animations is a good future **core-tools** build (needs design).
+
 ## Open follow-ups (genuinely need Eric / not safely automatable here)
 - **`flake.nix` dev shell for Playwright on NixOS** — deliberately NOT fabricated (can't be
    verified on this box, and it's your Nix domain). Recommended approach: nixpkgs
