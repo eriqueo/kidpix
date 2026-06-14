@@ -13,9 +13,13 @@ must match the golden.
 
 ## Run
 ```bash
-yarn test:parity            # compare against committed goldens
-yarn test:parity:update     # (re)generate goldens — commit the PNGs
+yarn test:parity            # compare ALL specs against committed goldens
+yarn test:parity:update     # regenerate ONLY @golden (legacy) baselines — commit the PNGs
 ```
+Legacy specs are tagged `@golden` and OWN the baseline image; `*-core` specs only
+compare the hexagonal tool's output against that same legacy golden (so `update`
+never lets a core spec overwrite the reference). CI generates baselines via the
+`Generate parity baselines` workflow (`.github/workflows/generate-parity-baselines.yml`).
 
 ## Determinism / FX exemption
 Only deterministic tools (pencil, line, shapes, eraser) get pixel parity.

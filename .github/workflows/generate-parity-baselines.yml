@@ -1,0 +1,45 @@
+name: Generate parity baselines
+
+# Manual trigger: generates the legacy golden screenshots on Ubuntu (where
+# Playwright browsers run — NixOS local can't), verifies the hexagonal-core
+# tools match them, and commits the PNGs. Run with:
+#   gh workflow run "Generate parity baselines"
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  baselines:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+
+      - run: yarn install --frozen-lockfile
+
+      - name: Install Playwright Chromium + OS deps
+        run: yarn playwright install --with-deps chromium
+
+      - name: Generate legacy golden baselines (@golden specs)
+        run: yarn test:parity:update
+
+      - name: Commit baselines
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tests/parity/__screenshots__
+          if git diff --cached --quiet; then
+            echo "No baseline changes."
+          else
+            git commit -m "test(parity): generate golden baselines [skip ci]"
+            git push
+          fi
+
+      - name: Verify core tools match the legacy goldens (the parity gate)
+        run: yarn test:parity

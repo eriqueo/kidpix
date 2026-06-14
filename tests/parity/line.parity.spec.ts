@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 import { initializeKidPix, drawStroke, mainCanvas } from "./parity-helpers";
 
 /** Golden parity baseline for the legacy line (deterministic). */
-test.describe("parity: line (legacy golden)", () => {
+test.describe("parity: line (legacy) @golden", () => {
   test.beforeEach(async ({ page }) => {
     await initializeKidPix(page);
   });

@@ -11,7 +11,7 @@ import {
  * This is the reference the future `core` pencil (Phase 3) must match. The
  * baseline PNG is generated with `yarn test:parity:update` and committed.
  */
-test.describe("parity: pencil (legacy golden)", () => {
+test.describe("parity: pencil (legacy) @golden", () => {
   test.beforeEach(async ({ page }) => {
     await initializeKidPix(page);
   });
