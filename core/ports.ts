@@ -32,6 +32,9 @@ export interface Renderer {
   moveTo(p: Point): void;
   lineTo(p: Point): void;
   stroke(): void;
+  /** Clear the scratch (tmp) layer — used by preview tools between moves.
+   *  Bridged to the legacy clearTmp(), which respects Display.allowClearTmp. */
+  clear(): void;
   readonly raw?: CanvasRenderingContext2D;
 }
 
@@ -46,6 +49,8 @@ export interface DrawingStateView {
   readonly altColor: string;
   readonly scaling: number;
   readonly multiplier: number;
+  /** Active modifier (e.g. shift) — tools use it for constrain behavior. */
+  readonly modified: boolean;
   /** Map a color to a strokeStyle via the active texture (legacy Textures.*). */
   texture(color: string): StrokeStyle;
 }

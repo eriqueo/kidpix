@@ -17,8 +17,14 @@ interface LegacyEvent {
 
 /** Minimal slice of the legacy global the bridge reads/writes. */
 export interface KiddoPaintLike {
-  Current: { color: string; altColor?: string; scaling: number; multiplier?: number };
-  Display: { context: CanvasRenderingContext2D; saveMain(): void };
+  Current: {
+    color: string;
+    altColor?: string;
+    scaling: number;
+    multiplier?: number;
+    modified?: boolean;
+  };
+  Display: { context: CanvasRenderingContext2D; saveMain(): void; clearTmp(): void };
   Sounds: { Library: { playRand(id: string): void }; [k: string]: unknown };
   Textures: { Solid(color: string): StrokeStyle };
 }
@@ -32,7 +38,7 @@ export interface LegacyTool {
 /** Build a fresh ToolContext from the LIVE globals on every event. */
 function contextFrom(KP: KiddoPaintLike): ToolContext {
   return {
-    renderer: new Canvas2DRenderer(KP.Display.context),
+    renderer: new Canvas2DRenderer(KP.Display.context, () => KP.Display.clearTmp()),
     sound: {
       play(id: string) {
         const named = (KP.Sounds as Record<string, unknown>)[id];
@@ -52,6 +58,9 @@ function contextFrom(KP: KiddoPaintLike): ToolContext {
       },
       get multiplier() {
         return KP.Current.multiplier ?? 1;
+      },
+      get modified() {
+        return KP.Current.modified ?? false;
       },
       texture: (c: string) => KP.Textures.Solid(c),
     },

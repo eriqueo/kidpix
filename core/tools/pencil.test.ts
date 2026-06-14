@@ -16,6 +16,7 @@ function fakeCtx() {
     moveTo: vi.fn((p: Point) => calls.push(`moveTo:${p.x},${p.y}`)),
     lineTo: vi.fn((p: Point) => calls.push(`lineTo:${p.x},${p.y}`)),
     stroke: vi.fn(() => calls.push("stroke")),
+    clear: vi.fn(() => calls.push("clear")),
   };
   const ctx: ToolContext = {
     renderer,
@@ -25,6 +26,7 @@ function fakeCtx() {
       altColor: "#000000",
       scaling: 2,
       multiplier: 1,
+      modified: false,
       texture: (c) => c, // identity texture → strokeStyle === color
     },
     rng: () => 0.5,

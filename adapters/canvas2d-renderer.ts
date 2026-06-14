@@ -2,13 +2,27 @@ import type { Renderer, StrokeOpts, Point } from "../core/ports";
 
 /** Renderer port implemented over a real CanvasRenderingContext2D. */
 export class Canvas2DRenderer implements Renderer {
-  constructor(private readonly ctx: CanvasRenderingContext2D) {}
+  /**
+   * @param ctx        the 2D context to draw into (the scratch/tmp layer)
+   * @param clearImpl  optional clear strategy. The legacy bridge passes
+   *                   `() => KiddoPaint.Display.clearTmp()` so the
+   *                   `allowClearTmp` invariant is preserved; standalone use
+   *                   falls back to clearRect over the whole canvas.
+   */
+  constructor(
+    private readonly ctx: CanvasRenderingContext2D,
+    private readonly clearImpl?: () => void,
+  ) {}
 
   beginPath(): void {
     this.ctx.beginPath();
   }
   closePath(): void {
     this.ctx.closePath();
+  }
+  clear(): void {
+    if (this.clearImpl) this.clearImpl();
+    else this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
   }
   setStroke(o: StrokeOpts): void {
     this.ctx.strokeStyle = o.strokeStyle;
