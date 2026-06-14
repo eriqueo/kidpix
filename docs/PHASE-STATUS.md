@@ -22,22 +22,25 @@ State: **89 unit tests pass, `tsc` clean, build clean.** Default app behavior un
 - **Migrate-on-touch tail:** remaining ~48 legacy tools stay in the legacy engine and are
   migrated opportunistically (never a death-march). Stochastic FX tools stay put.
 
-## ⚠️ Needs Eric / CI (can't be done from this machine)
+## Manual tasks — status
 
-1. **Enable GitHub Pages** (one-time, repo admin — the agent's token can't):
-   GitHub → repo **Settings → Pages → Source: "GitHub Actions"**. Then a push to `main`
-   deploys `dist-gh/` to `https://eriqueo.github.io/kidpix/`. (The deploy workflow itself is
-   already generic — no hardcoded `justinpearson`.)
-2. **Delete the old fork** (token lacks `delete_repo`):
-   `gh auth refresh -h github.com -s delete_repo && gh repo delete eriqueo/kidpix_bak --yes`
-3. **Generate parity baselines** in a working browser env (NixOS local can't launch Chromium —
-   same as the existing E2E suite). Run in CI or a flake dev shell:
-   `yarn test:parity:update` for the legacy goldens, commit the PNGs under
-   `tests/parity/__screenshots__/`. Then `pencil-core` / `line-core` specs gate future migrations.
-4. **iPad spike** (needs your device): install the deployed PWA to the home screen and test
-   (a) audio-unlock on first tap, (b) touch drawing, (c) offline reload. Findings → adapter constraints.
+1. ✅ **GitHub Pages enabled** (via Pages API, build_type=workflow). Pushing `main` deploys
+   `dist-gh/` to `https://eriqueo.github.io/kidpix/`.
+2. ✅ **Old fork gone** — `eriqueo/kidpix_bak` returns 404 (already deleted).
+3. ✅ **README repointed** to the eriqueo fork; lineage (vikrum → justinpearson → eriqueo) and
+   the TS/hexagonal direction documented.
+4. 🤖 **Parity baselines — automated, not yet run.** NixOS local can't launch Chromium (tried
+   `steam-run`; Playwright's nss/nspr preflight still fails). Solved via CI instead:
+   `.github/workflows/generate-parity-baselines.yml` (manual dispatch) generates the `@golden`
+   legacy baselines on Ubuntu, commits the PNGs, and runs the core-vs-legacy parity gate.
+   **Trigger:** `gh workflow run "Generate parity baselines"` (or the Actions tab).
+5. 📱 **iPad spike — needs your device.** Once Pages is live, install the PWA to the home screen
+   and test (a) audio-unlock on first tap, (b) touch drawing, (c) offline reload. Findings →
+   adapter constraints.
 
-## Follow-ups (nice-to-have, not blocking)
-- Repoint `README.md` URLs from `justinpearson` → `eriqueo` and update the narrative authorship.
-- Optional `flake.nix` dev shell providing Playwright browsers (fixes local E2E + parity on NixOS).
-- Add proper purpose-`maskable` artwork (current 192/512 are upscaled from the 180 icon).
+## Open follow-ups (genuinely need Eric / not safely automatable here)
+- **`flake.nix` dev shell for Playwright on NixOS** — deliberately NOT fabricated (can't be
+   verified on this box, and it's your Nix domain). Recommended approach: nixpkgs
+   `playwright-driver.browsers` + `PLAYWRIGHT_BROWSERS_PATH`, pinning `@playwright/test` to the
+   nixpkgs driver version. Would fix local E2E + parity. CI covers the need meanwhile.
+- Proper purpose-`maskable` artwork (current 192/512 are upscaled from the 180 icon).

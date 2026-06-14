@@ -1,18 +1,22 @@
-# Justin's Kid Pix
+# Kid Pix (eriqueo fork)
 
-**PLAY HERE: https://justinpearson.github.io/kidpix/**
+**PLAY HERE: https://eriqueo.github.io/kidpix/**
 
-The "Kid Pix" computer drawing program for kids (the public domain version from 1989), forked from vikrum's Javascript re-implementation [here](https://github.com/vikrum/kidpix), with some customizations like:
+The "Kid Pix" computer drawing program for kids (the public domain version from 1989) — a drawing
+playground I'm extending with custom tools and funny sounds for my kids, and eventually packaging
+as a standalone offline app for an iPad.
 
-- Multi-undo / redo (works across page reloads!)
-- Highlight currently-selected tool / subtool
-- New color-picker tool
-- [Docs](https://justinpearson.github.io/kidpix/docs/), for both [Users](https://justinpearson.github.io/kidpix/docs/user/quick-start/) and [Software Maintainers](https://justinpearson.github.io/kidpix/docs/maintainer/quick-start/)
-- Automatic deployment via Github Pages
-- Expanded "numbers" and "symbols" stamps
-- Code cleanup, misc bug fixes
+**Lineage:** [vikrum/kidpix](https://github.com/vikrum/kidpix) (2021 HTML/JS reimplementation) →
+[justinpearson/kidpix](https://github.com/justinpearson/kidpix) (Vite/tests/CI + custom kid
+features) → this fork.
 
-TODO: pic here
+Direction (see [`docs/`](docs/)): modernize the **engine** toward a clean, testable TypeScript
+**hexagonal core** (`core/` `ports/` `adapters/`) with a **data-driven tool/sound registry**,
+migrated **strangler-fig** style behind a bridge so the legacy engine keeps working at every step.
+React was deliberately dropped — see [ADR-0001](docs/adr/0001-no-react-strangler-fig-tool-contract.md).
+
+Already inherited from upstream: multi-undo/redo across reloads, selected-tool highlighting,
+color-picker tool, expanded stamps, automatic GitHub Pages deployment.
 
 ## Background
 
@@ -20,13 +24,12 @@ Kid Pix is a 1989 computer drawing program for kids that features fun
 tools and wacky sounds -- who can forget the undo button's "Oh No!"??
 
 In 2021, GitHub user vikrum re-implemented the Kid Pix Public Domain Version 1.0 in HTML / Javascript
-(https://github.com/vikrum/kidpix), hosting it at www.kidpix.app. Very cool!
+(https://github.com/vikrum/kidpix), hosting it at www.kidpix.app. Justin Pearson then forked it in
+2024, adding a modern build (Vite), tests, CI/CD, and custom features for his kids. This fork
+continues from there with a TypeScript hexagonal-core direction:
 
-I forked that project in 2024 in order to implement custom "features"
-requested by my kids, and to practice technical skills like:
-
-- migrating JS codebase to modern React / TypeScript tech stack
-- automated testing / TDD
+- migrating the JS engine to a modular, testable TypeScript core (no framework lock-in)
+- automated testing / TDD (Vitest + Playwright, incl. a pixel-parity harness)
 - CI / CD
 - devops: deployment, monitoring, alerting
 - AI-assisted coding tools (VS Code Copilot, Cursor, Claude Code)
@@ -64,13 +67,13 @@ The following sections decribe:
 
 ## How to Play
 
-Just browse to **<https://justinpearson.github.io/kidpix/>** !!
+Just browse to **<https://eriqueo.github.io/kidpix/>** !!
 
 ## How to Play Offline via a Pre-packaged Release
 
 (Good for laptops that are too old to be let onto the Internet.)
 
-1. From an internet-enabled computer, to go the Releases page <https://github.com/justinpearson/kidpix/releases> and download the latest release's tarball, eg, `kidpix-v1.0.0.tar.gz`.
+1. From an internet-enabled computer, to go the Releases page <https://github.com/eriqueo/kidpix/releases> and download the latest release's tarball, eg, `kidpix-v1.0.0.tar.gz`.
 
 2. Transfer this tarball to the target computer and unzip it.
 
@@ -86,7 +89,7 @@ These instructions are for MacOS.
 
 **1. Clone the code:**
 
-- `git clone https://github.com/justinpearson/kidpix.git`
+- `git clone https://github.com/eriqueo/kidpix.git`
 - If you get error 'command not found: git', you need to install git, easiest with: `xcode-select --install`
 
 **2. Install dependencies:**
@@ -117,7 +120,7 @@ yarn test:e2e
 - Serve the docs: `yarn dev-docs`
 - Docs URL:
   - Local: <http://127.0.0.1:8000/kidpix/docs/>
-  - Note: deployed docs: <https://justinpearson.github.io/kidpix/docs/>
+  - Note: deployed docs: <https://eriqueo.github.io/kidpix/docs/>
 
 **5. Build & view the app**
 
@@ -137,7 +140,7 @@ move completed feature-request files into `prompts-DONE/`.
 
 GitHub releases:
 
-https://github.com/justinpearson/kidpix/releases
+https://github.com/eriqueo/kidpix/releases
 
 To create a new release, 3 options:
 
@@ -152,7 +155,7 @@ yarn release:minor
 yarn release:major
 ```
 
-this runs, eg, `npm version minor && git push origin --tags` from package.json, which basically creates a git tag named `v1.0.0` and pushes it, which gets picked up by the github workflow `kidpix/.github/workflows/release.yml`, which builds the app, tarballs the `dist/` folder, and publishes it to github at <https://github.com/justinpearson/kidpix/releases> .
+this runs, eg, `npm version minor && git push origin --tags` from package.json, which basically creates a git tag named `v1.0.0` and pushes it, which gets picked up by the github workflow `kidpix/.github/workflows/release.yml`, which builds the app, tarballs the `dist/` folder, and publishes it to github at <https://github.com/eriqueo/kidpix/releases> .
 
 ### Release manually
 
@@ -164,7 +167,7 @@ this runs, eg, `npm version minor && git push origin --tags` from package.json, 
 
 - (Will push the tag, but github is smart enough not to redundantly trigger the workflow.)
 
-4. View new release, eg, <https://github.com/justinpearson/kidpix/releases/tag/v1.0.0>
+4. View new release, eg, <https://github.com/eriqueo/kidpix/releases/tag/v1.0.0>
 
 ## Tech Stack
 
@@ -250,8 +253,8 @@ Instructions for Mac.
   - restart terminal
   - `brew install node` -- to get npm
 - install my kidpix fork:
-  - option 1: git clone https://github.com/justinpearson/kidpix.git
-  - option 2: download tarball from https://github.com/justinpearson/kidpix
+  - option 1: git clone https://github.com/eriqueo/kidpix.git
+  - option 2: download tarball from https://github.com/eriqueo/kidpix
     - if tarball: you'll also be able to make code local code changes, but not push them to back to the git repo.
   - cd kidpix (or kidpix-main if used tarball)
   - `./build.sh`
