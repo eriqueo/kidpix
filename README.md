@@ -163,7 +163,7 @@ this runs, eg, `npm version minor && git push origin --tags` from package.json, 
 
 1. Build app: `yarn build`
 2. Tarball the `dist/` folder: `tar -czf kidpix-v1.0.0.tar.gz -C dist .`
-3. Create github release manually (will create the git tag automatically): `gh release create v1.0.0 kidpix-v1.0.0.tar.gz --title "Justin's KidPix fork v1.0.0 - First Release" --notes "# Justin's KidPix v1.0.0 - Classic ...`
+3. Create github release manually (will create the git tag automatically): `gh release create v1.0.0 kidpix-v1.0.0.tar.gz --title "Kid Pix v1.0.0" --notes "# Kid Pix v1.0.0 ...`
 
 - (Will push the tag, but github is smart enough not to redundantly trigger the workflow.)
 

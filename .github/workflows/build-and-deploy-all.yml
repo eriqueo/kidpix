@@ -26,6 +26,12 @@ jobs:
           cache: yarn
 
       - run: yarn install --frozen-lockfile
+
+      # Gate the deploy on a green typecheck + unit tests (captures the intent of
+      # the old deploy.yml, which was disabled/redundant and has been removed).
+      - run: yarn typecheck
+      - run: yarn test
+
       - run: yarn build
 
       - name: Upload Pages artifact

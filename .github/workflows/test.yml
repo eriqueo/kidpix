@@ -32,6 +32,9 @@ jobs:
       - name: Run E2E tests (chromium only)
         run: yarn exec playwright test -- --project=chromium --workers=1 --reporter=line
 
+      - name: Run parity gate (core tools must match committed legacy goldens)
+        run: yarn test:parity
+
       - name: Upload E2E test results
         uses: actions/upload-artifact@v4
         if: failure()
