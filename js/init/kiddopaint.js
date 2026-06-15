@@ -781,8 +781,17 @@ function ev_canvas(ev) {
   KiddoPaint.Display.clearPreview();
   KiddoPaint.Current.ev = ev;
 
-  ev._x = ev.offsetX;
-  ev._y = ev.offsetY;
+  // Map the pointer from display (CSS) pixels to backing-store pixels. The canvas is
+  // CSS-scaled to fit the window (WS1) while the backing store stays 1300x650, so
+  // offsetX/Y (display px) no longer equal backing px — drawing would land in the wrong
+  // place. Remap via the canvas rect + scale. This also covers touch, whose synthetic
+  // mouse events carry clientX/Y. (KiddoPaint.Display.canvas is tmpCanvas, the layer the
+  // listeners are on; all five layers share the same size/position.)
+  var rect = KiddoPaint.Display.canvas.getBoundingClientRect();
+  var scaleX = rect.width ? KiddoPaint.Display.canvas.width / rect.width : 1;
+  var scaleY = rect.height ? KiddoPaint.Display.canvas.height / rect.height : 1;
+  ev._x = (ev.clientX - rect.left) * scaleX;
+  ev._y = (ev.clientY - rect.top) * scaleY;
 
   // handle event
   if (ev.type === "touchstart") {
