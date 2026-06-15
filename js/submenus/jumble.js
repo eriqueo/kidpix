@@ -61,7 +61,12 @@ KiddoPaint.Submenu.jumble = [
     name: "The Outliner",
     imgSrc: "img/mixer/tool-submenu-wacky-mixer-169.png",
     handler: function () {
-      KiddoPaint.Sounds.unimpl();
+      // Edge-detect the whole canvas: traces the picture's outlines. Drag distance
+      // controls the edge thickness (see JumbleFx.EDGE in wholefx.js).
+      KiddoPaint.Display.canvas.classList = "";
+      KiddoPaint.Display.canvas.classList.add("cursor-guy-smile");
+      KiddoPaint.Tools.WholeCanvasEffect.effect = JumbleFx.EDGE;
+      KiddoPaint.Current.tool = KiddoPaint.Tools.WholeCanvasEffect;
     },
   },
   {
@@ -77,14 +82,22 @@ KiddoPaint.Submenu.jumble = [
     name: "Zoom In",
     imgSrc: "img/mixer/tool-submenu-wacky-mixer-171.png",
     handler: function () {
-      KiddoPaint.Sounds.unimpl();
+      // Real magnification centered on the click point. Drag farther to zoom in closer
+      // (the new-engine equivalent of the original's "click repeatedly to zoom closer").
+      KiddoPaint.Display.canvas.classList = "";
+      KiddoPaint.Display.canvas.classList.add("cursor-guy-smile");
+      KiddoPaint.Current.tool = KiddoPaint.Tools.MixerZoomIn;
     },
   },
   {
     name: "Broken Glass",
     imgSrc: "img/mixer/tool-submenu-wacky-mixer-172.png",
     handler: function () {
-      KiddoPaint.Sounds.unimpl();
+      // Shatter the picture into many jagged shards that blow apart from the click
+      // point, with white cracks between them. Drag farther to break it apart more.
+      KiddoPaint.Display.canvas.classList = "";
+      KiddoPaint.Display.canvas.classList.add("cursor-guy-smile");
+      KiddoPaint.Current.tool = KiddoPaint.Tools.MixerBrokenGlass;
     },
   },
   {
@@ -100,7 +113,12 @@ KiddoPaint.Submenu.jumble = [
     name: "The Highlighter",
     imgSrc: "img/mixer/tool-submenu-wacky-mixer-174.png",
     handler: function () {
-      KiddoPaint.Sounds.unimpl();
+      // "Highlights everything": brightens the whole picture toward white like a
+      // highlighter pen. Drag distance controls how bright (JumbleFx.HIGHLIGHT).
+      KiddoPaint.Display.canvas.classList = "";
+      KiddoPaint.Display.canvas.classList.add("cursor-guy-smile");
+      KiddoPaint.Tools.WholeCanvasEffect.effect = JumbleFx.HIGHLIGHT;
+      KiddoPaint.Current.tool = KiddoPaint.Tools.WholeCanvasEffect;
     },
   },
   {
@@ -116,7 +134,10 @@ KiddoPaint.Submenu.jumble = [
     name: "Wrap Around",
     imgSrc: "img/mixer/tool-submenu-wacky-mixer-176.png",
     handler: function () {
-      KiddoPaint.Sounds.unimpl();
+      // Slide the whole picture; what falls off one edge wraps to the opposite edge.
+      KiddoPaint.Display.canvas.classList = "";
+      KiddoPaint.Display.canvas.classList.add("cursor-guy-smile");
+      KiddoPaint.Current.tool = KiddoPaint.Tools.MixerWrapAround;
     },
   },
   /*

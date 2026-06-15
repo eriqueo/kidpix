@@ -11,6 +11,7 @@ const JumbleFx = {
   PIXELATE: "pixelate",
   HUE: "hue",
   SAT: "sat",
+  HIGHLIGHT: "highlight",
   NIGHTVISION: "nightvision",
   INVERT: "invert",
   SUNSHINE: "sunshine",
@@ -140,21 +141,39 @@ KiddoPaint.Tools.Toolbox.WholeCanvasEffect = function () {
             .edgeWork(drawDistance / 10.0)
             .update();
           break;
+        case JumbleFx.HIGHLIGHT:
+          // "Highlights everything": brighten the whole picture toward white, like
+          // swiping a highlighter over it. Drag farther = brighter. A touch of contrast
+          // keeps it from washing out to flat grey.
+          var brightness = remap(0, 500, 0, 0.6, clamp(0, 500, drawDistance));
+          var renderedGfx = tool.gfx
+            .draw(tool.textureGfx)
+            .brightnessContrast(brightness, 0.15)
+            .update();
+          break;
         case JumbleFx.PANCAKE:
           var renderedGfx = tool.gfx
             .draw(tool.textureGfx)
             .brightnessContrast(0, 0)
             .update();
-          var howManyPancakes = 2 + drawDistance / 64;
-          var increment = KiddoPaint.Current.modifiedAlt ? 4 : 16;
+          // Build a visible "stack of pancakes": several copies of the picture offset
+          // and receding in the drag direction, with the crisp original drawn on top
+          // by the shared drawImage below. The upstream values (2 copies, 16px spacing,
+          // alpha fading to 0) made the stack peek only a few faint pixels out from
+          // behind that top copy, so on a short drag / large canvas it looked like
+          // nothing happened. Use more copies, wider spacing, and a floored opacity so
+          // the stack actually reads as a stack.
+          var howManyPancakes = 3 + drawDistance / 48;
+          var increment = KiddoPaint.Current.modifiedAlt ? 10 : 24;
           var furthestAway = howManyPancakes * increment;
 
           var deltax = ev._x - tool.initialClick._x;
           var deltay = ev._y - tool.initialClick._y;
 
           for (var i = 1; i < howManyPancakes; i++) {
+            // Nearer copies are more opaque; floor at 0.35 so far copies stay visible.
             KiddoPaint.Display.context.globalAlpha =
-              i / (howManyPancakes * 1.0);
+              0.35 + 0.65 * (i / howManyPancakes);
             KiddoPaint.Display.context.drawImage(
               renderedGfx,
               (furthestAway - i * increment) * Math.sign(deltax),
