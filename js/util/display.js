@@ -3,54 +3,48 @@ KiddoPaint.Display.redoData = [];
 KiddoPaint.Display.undoOn = true;
 KiddoPaint.Display.allowClearTmp = true;
 
-// Load undo/redo state from localStorage (limit to 10 most recent for page reloads)
-KiddoPaint.Display.loadUndoRedoFromLocalStorage = function () {
-  if (typeof Storage != "undefined") {
-    try {
-      const undoData = localStorage.getItem("kiddopaint_undo");
-      const redoData = localStorage.getItem("kiddopaint_redo");
+// Undo/redo history lives in memory only as ImageData snapshots (cheap getImageData,
+// no per-stroke PNG encode). It is intentionally NOT persisted across reloads (WS3
+// variant ii): only the *current drawing* is restored, via the "kiddopaint" key below.
+// Cap kept modest because each ImageData is uncompressed (~3.4MB for 1300x650), unlike
+// the old PNG data-URLs; this bounds memory on iPad.
+KiddoPaint.Display.MAX_UNDO = 20;
 
-      if (undoData) {
-        const parsed = JSON.parse(undoData);
-        // Keep only the 10 most recent undo states to manage storage size
-        KiddoPaint.Display.undoData = parsed.slice(-10);
-      }
-      if (redoData) {
-        const parsed = JSON.parse(redoData);
-        // Keep only the 10 most recent redo states
-        KiddoPaint.Display.redoData = parsed.slice(-10);
-      }
-    } catch (e) {
-      console.log("Failed to load undo/redo state:", e);
-      // Reset to empty arrays on error
-      KiddoPaint.Display.undoData = [];
-      KiddoPaint.Display.redoData = [];
+// --- Debounced current-drawing persistence ---------------------------------------
+// Encoding the canvas to a data URL + localStorage write is megabytes of synchronous
+// main-thread work; doing it on every stroke was the primary lag source. Coalesce rapid
+// strokes into a single trailing write, and flush on tab close/background (see init) so
+// nothing is lost.
+KiddoPaint.Display._persistTimer = null;
+KiddoPaint.Display._persistDelayMs = 500;
+
+KiddoPaint.Display._writeCurrentDrawing = function () {
+  if (typeof Storage == "undefined") return;
+  try {
+    localStorage.setItem(
+      "kiddopaint",
+      KiddoPaint.Display.main_canvas.toDataURL(),
+    );
+  } catch (e) {
+    // Quota fallback: re-encode smaller as JPEG.
+    try {
+      localStorage.setItem(
+        "kiddopaint",
+        KiddoPaint.Display.main_canvas.toDataURL("image/jpeg", 0.87),
+      );
+    } catch (e2) {
+      console.log(e2);
     }
   }
 };
 
-// Save undo/redo state to localStorage (limit to 10 most recent states)
-KiddoPaint.Display.saveUndoRedoToLocalStorage = function () {
-  if (typeof Storage != "undefined") {
-    try {
-      // Only persist the 10 most recent states to manage storage size
-      const undoToSave = KiddoPaint.Display.undoData.slice(-10);
-      const redoToSave = KiddoPaint.Display.redoData.slice(-10);
-
-      localStorage.setItem("kiddopaint_undo", JSON.stringify(undoToSave));
-      localStorage.setItem("kiddopaint_redo", JSON.stringify(redoToSave));
-    } catch (e) {
-      if (e.name === "QuotaExceededError") {
-        console.log(
-          "localStorage quota exceeded, clearing undo/redo persistence",
-        );
-        localStorage.removeItem("kiddopaint_undo");
-        localStorage.removeItem("kiddopaint_redo");
-      } else {
-        console.log("Failed to save undo/redo state:", e);
-      }
-    }
+// Force any pending debounced save to happen now (used on pagehide/visibilitychange).
+KiddoPaint.Display.flushPersist = function () {
+  if (KiddoPaint.Display._persistTimer !== null) {
+    clearTimeout(KiddoPaint.Display._persistTimer);
+    KiddoPaint.Display._persistTimer = null;
   }
+  KiddoPaint.Display._writeCurrentDrawing();
 };
 
 KiddoPaint.Display.clearAll = function () {
@@ -167,15 +161,17 @@ KiddoPaint.Display.toggleUndo = function () {
 KiddoPaint.Display.saveUndo = function () {
   if (KiddoPaint.Display.undoOn) {
     KiddoPaint.Display.undoData.push(
-      KiddoPaint.Display.main_canvas.toDataURL(),
+      KiddoPaint.Display.main_context.getImageData(
+        0,
+        0,
+        KiddoPaint.Display.main_canvas.width,
+        KiddoPaint.Display.main_canvas.height,
+      ),
     );
-    if (KiddoPaint.Display.undoData.length > 30) {
-      console.log("undo buffer full, removing oldest...");
+    if (KiddoPaint.Display.undoData.length > KiddoPaint.Display.MAX_UNDO) {
       KiddoPaint.Display.undoData.shift();
     }
     KiddoPaint.Display.redoData = [];
-    // Persist undo/redo state after modification
-    KiddoPaint.Display.saveUndoRedoToLocalStorage();
   }
   return KiddoPaint.Display.undoOn;
 };
@@ -188,22 +184,27 @@ KiddoPaint.Display.saveUndo = function () {
 // operation is to push the canvas onto the opposite buffer, to save it.
 
 KiddoPaint.Display.popAndLoad = function (stack) {
-  var img = new Image();
-  img.src = stack.pop();
-  img.onload = function () {
-    KiddoPaint.Display.clearMain();
-    KiddoPaint.Display.main_context.drawImage(img, 0, 0);
-  };
+  // ImageData is written straight back to the canvas (synchronous, no Image.onload race).
+  KiddoPaint.Display.clearMain();
+  KiddoPaint.Display.main_context.putImageData(stack.pop(), 0, 0);
+};
+
+// Snapshot the current canvas as ImageData (the live "3rd state"; see note below).
+KiddoPaint.Display._snapshotMain = function () {
+  return KiddoPaint.Display.main_context.getImageData(
+    0,
+    0,
+    KiddoPaint.Display.main_canvas.width,
+    KiddoPaint.Display.main_canvas.height,
+  );
 };
 
 KiddoPaint.Display.undo = function () {
   if (KiddoPaint.Display.undoData.length > 0) {
-    KiddoPaint.Display.redoData.push(
-      KiddoPaint.Display.main_canvas.toDataURL(),
-    );
+    KiddoPaint.Display.redoData.push(KiddoPaint.Display._snapshotMain());
     KiddoPaint.Display.popAndLoad(KiddoPaint.Display.undoData);
-    // Persist state changes after undo operation
-    KiddoPaint.Display.saveUndoRedoToLocalStorage();
+    // Keep the persisted current drawing in sync with what's now on screen.
+    KiddoPaint.Display.saveToLocalStorage();
   } else {
     console.log("undo buffer empty, nothing to do");
   }
@@ -211,12 +212,10 @@ KiddoPaint.Display.undo = function () {
 
 KiddoPaint.Display.redo = function () {
   if (KiddoPaint.Display.redoData.length > 0) {
-    KiddoPaint.Display.undoData.push(
-      KiddoPaint.Display.main_canvas.toDataURL(),
-    );
+    KiddoPaint.Display.undoData.push(KiddoPaint.Display._snapshotMain());
     KiddoPaint.Display.popAndLoad(KiddoPaint.Display.redoData);
-    // Persist state changes after redo operation
-    KiddoPaint.Display.saveUndoRedoToLocalStorage();
+    // Keep the persisted current drawing in sync with what's now on screen.
+    KiddoPaint.Display.saveToLocalStorage();
   } else {
     console.log("redo buffer empty, nothing to do");
   }
@@ -230,24 +229,17 @@ KiddoPaint.Display.clearLocalStorage = function () {
   }
 };
 
+// Schedule a debounced write of the current drawing. Callers fire this on every stroke;
+// rapid calls collapse into one trailing localStorage write (see _persistDelayMs).
 KiddoPaint.Display.saveToLocalStorage = function () {
-  if (typeof Storage != "undefined") {
-    try {
-      localStorage.setItem(
-        "kiddopaint",
-        KiddoPaint.Display.main_canvas.toDataURL(),
-      );
-    } catch (e) {
-      try {
-        localStorage.setItem(
-          "kiddopaint",
-          KiddoPaint.Display.main_canvas.toDataURL("image/jpeg", 0.87),
-        );
-      } catch (e2) {
-        console.log(e2);
-      }
-    }
+  if (typeof Storage == "undefined") return;
+  if (KiddoPaint.Display._persistTimer !== null) {
+    clearTimeout(KiddoPaint.Display._persistTimer);
   }
+  KiddoPaint.Display._persistTimer = setTimeout(function () {
+    KiddoPaint.Display._persistTimer = null;
+    KiddoPaint.Display._writeCurrentDrawing();
+  }, KiddoPaint.Display._persistDelayMs);
 };
 
 KiddoPaint.Display.loadFromLocalStorage = function () {

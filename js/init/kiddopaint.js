@@ -82,12 +82,24 @@ window.init_kiddo_paint = function init_kiddo_paint() {
 
     KiddoPaint.Display.loadFromLocalStorage();
 
-    // Load undo/redo state from localStorage (persistent across page reloads)
-    KiddoPaint.Display.loadUndoRedoFromLocalStorage();
+    // Reclaim quota from the old persisted undo/redo history (pre-WS3): those keys are no
+    // longer read and could hold megabytes that crowd out the current-drawing save.
+    if (typeof Storage != "undefined") {
+      localStorage.removeItem("kiddopaint_undo");
+      localStorage.removeItem("kiddopaint_redo");
+    }
 
-    // Add beforeunload listener for lazy persistence backup
-    window.addEventListener("beforeunload", function () {
-      KiddoPaint.Display.saveUndoRedoToLocalStorage();
+    // Undo/redo history is in-memory only and resets on reload (WS3 variant ii); only the
+    // current drawing is restored, via loadFromLocalStorage above. Flush any pending
+    // debounced save when the tab closes or backgrounds so the latest strokes aren't lost.
+    // pagehide + visibilitychange are the iOS-Safari-reliable signals; beforeunload covers
+    // desktop.
+    window.addEventListener("pagehide", KiddoPaint.Display.flushPersist);
+    window.addEventListener("beforeunload", KiddoPaint.Display.flushPersist);
+    document.addEventListener("visibilitychange", function () {
+      if (document.visibilityState === "hidden") {
+        KiddoPaint.Display.flushPersist();
+      }
     });
 
     init_kiddo_defaults();
