@@ -39,6 +39,18 @@ body {
   text-overflow: ellipsis;
 }
 
+.status-name {
+  font-weight: bold;
+  font-size: 16px;
+  color: #111;
+}
+
+.status-desc {
+  font-size: 13px;
+  color: #555;
+  margin-left: 10px;
+}
+
 /* #toolbar wraps #mainbar (tools) + #colorbar (colors) in the HTML. Make it a no-box
    wrapper so its two children become direct columns of #container — that lets colors
    move to the RIGHT via `order`, without relocating the (base64-heavy) color HTML. */
@@ -71,14 +83,30 @@ body {
   box-sizing: border-box;
 }
 
-/* Center column: options bar (top) + canvas */
+/* Center column: options bar (top) + canvas stage */
 #hcontainer {
   order: 2;
   flex: 1 1 auto;
   min-width: 0;
   display: flex;
   flex-direction: column;
+  align-items: stretch;
+  overflow: hidden;
+}
+
+/* Mat/buffer around the canvas: centers it and frames it on all four sides (tools left,
+   options top, colors right, status bar bottom) so the empty space reads as a deliberate
+   frame, not stray whitespace. */
+#canvas-stage {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
   align-items: center;
+  justify-content: center;
+  padding: 14px;
+  box-sizing: border-box;
+  background-color: #b7bbc2;
   overflow: hidden;
 }
 
@@ -201,9 +229,10 @@ body {
      chunky. Width is bounded by the column (100%) and by height ((100vh - top bar) * 2)
      so it never overflows vertically; ~80px reserves the options bar + its border. */
   aspect-ratio: 1300 / 650;
-  width: min(100%, calc((100vh - 80px) * 2), 2600px);
-  max-width: 2600px;
-  margin: 4px auto;
+  /* Bounded by the stage width (100%), by the stage height ((viewport - top/bottom
+     bars - padding) * 2), and capped at 2x backing. Centered by #canvas-stage's flex. */
+  width: min(100%, calc((100vh - 130px) * 2), 2600px);
+  max-width: 100%;
 }
 
 /* All five stacked layers scale together to fill #paint (display size only — the

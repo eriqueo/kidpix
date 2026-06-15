@@ -111,17 +111,51 @@ window.init_kiddo_paint = function init_kiddo_paint() {
   }
 };
 
-// Bottom status bar: reflect the title/name of whatever tool, option, or stamp the
-// cursor is over. Tool buttons (and dynamically-created option/stamp buttons) carry a
-// `title`, so a single delegated listener covers all of them, including ones added later.
+// One-line descriptions for the main tools, keyed by their `title` (data-driven so the
+// status bar stays in sync with the toolbar without per-tool wiring). Options/stamps with
+// no entry fall back to just their name.
+KiddoPaint.ToolDescriptions = {
+  Save: "Save your picture.",
+  Pencil: "Draw thin freehand lines.",
+  Line: "Drag to draw a straight line.",
+  Rectangle: "Drag to draw a rectangle.",
+  Circle: "Drag to draw a circle or oval.",
+  Brush: "Paint with fun brushes and patterns.",
+  Mixer: "Mix up the whole picture with wacky effects.",
+  "Paint Can": "Fill an area with color or a pattern.",
+  Eraser: "Erase parts of your picture.",
+  Text: "Stamp letters and numbers.",
+  Stamp: "Stamp fun pictures and stickers.",
+  Truck: "Drive a truck that builds roads and rails.",
+  "Color Picker": "Pick a color from the picture.",
+  Undo: "Undo your last change.",
+  Redo: "Redo what you undid.",
+};
+
+// Bottom status bar: reflect whatever tool, option, or stamp the cursor is over. Tool
+// buttons (and dynamically-created option/stamp buttons) carry a `title`, so a single
+// delegated listener covers all of them, including ones added later. Shows the name in
+// bold with a smaller description beside it; the native browser tooltip still shows just
+// the title.
 function init_statusbar() {
   var statusbar = document.getElementById("statusbar");
   if (!statusbar) return;
   document.addEventListener("mouseover", function (e) {
     if (!e.target.closest) return;
     var el = e.target.closest("[title]");
-    if (el && el.getAttribute("title")) {
-      statusbar.textContent = el.getAttribute("title");
+    if (!el || !el.getAttribute("title")) return;
+    var name = el.getAttribute("title");
+    statusbar.textContent = "";
+    var nameEl = document.createElement("span");
+    nameEl.className = "status-name";
+    nameEl.textContent = name;
+    statusbar.appendChild(nameEl);
+    var desc = KiddoPaint.ToolDescriptions[name];
+    if (desc) {
+      var descEl = document.createElement("span");
+      descEl.className = "status-desc";
+      descEl.textContent = desc;
+      statusbar.appendChild(descEl);
     }
   });
 }
