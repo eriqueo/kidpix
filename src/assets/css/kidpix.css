@@ -65,13 +65,13 @@ body {
   overflow: hidden;
 }
 
-/* Right column: colors */
+/* Right column: colors (wider, with larger swatches) */
 #colorbar {
   order: 3;
   flex: 0 0 auto;
   align-self: stretch;
   float: none;
-  width: 78px;
+  width: 108px;
   overflow-y: auto;
   background-color: #ececec;
   border-left: 2px solid #999;
@@ -132,16 +132,16 @@ body {
 }
 
 .currentColor {
-  width: 50px;
-  height: 50px;
+  width: 96px;
+  height: 44px;
   -webkit-border-radius: 0px;
   -webkit-appearance: none;
   border-radius: 0;
 }
 
 .color {
-  width: 25px;
-  height: 25px;
+  width: 48px;
+  height: 48px;
   margin: 0px;
   -webkit-border-radius: 0px;
   -webkit-appearance: none;
@@ -149,8 +149,8 @@ body {
 }
 
 .colornav {
-  width: 25px;
-  height: 25px;
+  width: 40px;
+  height: 36px;
   margin: 0px;
   -webkit-border-radius: 0px;
   -webkit-appearance: none;

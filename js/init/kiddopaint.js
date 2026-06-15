@@ -788,10 +788,16 @@ function ev_canvas(ev) {
   // mouse events carry clientX/Y. (KiddoPaint.Display.canvas is tmpCanvas, the layer the
   // listeners are on; all five layers share the same size/position.)
   var rect = KiddoPaint.Display.canvas.getBoundingClientRect();
-  var scaleX = rect.width ? KiddoPaint.Display.canvas.width / rect.width : 1;
-  var scaleY = rect.height ? KiddoPaint.Display.canvas.height / rect.height : 1;
-  ev._x = (ev.clientX - rect.left) * scaleX;
-  ev._y = (ev.clientY - rect.top) * scaleY;
+  var cw = KiddoPaint.Display.canvas.width;
+  var ch = KiddoPaint.Display.canvas.height;
+  var scaleX = rect.width ? cw / rect.width : 1;
+  var scaleY = rect.height ? ch / rect.height : 1;
+  // Round to integer backing pixels and clamp to the canvas. Tools index the pixel
+  // buffer with these (e.g. paintcan flood fill: (y*width + x)*4); a fractional or
+  // out-of-range value reads undefined from the typed array, which breaks color
+  // comparisons and sends the fill into a runaway loop (frozen tab).
+  ev._x = Math.max(0, Math.min(cw - 1, Math.round((ev.clientX - rect.left) * scaleX)));
+  ev._y = Math.max(0, Math.min(ch - 1, Math.round((ev.clientY - rect.top) * scaleY)));
 
   // handle event
   if (ev.type === "touchstart") {
