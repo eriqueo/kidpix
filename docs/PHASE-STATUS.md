@@ -2,6 +2,15 @@
 
 Execution tracker for [hexagonal-roadmap.md](./hexagonal-roadmap.md). Updated 2026-06-14.
 
+## Session: portable/offline/responsive ("CD-ROM") — WS0 diagnosis done
+iPad on-device spike (2026-06-14): strong POC but very laggy; fixed-size canvas doesn't adapt to
+window; needs landscape+portrait; some tools are upstream placeholders. **WS0 (diagnose-only)
+complete** → see [spike-2026-06-14-findings.md](./spike-2026-06-14-findings.md) for measured root
+causes: per-stroke `toDataURL()`+localStorage and per-move sound (lag); only 8/376 assets precached
+(offline); absolute `/kidpix/` base + module scripts (no `file://`); fixed 1300×650 backing + no CSS
+fit/DPR (responsive). **Awaiting Eric's review before WS1 (responsive canvas) / WS2 (portable+offline)
+/ WS3 (perf).** Backing store stays 1300×650 (presentation-only fixes); parity gate must stay green.
+
 ## Done (committed on `main`)
 
 | Phase | What landed | Verify |
