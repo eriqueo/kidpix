@@ -107,8 +107,145 @@ window.init_kiddo_paint = function init_kiddo_paint() {
     init_tool_bar();
     init_subtool_bars();
     init_color_selector();
+    init_statusbar();
+    init_canvas_fit();
+    init_frame_toggle();
   }
 };
+
+// Cycle the decorative canvas frame (Wood is default). The chosen style is a CSS class on
+// #paint and persists across reloads. Changing the frame changes the border width, so we
+// re-fit the canvas afterwards.
+KiddoPaint.FrameStyles = [
+  { cls: "frame-wood", label: "Wood" },
+  { cls: "frame-rainbow", label: "Rainbow" },
+  { cls: "frame-gold", label: "Gold" },
+  { cls: "frame-classic", label: "Classic" },
+];
+function init_frame_toggle() {
+  var paint = document.getElementById("paint");
+  var btn = document.getElementById("frame-toggle");
+  if (!paint || !btn) return;
+  var styles = KiddoPaint.FrameStyles;
+  var idx = 0;
+  try {
+    var saved = localStorage.getItem("kiddopaint_frame");
+    for (var i = 0; i < styles.length; i++) {
+      if (styles[i].cls === saved) idx = i;
+    }
+  } catch (e) {}
+  function apply() {
+    styles.forEach(function (s) {
+      paint.classList.remove(s.cls);
+    });
+    paint.classList.add(styles[idx].cls);
+    btn.textContent = "Frame: " + styles[idx].label;
+    try {
+      localStorage.setItem("kiddopaint_frame", styles[idx].cls);
+    } catch (e) {}
+    fitCanvasToStage();
+  }
+  btn.addEventListener("click", function () {
+    idx = (idx + 1) % styles.length;
+    apply();
+  });
+  apply();
+}
+
+// Size the canvas (#paint content box) to the largest 1300x650 (2:1) box that fits inside
+// #canvas-stage, capped at 2x the backing store. Re-runs whenever the stage changes size
+// (window resize, or the options bar gaining/losing rows), so the canvas always fits and
+// stays centered — no fragile viewport math. content-box + an outside frame border keeps
+// the 2:1 shape exact.
+function fitCanvasToStage() {
+  var stage = document.getElementById("canvas-stage");
+  var paint = document.getElementById("paint");
+  if (!stage || !paint || !KiddoPaint.Display.main_canvas) return;
+  // Test hook: `?pincanvas` keeps the canvas at exactly its 1300x650 backing size (1:1)
+  // so the parity screenshots match the goldens. Never used by real users.
+  if (/[?&]pincanvas\b/.test(window.location.search)) {
+    paint.style.width = KiddoPaint.Display.main_canvas.width + "px";
+    paint.style.height = KiddoPaint.Display.main_canvas.height + "px";
+    return;
+  }
+  var scs = getComputedStyle(stage);
+  var padX = parseFloat(scs.paddingLeft) + parseFloat(scs.paddingRight);
+  var padY = parseFloat(scs.paddingTop) + parseFloat(scs.paddingBottom);
+  var pcs = getComputedStyle(paint);
+  var borderX =
+    parseFloat(pcs.borderLeftWidth) + parseFloat(pcs.borderRightWidth);
+  var borderY =
+    parseFloat(pcs.borderTopWidth) + parseFloat(pcs.borderBottomWidth);
+  var availW = stage.clientWidth - padX - borderX;
+  var availH = stage.clientHeight - padY - borderY;
+  if (availW <= 0 || availH <= 0) return;
+  var bw = KiddoPaint.Display.main_canvas.width;
+  var bh = KiddoPaint.Display.main_canvas.height;
+  var MAX_SCALE = 2; // don't upscale past 2x backing (keeps pixels from getting huge)
+  var scale = Math.min(availW / bw, availH / bh, MAX_SCALE);
+  paint.style.width = Math.floor(bw * scale) + "px";
+  paint.style.height = Math.floor(bh * scale) + "px";
+}
+
+function init_canvas_fit() {
+  fitCanvasToStage();
+  var stage = document.getElementById("canvas-stage");
+  if (stage && typeof ResizeObserver !== "undefined") {
+    // Fires on window resize and whenever the options bar changes the stage's height.
+    new ResizeObserver(fitCanvasToStage).observe(stage);
+  } else {
+    window.addEventListener("resize", fitCanvasToStage);
+  }
+}
+
+// One-line descriptions for the main tools, keyed by their `title` (data-driven so the
+// status bar stays in sync with the toolbar without per-tool wiring). Options/stamps with
+// no entry fall back to just their name.
+KiddoPaint.ToolDescriptions = {
+  Save: "Save your picture.",
+  Pencil: "Draw thin freehand lines.",
+  Line: "Drag to draw a straight line.",
+  Rectangle: "Drag to draw a rectangle.",
+  Circle: "Drag to draw a circle or oval.",
+  Brush: "Paint with fun brushes and patterns.",
+  Mixer: "Mix up the whole picture with wacky effects.",
+  "Paint Can": "Fill an area with color or a pattern.",
+  Eraser: "Erase parts of your picture.",
+  Text: "Stamp letters and numbers.",
+  Stamp: "Stamp fun pictures and stickers.",
+  Truck: "Drive a truck that builds roads and rails.",
+  "Color Picker": "Pick a color from the picture.",
+  Undo: "Undo your last change.",
+  Redo: "Redo what you undid.",
+};
+
+// Bottom status bar: reflect whatever tool, option, or stamp the cursor is over. Tool
+// buttons (and dynamically-created option/stamp buttons) carry a `title`, so a single
+// delegated listener covers all of them, including ones added later. Shows the name in
+// bold with a smaller description beside it; the native browser tooltip still shows just
+// the title.
+function init_statusbar() {
+  var statusbar = document.getElementById("statusbar-text");
+  if (!statusbar) return;
+  document.addEventListener("mouseover", function (e) {
+    if (!e.target.closest) return;
+    var el = e.target.closest("[title]");
+    if (!el || !el.getAttribute("title")) return;
+    var name = el.getAttribute("title");
+    statusbar.textContent = "";
+    var nameEl = document.createElement("span");
+    nameEl.className = "status-name";
+    nameEl.textContent = name;
+    statusbar.appendChild(nameEl);
+    var desc = KiddoPaint.ToolDescriptions[name];
+    if (desc) {
+      var descEl = document.createElement("span");
+      descEl.className = "status-desc";
+      descEl.textContent = desc;
+      statusbar.appendChild(descEl);
+    }
+  });
+}
 
 function init_kiddo_defaults() {
   KiddoPaint.Current.color = KiddoPaint.Colors.currentPalette()[0];
@@ -781,8 +918,23 @@ function ev_canvas(ev) {
   KiddoPaint.Display.clearPreview();
   KiddoPaint.Current.ev = ev;
 
-  ev._x = ev.offsetX;
-  ev._y = ev.offsetY;
+  // Map the pointer from display (CSS) pixels to backing-store pixels. The canvas is
+  // CSS-scaled to fit the window (WS1) while the backing store stays 1300x650, so
+  // offsetX/Y (display px) no longer equal backing px — drawing would land in the wrong
+  // place. Remap via the canvas rect + scale. This also covers touch, whose synthetic
+  // mouse events carry clientX/Y. (KiddoPaint.Display.canvas is tmpCanvas, the layer the
+  // listeners are on; all five layers share the same size/position.)
+  var rect = KiddoPaint.Display.canvas.getBoundingClientRect();
+  var cw = KiddoPaint.Display.canvas.width;
+  var ch = KiddoPaint.Display.canvas.height;
+  var scaleX = rect.width ? cw / rect.width : 1;
+  var scaleY = rect.height ? ch / rect.height : 1;
+  // Round to integer backing pixels and clamp to the canvas. Tools index the pixel
+  // buffer with these (e.g. paintcan flood fill: (y*width + x)*4); a fractional or
+  // out-of-range value reads undefined from the typed array, which breaks color
+  // comparisons and sends the fill into a runaway loop (frozen tab).
+  ev._x = Math.max(0, Math.min(cw - 1, Math.round((ev.clientX - rect.left) * scaleX)));
+  ev._y = Math.max(0, Math.min(ch - 1, Math.round((ev.clientY - rect.top) * scaleY)));
 
   // handle event
   if (ev.type === "touchstart") {

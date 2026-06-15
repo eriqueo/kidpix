@@ -11,78 +11,186 @@ body {
   user-select: none;
 }
 
-#container {
-  /*
-  border: solid;
-  border-color: yellow;
-  */
-  width: 100%;
+/* Top title bar (classic Mac pinstripe). Adds chrome at the top and, with the taller
+   status bar, soaks up the canvas's vertical slack so the mat buffer looks balanced
+   without changing the canvas ratio. */
+#titlebar {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    90deg,
+    #ff5f6d,
+    #ffc371,
+    #47e891,
+    #4facfe,
+    #b06ab3
+  );
+  border-bottom: 3px solid #222;
+}
+.titlebar-text {
+  background-color: #fff;
+  padding: 3px 24px;
+  border: 2px solid #222;
+  border-radius: 4px;
+  font-family: Chicago, Geneva, Tahoma, sans-serif;
+  font-weight: bold;
+  font-size: 20px;
+  letter-spacing: 1px;
+  color: #111;
 }
 
-#hcontainer {
-  /*
-  border: solid;
-  border-color: blue;
-    overflow: hidden;
-    white-space: nowrap;
-    */
+/* Three-column frame around the canvas:
+   [ tools (left) ] [ options (top) + canvas ] [ colors (right) ] */
+#container {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: row;
+  align-items: stretch;
+  width: 100%;
+  height: calc(100vh - 43px - 76px); /* minus title bar (40+3 border) and status bar (76) */
+  overflow: hidden;
+}
+
+/* Bottom status bar: shows the name/description of the tool under the cursor. Tall
+   enough (~side-toolbar width) to balance the title bar and shrink the bottom buffer. */
+#statusbar {
+  position: relative;
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* center the description text */
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 16px;
+  background-color: #ececec;
+  border-top: 2px solid #999;
+  font-family: Geneva, Tahoma, sans-serif;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+#statusbar-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status-name {
+  font-weight: bold;
+  font-size: 24px;
+  color: #111;
+}
+
+.status-desc {
+  font-size: 18px;
+  color: #555;
+  margin-left: 14px;
+}
+
+/* Frame-style toggle, parked at the right of the status bar. */
+#frame-toggle {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 40px;
+  padding: 0 16px;
+  font-family: Geneva, Tahoma, sans-serif;
+  font-size: 15px;
+  font-weight: bold;
+  color: #222;
+  background-color: #fff;
+  border: 2px solid #555;
+  border-radius: 6px;
+  cursor: pointer;
+}
+#frame-toggle:hover {
+  background-color: #f0f0ff;
+}
+#frame-toggle:active {
+  background-color: #e0e0ef;
+}
+
+/* #toolbar wraps #mainbar (tools) + #colorbar (colors) in the HTML. Make it a no-box
+   wrapper so its two children become direct columns of #container — that lets colors
+   move to the RIGHT via `order`, without relocating the (base64-heavy) color HTML. */
+#toolbar {
+  display: contents;
+}
+#toolbar > br {
+  display: none;
 }
 
 #socialbar {
-  /*
-  border: solid;
-  border-color: red;
-*/
   display: block;
   width: 50px;
 }
 
+/* Left column: tools */
 #mainbar {
-  display: flex;
-  flex-direction: column;
-}
-
-#colorbar {
-  /*
-  border: solid;
-  border-color: red;
-*/
-  display: block;
-  width: 50px;
-  float: left;
-}
-
-#colorselector {
-  /*
-  border: solid;
-  border-color: red;
-*/
-  width: 51px;
+  order: 1;
+  flex: 0 0 auto;
+  align-self: stretch;
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
+  align-content: flex-start;
+  justify-content: center;
+  width: 78px;
+  overflow-y: auto;
+  background-color: #ececec;
+  border-right: 2px solid #999;
+  box-sizing: border-box;
 }
 
-@media (max-height: 1400px) {
-  #toolbar {
-    width: 100px;
-    display: flex;
-    flex-direction: row-reverse;
-    flex-wrap: wrap;
-    float: left;
-  }
+/* Center column: options bar (top) + canvas stage */
+#hcontainer {
+  order: 2;
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  overflow: hidden;
 }
 
-@media (min-height: 1401px) {
-  #toolbar {
-    width: 50px;
-    display: flex;
-    flex-direction: column;
-    flex-wrap: wrap;
-    float: left;
-  }
+/* Mat/buffer around the canvas: centers it and frames it on all four sides (tools left,
+   options top, colors right, status bar bottom) so the empty space reads as a deliberate
+   frame, not stray whitespace. */
+#canvas-stage {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  box-sizing: border-box;
+  background-color: #b7bbc2;
+  overflow: hidden;
+}
+
+/* Right column: colors (wider, with larger swatches) */
+#colorbar {
+  order: 3;
+  flex: 0 0 auto;
+  align-self: stretch;
+  float: none;
+  width: 108px;
+  overflow-y: auto;
+  background-color: #ececec;
+  border-left: 2px solid #999;
+  box-sizing: border-box;
+  padding-top: 2px;
+}
+
+#colorselector {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .hidden {
@@ -96,11 +204,20 @@ body {
 .subtoolbar {
   display: flex;
   flex-wrap: wrap;
+  /* Reserve height for one row of tool options so switching tools doesn't reflow
+     (move) the canvas when a submenu appears/changes. */
+  min-height: 68px;
+  align-content: flex-start;
+  /* Options bar spans the top of the canvas column, with a boundary beneath it. */
+  width: 100%;
+  box-sizing: border-box;
+  background-color: #ececec;
+  border-bottom: 2px solid #999;
 }
 
 .tool {
-  width: 50px;
-  height: 50px;
+  width: 64px;
+  height: 64px;
   padding: 0px 0px 0px 0px;
   vertical-align: middle;
   display: inline-block;
@@ -109,22 +226,34 @@ body {
   border-radius: 0;
 }
 
-.toolImg {
-  width: 36px;
-  height: 36px;
+/* Tool icons fill more of the larger button. Overrides per-<img> inline width/height. */
+.tool img {
+  width: 52px;
+  height: 52px;
 }
 
+.toolImg {
+  width: 52px;
+  height: 52px;
+}
+
+/* The selected color: biggest, boldest element in the column so it reads clearly as
+   "the color you're painting with". */
 .currentColor {
-  width: 50px;
-  height: 50px;
+  width: 100%;
+  height: 72px;
+  margin-bottom: 6px;
+  border: 4px solid #333;
+  box-shadow: 0 0 0 2px #ececec, 0 2px 4px rgba(0, 0, 0, 0.35);
+  box-sizing: border-box;
   -webkit-border-radius: 0px;
   -webkit-appearance: none;
   border-radius: 0;
 }
 
 .color {
-  width: 25px;
-  height: 25px;
+  width: 48px;
+  height: 48px;
   margin: 0px;
   -webkit-border-radius: 0px;
   -webkit-appearance: none;
@@ -132,8 +261,8 @@ body {
 }
 
 .colornav {
-  width: 25px;
-  height: 25px;
+  width: 40px;
+  height: 36px;
   margin: 0px;
   -webkit-border-radius: 0px;
   -webkit-appearance: none;
@@ -153,13 +282,60 @@ body {
 }
 
 #paint {
-  display: grid;
+  position: relative; /* anchor for the absolutely-stacked canvas layers */
+  /* The frame/border is never a pointer target; only the canvas layers receive input,
+     so a hover near the edge or mid-resize can't be intercepted by #paint. */
+  pointer-events: none;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
+  /* Size (content width/height) is set in JS by fitCanvasToStage() to the largest 2:1
+     box that fits the stage (capped at 2x backing); content-box keeps the canvas exactly
+     2:1 with the frame border outside it (no distortion). */
+  box-sizing: content-box;
+  border: 14px solid #2b2b2b; /* fallback; a .frame-* class supplies the real frame */
+}
+
+/* Decorative canvas frames, toggled by the Frame button. Wood is the default. */
+#paint.frame-wood {
+  border: 16px ridge #a06a35;
+}
+#paint.frame-rainbow {
+  border: 14px solid #2b2b2b;
+  border-image: repeating-linear-gradient(
+      45deg,
+      #e74c3c 0 12px,
+      #f1c40f 12px 24px,
+      #2ecc71 24px 36px,
+      #3498db 36px 48px,
+      #9b59b6 48px 60px
+    )
+    14;
+}
+#paint.frame-gold {
+  border: 16px ridge #d4af37;
+}
+#paint.frame-classic {
+  border: 12px solid #2b2b2b;
+}
+
+/* All five layers absolutely overlay #paint's content box so they coincide exactly and
+   the top layer (tmpCanvas) reliably receives pointer events — display size only; the
+   1300x650 backing store is untouched, so undo/parity/compositing are unaffected. */
+#kiddopaint,
+#tmpCanvas,
+#previewCanvas,
+#animCanvas,
+#bnimCanvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  pointer-events: auto; /* re-enable input on the layers (parent #paint is none) */
 }
 
 #kiddopaint {
-  border: 1px solid #00f;
   cursor: crosshair;
   grid-column: 1;
   grid-row: 1;
@@ -168,7 +344,6 @@ body {
 }
 
 #tmpCanvas {
-  border: 1px solid #00f;
   grid-column: 1;
   grid-row: 1;
   image-rendering: pixelated;
@@ -176,7 +351,6 @@ body {
 }
 
 #previewCanvas {
-  border: 1px solid #00f;
   grid-column: 1;
   grid-row: 1;
   image-rendering: pixelated;
@@ -184,7 +358,6 @@ body {
 }
 
 #animCanvas {
-  border: 1px solid #00f;
   grid-column: 1;
   grid-row: 1;
   image-rendering: pixelated;
@@ -192,7 +365,6 @@ body {
 }
 
 #bnimCanvas {
-  border: 1px solid #00f;
   grid-column: 1;
   grid-row: 1;
   image-rendering: pixelated;

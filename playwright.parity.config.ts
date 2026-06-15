@@ -26,7 +26,17 @@ export default defineConfig({
   expect: {
     toHaveScreenshot: { maxDiffPixelRatio: 0.02 },
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    {
+      name: "chromium",
+      // Viewport large enough that the pinned 1300x650 canvas isn't clipped by the
+      // layout chrome (so the #kiddopaint screenshot is the full backing-size image).
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: 1700, height: 1000 },
+      },
+    },
+  ],
   webServer: {
     command: "yarn dev",
     url: "http://localhost:5173",
