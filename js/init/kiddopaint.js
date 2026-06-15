@@ -108,8 +108,48 @@ window.init_kiddo_paint = function init_kiddo_paint() {
     init_subtool_bars();
     init_color_selector();
     init_statusbar();
+    init_canvas_fit();
   }
 };
+
+// Size the canvas (#paint content box) to the largest 1300x650 (2:1) box that fits inside
+// #canvas-stage, capped at 2x the backing store. Re-runs whenever the stage changes size
+// (window resize, or the options bar gaining/losing rows), so the canvas always fits and
+// stays centered — no fragile viewport math. content-box + an outside frame border keeps
+// the 2:1 shape exact.
+function fitCanvasToStage() {
+  var stage = document.getElementById("canvas-stage");
+  var paint = document.getElementById("paint");
+  if (!stage || !paint || !KiddoPaint.Display.main_canvas) return;
+  var scs = getComputedStyle(stage);
+  var padX = parseFloat(scs.paddingLeft) + parseFloat(scs.paddingRight);
+  var padY = parseFloat(scs.paddingTop) + parseFloat(scs.paddingBottom);
+  var pcs = getComputedStyle(paint);
+  var borderX =
+    parseFloat(pcs.borderLeftWidth) + parseFloat(pcs.borderRightWidth);
+  var borderY =
+    parseFloat(pcs.borderTopWidth) + parseFloat(pcs.borderBottomWidth);
+  var availW = stage.clientWidth - padX - borderX;
+  var availH = stage.clientHeight - padY - borderY;
+  if (availW <= 0 || availH <= 0) return;
+  var bw = KiddoPaint.Display.main_canvas.width;
+  var bh = KiddoPaint.Display.main_canvas.height;
+  var MAX_SCALE = 2; // don't upscale past 2x backing (keeps pixels from getting huge)
+  var scale = Math.min(availW / bw, availH / bh, MAX_SCALE);
+  paint.style.width = Math.floor(bw * scale) + "px";
+  paint.style.height = Math.floor(bh * scale) + "px";
+}
+
+function init_canvas_fit() {
+  fitCanvasToStage();
+  var stage = document.getElementById("canvas-stage");
+  if (stage && typeof ResizeObserver !== "undefined") {
+    // Fires on window resize and whenever the options bar changes the stage's height.
+    new ResizeObserver(fitCanvasToStage).observe(stage);
+  } else {
+    window.addEventListener("resize", fitCanvasToStage);
+  }
+}
 
 // One-line descriptions for the main tools, keyed by their `title` (data-driven so the
 // status bar stays in sync with the toolbar without per-tool wiring). Options/stamps with
