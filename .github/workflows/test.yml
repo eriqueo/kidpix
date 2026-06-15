@@ -42,9 +42,36 @@ jobs:
         timeout-minutes: 8
         run: yarn playwright install-deps chromium
 
+      # Cache the downloaded browser so the flaky download only has to succeed once;
+      # subsequent runs restore it and skip the install entirely.
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-1.56.1-${{ runner.os }}-${{ hashFiles('**/yarn.lock') }}
+
+      # Root cause of the old job hang: Playwright's browser download intermittently
+      # stalls at 100% on hosted runners — all bytes arrive, but the connection never
+      # signals completion, so the process waits forever. Fix: bound each attempt with
+      # `timeout` so a hung download is killed and retried with a fresh connection
+      # (a successful install finishes in seconds), instead of freezing the whole job.
       - name: Install Playwright Chromium browser
-        timeout-minutes: 8
-        run: yarn playwright install chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        timeout-minutes: 14
+        run: |
+          for attempt in 1 2 3; do
+            echo "::group::Chromium install attempt $attempt"
+            if timeout --kill-after=10 240 yarn playwright install chromium; then
+              echo "::endgroup::"
+              echo "Chromium installed on attempt $attempt."
+              exit 0
+            fi
+            echo "::endgroup::"
+            echo "Attempt $attempt hung or failed; retrying with a fresh connection..."
+          done
+          echo "All Chromium install attempts failed." >&2
+          exit 1
 
       - name: Run E2E tests (chromium only)
         timeout-minutes: 15
