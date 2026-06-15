@@ -75,6 +75,7 @@ import "../js/tools/mixer-pip.js";
 import "../js/tools/mixer-shadow-boxes.js";
 import "../js/tools/mixer-venetian-blinds.js";
 import "../js/tools/mixer-wallpaper.js";
+import "../js/tools/mixer-wraparound.js";
 import "../js/tools/wholefx.js";
 
 // js/textures/*

@@ -136,7 +136,10 @@ KiddoPaint.Submenu.jumble = [
     name: "Wrap Around",
     imgSrc: "img/mixer/tool-submenu-wacky-mixer-176.png",
     handler: function () {
-      KiddoPaint.Sounds.unimpl();
+      // Slide the whole picture; what falls off one edge wraps to the opposite edge.
+      KiddoPaint.Display.canvas.classList = "";
+      KiddoPaint.Display.canvas.classList.add("cursor-guy-smile");
+      KiddoPaint.Current.tool = KiddoPaint.Tools.MixerWrapAround;
     },
   },
   /*
