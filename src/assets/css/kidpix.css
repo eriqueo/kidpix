@@ -18,8 +18,25 @@ body {
   flex-direction: row;
   align-items: stretch;
   width: 100%;
-  height: 100vh;
+  height: calc(100vh - 32px); /* leave room for the status bar */
   overflow: hidden;
+}
+
+/* Bottom status bar: shows the name/description of the tool under the cursor. */
+#statusbar {
+  height: 30px;
+  line-height: 30px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 12px;
+  background-color: #ececec;
+  border-top: 2px solid #999;
+  font-family: Geneva, Tahoma, sans-serif;
+  font-size: 14px;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* #toolbar wraps #mainbar (tools) + #colorbar (colors) in the HTML. Make it a no-box
@@ -131,9 +148,15 @@ body {
   height: 52px;
 }
 
+/* The selected color: biggest, boldest element in the column so it reads clearly as
+   "the color you're painting with". */
 .currentColor {
-  width: 96px;
-  height: 44px;
+  width: 100%;
+  height: 72px;
+  margin-bottom: 6px;
+  border: 4px solid #333;
+  box-shadow: 0 0 0 2px #ececec, 0 2px 4px rgba(0, 0, 0, 0.35);
+  box-sizing: border-box;
   -webkit-border-radius: 0px;
   -webkit-appearance: none;
   border-radius: 0;

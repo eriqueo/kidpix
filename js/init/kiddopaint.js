@@ -107,8 +107,24 @@ window.init_kiddo_paint = function init_kiddo_paint() {
     init_tool_bar();
     init_subtool_bars();
     init_color_selector();
+    init_statusbar();
   }
 };
+
+// Bottom status bar: reflect the title/name of whatever tool, option, or stamp the
+// cursor is over. Tool buttons (and dynamically-created option/stamp buttons) carry a
+// `title`, so a single delegated listener covers all of them, including ones added later.
+function init_statusbar() {
+  var statusbar = document.getElementById("statusbar");
+  if (!statusbar) return;
+  document.addEventListener("mouseover", function (e) {
+    if (!e.target.closest) return;
+    var el = e.target.closest("[title]");
+    if (el && el.getAttribute("title")) {
+      statusbar.textContent = el.getAttribute("title");
+    }
+  });
+}
 
 function init_kiddo_defaults() {
   KiddoPaint.Current.color = KiddoPaint.Colors.currentPalette()[0];
