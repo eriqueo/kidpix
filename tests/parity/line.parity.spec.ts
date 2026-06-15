@@ -4,7 +4,7 @@ import { initializeKidPix, drawStroke, mainCanvas } from "./parity-helpers";
 /** Golden parity baseline for the legacy line (deterministic). */
 test.describe("parity: line (legacy) @golden", () => {
   test.beforeEach(async ({ page }) => {
-    await initializeKidPix(page);
+    await initializeKidPix(page, { pin: true });
   });
 
   test("fixed diagonal matches golden", async ({ page }) => {

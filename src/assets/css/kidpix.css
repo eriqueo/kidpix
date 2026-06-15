@@ -283,6 +283,9 @@ body {
 
 #paint {
   position: relative; /* anchor for the absolutely-stacked canvas layers */
+  /* The frame/border is never a pointer target; only the canvas layers receive input,
+     so a hover near the edge or mid-resize can't be intercepted by #paint. */
+  pointer-events: none;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
   /* Size (content width/height) is set in JS by fitCanvasToStage() to the largest 2:1
@@ -329,6 +332,7 @@ body {
   width: 100%;
   height: 100%;
   box-sizing: border-box;
+  pointer-events: auto; /* re-enable input on the layers (parent #paint is none) */
 }
 
 #kiddopaint {

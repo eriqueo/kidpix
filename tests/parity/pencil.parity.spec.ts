@@ -13,7 +13,7 @@ import {
  */
 test.describe("parity: pencil (legacy) @golden", () => {
   test.beforeEach(async ({ page }) => {
-    await initializeKidPix(page);
+    await initializeKidPix(page, { pin: true });
   });
 
   test("fixed zig-zag stroke matches golden", async ({ page }) => {

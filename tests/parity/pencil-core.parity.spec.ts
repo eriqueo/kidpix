@@ -9,7 +9,7 @@ import { drawStroke, mainCanvas } from "./parity-helpers";
  */
 test.describe("parity: core pencil vs legacy golden", () => {
   test("fixed zig-zag stroke matches the legacy pencil golden", async ({ page }) => {
-    await page.goto("/?core=pencil");
+    await page.goto("/?core=pencil&pincanvas");
     await page.waitForSelector("#tmpCanvas", { timeout: 10000 });
 
     await drawStroke(page, "pencil", [

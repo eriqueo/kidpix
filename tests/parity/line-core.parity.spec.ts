@@ -7,7 +7,7 @@ import { drawStroke, mainCanvas } from "./parity-helpers";
  */
 test.describe("parity: core line vs legacy golden", () => {
   test("fixed diagonal matches the legacy line golden", async ({ page }) => {
-    await page.goto("/?core=line");
+    await page.goto("/?core=line&pincanvas");
     await page.waitForSelector("#tmpCanvas", { timeout: 10000 });
 
     await drawStroke(page, "line", [

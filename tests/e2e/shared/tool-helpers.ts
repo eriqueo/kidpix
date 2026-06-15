@@ -37,8 +37,12 @@ export interface WackyBrushSubtool {
  * We wait for #tmpCanvas to exist because it's dynamically created by
  * init_kiddo_paint() — its presence signals the app is fully initialized.
  */
-export async function initializeKidPix(page: Page): Promise<void> {
-  await page.goto("/");
+export async function initializeKidPix(
+  page: Page,
+  opts: { pin?: boolean } = {},
+): Promise<void> {
+  // pin: keep the canvas at its 1:1 backing size (for pixel-parity screenshots).
+  await page.goto(opts.pin ? "/?pincanvas" : "/");
   await page.waitForLoadState("networkidle");
   // Wait for the dynamically-created tmpCanvas, which signals init_kiddo_paint() has completed
   await page.waitForSelector("#tmpCanvas", { timeout: 10000 });

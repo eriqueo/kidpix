@@ -161,6 +161,13 @@ function fitCanvasToStage() {
   var stage = document.getElementById("canvas-stage");
   var paint = document.getElementById("paint");
   if (!stage || !paint || !KiddoPaint.Display.main_canvas) return;
+  // Test hook: `?pincanvas` keeps the canvas at exactly its 1300x650 backing size (1:1)
+  // so the parity screenshots match the goldens. Never used by real users.
+  if (/[?&]pincanvas\b/.test(window.location.search)) {
+    paint.style.width = KiddoPaint.Display.main_canvas.width + "px";
+    paint.style.height = KiddoPaint.Display.main_canvas.height + "px";
+    return;
+  }
   var scs = getComputedStyle(stage);
   var padX = parseFloat(scs.paddingLeft) + parseFloat(scs.paddingRight);
   var padY = parseFloat(scs.paddingTop) + parseFloat(scs.paddingBottom);
