@@ -1,9 +1,10 @@
 name: Generate parity baselines
 
-# Manual trigger: generates the legacy golden screenshots on Ubuntu (where
-# Playwright browsers run — NixOS local can't), verifies the hexagonal-core
-# tools match them, and commits the PNGs. Run with:
-#   gh workflow run "Generate parity baselines"
+# Manual trigger: regenerates the legacy golden screenshots, verifies the hexagonal-core
+# tools match them, and commits the PNGs. Runs inside the official Playwright container
+# (browsers preinstalled) — the bare `playwright install --with-deps` hangs on hosted
+# runners. Run on a branch with:
+#   gh workflow run "Generate parity baselines" --ref <branch>
 on:
   workflow_dispatch:
 
@@ -13,31 +14,34 @@ permissions:
 jobs:
   baselines:
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-noble
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: yarn
+          node-version: "24"
+
+      - name: Enable Corepack (yarn)
+        run: corepack enable
 
       - run: yarn install --frozen-lockfile
-
-      - name: Install Playwright Chromium + OS deps
-        run: yarn playwright install --with-deps chromium
 
       - name: Generate legacy golden baselines (@golden specs)
         run: yarn test:parity:update
 
       - name: Commit baselines
         run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add tests/parity/__screenshots__
           if git diff --cached --quiet; then
             echo "No baseline changes."
           else
-            git commit -m "test(parity): generate golden baselines [skip ci]"
+            git commit -m "test(parity): regenerate goldens for WS1 layout [skip ci]"
             git push
           fi
 
