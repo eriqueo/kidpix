@@ -15,25 +15,29 @@ body {
    status bar, soaks up the canvas's vertical slack so the mat buffer looks balanced
    without changing the canvas ratio. */
 #titlebar {
-  height: 38px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: repeating-linear-gradient(
-    #ffffff,
-    #ffffff 1px,
-    #c9c9d6 1px,
-    #c9c9d6 2px
+  background: linear-gradient(
+    90deg,
+    #ff5f6d,
+    #ffc371,
+    #47e891,
+    #4facfe,
+    #b06ab3
   );
-  border-bottom: 2px solid #333;
+  border-bottom: 3px solid #222;
 }
 .titlebar-text {
-  background-color: #ececec;
-  padding: 2px 16px;
-  border: 1px solid #333;
+  background-color: #fff;
+  padding: 3px 24px;
+  border: 2px solid #222;
+  border-radius: 4px;
   font-family: Chicago, Geneva, Tahoma, sans-serif;
   font-weight: bold;
-  font-size: 18px;
+  font-size: 20px;
+  letter-spacing: 1px;
   color: #111;
 }
 
@@ -44,39 +48,68 @@ body {
   flex-direction: row;
   align-items: stretch;
   width: 100%;
-  height: calc(100vh - 40px - 76px); /* minus title bar (40) and status bar (76) */
+  height: calc(100vh - 43px - 76px); /* minus title bar (40+3 border) and status bar (76) */
   overflow: hidden;
 }
 
 /* Bottom status bar: shows the name/description of the tool under the cursor. Tall
    enough (~side-toolbar width) to balance the title bar and shrink the bottom buffer. */
 #statusbar {
+  position: relative;
   height: 76px;
   display: flex;
   align-items: center;
+  justify-content: center; /* center the description text */
   width: 100%;
   box-sizing: border-box;
   padding: 0 16px;
   background-color: #ececec;
   border-top: 2px solid #999;
   font-family: Geneva, Tahoma, sans-serif;
-  font-size: 14px;
   color: #333;
   white-space: nowrap;
+  overflow: hidden;
+}
+
+#statusbar-text {
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .status-name {
   font-weight: bold;
-  font-size: 16px;
+  font-size: 24px;
   color: #111;
 }
 
 .status-desc {
-  font-size: 13px;
+  font-size: 18px;
   color: #555;
-  margin-left: 10px;
+  margin-left: 14px;
+}
+
+/* Frame-style toggle, parked at the right of the status bar. */
+#frame-toggle {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 40px;
+  padding: 0 16px;
+  font-family: Geneva, Tahoma, sans-serif;
+  font-size: 15px;
+  font-weight: bold;
+  color: #222;
+  background-color: #fff;
+  border: 2px solid #555;
+  border-radius: 6px;
+  cursor: pointer;
+}
+#frame-toggle:hover {
+  background-color: #f0f0ff;
+}
+#frame-toggle:active {
+  background-color: #e0e0ef;
 }
 
 /* #toolbar wraps #mainbar (tools) + #colorbar (colors) in the HTML. Make it a no-box
@@ -256,8 +289,14 @@ body {
      box that fits the stage (capped at 2x backing); content-box keeps the canvas exactly
      2:1 with the frame border outside it (no distortion). */
   box-sizing: content-box;
-  /* Fun chunky pixel "picture frame": a candy-stripe border-image over a dark base edge
-     so the canvas boundary is unmistakable and playful. */
+  border: 14px solid #2b2b2b; /* fallback; a .frame-* class supplies the real frame */
+}
+
+/* Decorative canvas frames, toggled by the Frame button. Wood is the default. */
+#paint.frame-wood {
+  border: 16px ridge #a06a35;
+}
+#paint.frame-rainbow {
   border: 14px solid #2b2b2b;
   border-image: repeating-linear-gradient(
       45deg,
@@ -268,6 +307,12 @@ body {
       #9b59b6 48px 60px
     )
     14;
+}
+#paint.frame-gold {
+  border: 16px ridge #d4af37;
+}
+#paint.frame-classic {
+  border: 12px solid #2b2b2b;
 }
 
 /* All five stacked layers scale together to fill #paint (display size only — the

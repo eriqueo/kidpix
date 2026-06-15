@@ -109,8 +109,48 @@ window.init_kiddo_paint = function init_kiddo_paint() {
     init_color_selector();
     init_statusbar();
     init_canvas_fit();
+    init_frame_toggle();
   }
 };
+
+// Cycle the decorative canvas frame (Wood is default). The chosen style is a CSS class on
+// #paint and persists across reloads. Changing the frame changes the border width, so we
+// re-fit the canvas afterwards.
+KiddoPaint.FrameStyles = [
+  { cls: "frame-wood", label: "Wood" },
+  { cls: "frame-rainbow", label: "Rainbow" },
+  { cls: "frame-gold", label: "Gold" },
+  { cls: "frame-classic", label: "Classic" },
+];
+function init_frame_toggle() {
+  var paint = document.getElementById("paint");
+  var btn = document.getElementById("frame-toggle");
+  if (!paint || !btn) return;
+  var styles = KiddoPaint.FrameStyles;
+  var idx = 0;
+  try {
+    var saved = localStorage.getItem("kiddopaint_frame");
+    for (var i = 0; i < styles.length; i++) {
+      if (styles[i].cls === saved) idx = i;
+    }
+  } catch (e) {}
+  function apply() {
+    styles.forEach(function (s) {
+      paint.classList.remove(s.cls);
+    });
+    paint.classList.add(styles[idx].cls);
+    btn.textContent = "Frame: " + styles[idx].label;
+    try {
+      localStorage.setItem("kiddopaint_frame", styles[idx].cls);
+    } catch (e) {}
+    fitCanvasToStage();
+  }
+  btn.addEventListener("click", function () {
+    idx = (idx + 1) % styles.length;
+    apply();
+  });
+  apply();
+}
 
 // Size the canvas (#paint content box) to the largest 1300x650 (2:1) box that fits inside
 // #canvas-stage, capped at 2x the backing store. Re-runs whenever the stage changes size
@@ -178,7 +218,7 @@ KiddoPaint.ToolDescriptions = {
 // bold with a smaller description beside it; the native browser tooltip still shows just
 // the title.
 function init_statusbar() {
-  var statusbar = document.getElementById("statusbar");
+  var statusbar = document.getElementById("statusbar-text");
   if (!statusbar) return;
   document.addEventListener("mouseover", function (e) {
     if (!e.target.closest) return;
