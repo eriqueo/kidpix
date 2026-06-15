@@ -61,7 +61,12 @@ KiddoPaint.Submenu.jumble = [
     name: "The Outliner",
     imgSrc: "img/mixer/tool-submenu-wacky-mixer-169.png",
     handler: function () {
-      KiddoPaint.Sounds.unimpl();
+      // Edge-detect the whole canvas: traces the picture's outlines. Drag distance
+      // controls the edge thickness (see JumbleFx.EDGE in wholefx.js).
+      KiddoPaint.Display.canvas.classList = "";
+      KiddoPaint.Display.canvas.classList.add("cursor-guy-smile");
+      KiddoPaint.Tools.WholeCanvasEffect.effect = JumbleFx.EDGE;
+      KiddoPaint.Current.tool = KiddoPaint.Tools.WholeCanvasEffect;
     },
   },
   {
@@ -77,14 +82,24 @@ KiddoPaint.Submenu.jumble = [
     name: "Zoom In",
     imgSrc: "img/mixer/tool-submenu-wacky-mixer-171.png",
     handler: function () {
-      KiddoPaint.Sounds.unimpl();
+      // Zoom-blur out from the click point: magnifies/streaks the picture toward you.
+      // Drag distance controls the zoom strength (see JumbleFx.ZOOM in wholefx.js).
+      KiddoPaint.Display.canvas.classList = "";
+      KiddoPaint.Display.canvas.classList.add("cursor-guy-smile");
+      KiddoPaint.Tools.WholeCanvasEffect.effect = JumbleFx.ZOOM;
+      KiddoPaint.Current.tool = KiddoPaint.Tools.WholeCanvasEffect;
     },
   },
   {
     name: "Broken Glass",
     imgSrc: "img/mixer/tool-submenu-wacky-mixer-172.png",
     handler: function () {
-      KiddoPaint.Sounds.unimpl();
+      // Hexagonal pixelate from the click point: shatters the picture into faceted
+      // glass-like cells. Drag distance controls cell size (JumbleFx.HEXAGON).
+      KiddoPaint.Display.canvas.classList = "";
+      KiddoPaint.Display.canvas.classList.add("cursor-guy-smile");
+      KiddoPaint.Tools.WholeCanvasEffect.effect = JumbleFx.HEXAGON;
+      KiddoPaint.Current.tool = KiddoPaint.Tools.WholeCanvasEffect;
     },
   },
   {
@@ -100,7 +115,12 @@ KiddoPaint.Submenu.jumble = [
     name: "The Highlighter",
     imgSrc: "img/mixer/tool-submenu-wacky-mixer-174.png",
     handler: function () {
-      KiddoPaint.Sounds.unimpl();
+      // Crank saturation: makes the picture's colors pop like a highlighter pen.
+      // Drag distance controls how vivid (JumbleFx.SAT in wholefx.js).
+      KiddoPaint.Display.canvas.classList = "";
+      KiddoPaint.Display.canvas.classList.add("cursor-guy-smile");
+      KiddoPaint.Tools.WholeCanvasEffect.effect = JumbleFx.SAT;
+      KiddoPaint.Current.tool = KiddoPaint.Tools.WholeCanvasEffect;
     },
   },
   {
