@@ -5,10 +5,19 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Cancel a previous run when the same branch/PR is pushed again, so force-pushes don't
+# leave hour-long zombie runs piling up.
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     name: Full Test Suite
     runs-on: ubuntu-latest
+    # Hard cap: without this, a hung step runs to GitHub's 6-hour default and never
+    # reports logs. With it, a hang fails fast and the step logs become visible.
+    timeout-minutes: 25
 
     steps:
       - name: Checkout code
@@ -26,13 +35,23 @@ jobs:
       - name: Run unit tests with coverage
         run: yarn test:coverage
 
-      - name: Install Playwright (chromium only)
-        run: yarn playwright install --with-deps chromium
+      # Split the former `playwright install --with-deps chromium` into two steps so a
+      # hang localizes to either the apt system-deps install or the browser-binary
+      # download, and each fails fast with its own logs instead of freezing the job.
+      - name: Install Playwright system deps (apt)
+        timeout-minutes: 8
+        run: yarn playwright install-deps chromium
+
+      - name: Install Playwright Chromium browser
+        timeout-minutes: 8
+        run: yarn playwright install chromium
 
       - name: Run E2E tests (chromium only)
+        timeout-minutes: 15
         run: yarn exec playwright test -- --project=chromium --workers=1 --reporter=line
 
       - name: Run parity gate (core tools must match committed legacy goldens)
+        timeout-minutes: 10
         run: yarn test:parity
 
       - name: Upload E2E test results
