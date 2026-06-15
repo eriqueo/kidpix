@@ -104,7 +104,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 14px;
+  padding: 18px;
   box-sizing: border-box;
   background-color: #b7bbc2;
   overflow: hidden;
@@ -230,9 +230,14 @@ body {
      so it never overflows vertically; ~80px reserves the options bar + its border. */
   aspect-ratio: 1300 / 650;
   /* Bounded by the stage width (100%), by the stage height ((viewport - top/bottom
-     bars - padding) * 2), and capped at 2x backing. Centered by #canvas-stage's flex. */
-  width: min(100%, calc((100vh - 130px) * 2), 2600px);
+     bars - padding - border) * 2), and capped at 2x backing. */
+  width: min(100%, calc((100vh - 150px) * 2), 2600px);
   max-width: 100%;
+  /* Thick, unmistakable canvas edge; margin:auto centers it evenly on both axes within
+     the stage's padding (so the buffer is symmetric left/right and top/bottom). */
+  border: 5px solid #2b2b2b;
+  box-sizing: border-box;
+  margin: auto;
 }
 
 /* All five stacked layers scale together to fill #paint (display size only — the
@@ -248,7 +253,6 @@ body {
 }
 
 #kiddopaint {
-  border: 1px solid #00f;
   cursor: crosshair;
   grid-column: 1;
   grid-row: 1;
@@ -257,7 +261,6 @@ body {
 }
 
 #tmpCanvas {
-  border: 1px solid #00f;
   grid-column: 1;
   grid-row: 1;
   image-rendering: pixelated;
@@ -265,7 +268,6 @@ body {
 }
 
 #previewCanvas {
-  border: 1px solid #00f;
   grid-column: 1;
   grid-row: 1;
   image-rendering: pixelated;
@@ -273,7 +275,6 @@ body {
 }
 
 #animCanvas {
-  border: 1px solid #00f;
   grid-column: 1;
   grid-row: 1;
   image-rendering: pixelated;
@@ -281,7 +282,6 @@ body {
 }
 
 #bnimCanvas {
-  border: 1px solid #00f;
   grid-column: 1;
   grid-row: 1;
   image-rendering: pixelated;
