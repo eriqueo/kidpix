@@ -11,76 +11,80 @@ body {
   user-select: none;
 }
 
+/* Three-column frame around the canvas:
+   [ tools (left) ] [ options (top) + canvas ] [ colors (right) ] */
 #container {
-  /*
-  border: solid;
-  border-color: yellow;
-  */
-  width: 100%;
-}
-
-#hcontainer {
-  /* Column so the subtoolbar always sits above the canvas (no side-by-side wrap),
-     and the canvas area flows beside the floated #toolbar. */
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: stretch;
+  width: 100%;
+  height: 100vh;
   overflow: hidden;
 }
 
+/* #toolbar wraps #mainbar (tools) + #colorbar (colors) in the HTML. Make it a no-box
+   wrapper so its two children become direct columns of #container — that lets colors
+   move to the RIGHT via `order`, without relocating the (base64-heavy) color HTML. */
+#toolbar {
+  display: contents;
+}
+#toolbar > br {
+  display: none;
+}
+
 #socialbar {
-  /*
-  border: solid;
-  border-color: red;
-*/
   display: block;
   width: 50px;
 }
 
+/* Left column: tools */
 #mainbar {
-  display: flex;
-  flex-direction: column;
-}
-
-#colorbar {
-  /*
-  border: solid;
-  border-color: red;
-*/
-  display: block;
-  width: 50px;
-  float: left;
-}
-
-#colorselector {
-  /*
-  border: solid;
-  border-color: red;
-*/
-  width: 51px;
+  order: 1;
+  flex: 0 0 auto;
+  align-self: stretch;
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
+  align-content: flex-start;
+  justify-content: center;
+  width: 78px;
+  overflow-y: auto;
+  background-color: #ececec;
+  border-right: 2px solid #999;
+  box-sizing: border-box;
 }
 
-@media (max-height: 1400px) {
-  #toolbar {
-    /* 2 columns of ~64px touch targets */
-    width: 136px;
-    display: flex;
-    flex-direction: row-reverse;
-    flex-wrap: wrap;
-    float: left;
-  }
+/* Center column: options bar (top) + canvas */
+#hcontainer {
+  order: 2;
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
 }
 
-@media (min-height: 1401px) {
-  #toolbar {
-    width: 50px;
-    display: flex;
-    flex-direction: column;
-    flex-wrap: wrap;
-    float: left;
-  }
+/* Right column: colors */
+#colorbar {
+  order: 3;
+  flex: 0 0 auto;
+  align-self: stretch;
+  float: none;
+  width: 78px;
+  overflow-y: auto;
+  background-color: #ececec;
+  border-left: 2px solid #999;
+  box-sizing: border-box;
+  padding-top: 2px;
+}
+
+#colorselector {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .hidden {
@@ -98,6 +102,11 @@ body {
      (move) the canvas when a submenu appears/changes. */
   min-height: 68px;
   align-content: flex-start;
+  /* Options bar spans the top of the canvas column, with a boundary beneath it. */
+  width: 100%;
+  box-sizing: border-box;
+  background-color: #ececec;
+  border-bottom: 2px solid #999;
 }
 
 .tool {
@@ -113,13 +122,13 @@ body {
 
 /* Tool icons fill more of the larger button. Overrides per-<img> inline width/height. */
 .tool img {
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
 }
 
 .toolImg {
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
 }
 
 .currentColor {
@@ -164,12 +173,14 @@ body {
   display: grid;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
-  /* Fill the space beside the toolbar / below the subtoolbar, preserving the 1300x650
-     (2:1) shape, capped at 2x the backing store so pixels don't get absurdly chunky.
-     The ~160px / ~96px reserves account for the toolbar width and subtoolbar height. */
+  /* Fill the center column (flex already reserves the side toolbars), preserving the
+     1300x650 (2:1) shape, capped at 2x the backing store so pixels don't get absurdly
+     chunky. Width is bounded by the column (100%) and by height ((100vh - top bar) * 2)
+     so it never overflows vertically; ~80px reserves the options bar + its border. */
   aspect-ratio: 1300 / 650;
-  width: min(calc(100vw - 160px), calc((100vh - 96px) * 2), 2600px);
+  width: min(100%, calc((100vh - 80px) * 2), 2600px);
   max-width: 2600px;
+  margin: 4px auto;
 }
 
 /* All five stacked layers scale together to fill #paint (display size only — the
