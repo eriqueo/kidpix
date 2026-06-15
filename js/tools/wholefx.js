@@ -11,6 +11,7 @@ const JumbleFx = {
   PIXELATE: "pixelate",
   HUE: "hue",
   SAT: "sat",
+  HIGHLIGHT: "highlight",
   NIGHTVISION: "nightvision",
   INVERT: "invert",
   SUNSHINE: "sunshine",
@@ -138,6 +139,16 @@ KiddoPaint.Tools.Toolbox.WholeCanvasEffect = function () {
           var renderedGfx = tool.gfx
             .draw(tool.textureGfx)
             .edgeWork(drawDistance / 10.0)
+            .update();
+          break;
+        case JumbleFx.HIGHLIGHT:
+          // "Highlights everything": brighten the whole picture toward white, like
+          // swiping a highlighter over it. Drag farther = brighter. A touch of contrast
+          // keeps it from washing out to flat grey.
+          var brightness = remap(0, 500, 0, 0.6, clamp(0, 500, drawDistance));
+          var renderedGfx = tool.gfx
+            .draw(tool.textureGfx)
+            .brightnessContrast(brightness, 0.15)
             .update();
           break;
         case JumbleFx.PANCAKE:

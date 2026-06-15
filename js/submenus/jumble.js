@@ -82,24 +82,22 @@ KiddoPaint.Submenu.jumble = [
     name: "Zoom In",
     imgSrc: "img/mixer/tool-submenu-wacky-mixer-171.png",
     handler: function () {
-      // Zoom-blur out from the click point: magnifies/streaks the picture toward you.
-      // Drag distance controls the zoom strength (see JumbleFx.ZOOM in wholefx.js).
+      // Real magnification centered on the click point. Drag farther to zoom in closer
+      // (the new-engine equivalent of the original's "click repeatedly to zoom closer").
       KiddoPaint.Display.canvas.classList = "";
       KiddoPaint.Display.canvas.classList.add("cursor-guy-smile");
-      KiddoPaint.Tools.WholeCanvasEffect.effect = JumbleFx.ZOOM;
-      KiddoPaint.Current.tool = KiddoPaint.Tools.WholeCanvasEffect;
+      KiddoPaint.Current.tool = KiddoPaint.Tools.MixerZoomIn;
     },
   },
   {
     name: "Broken Glass",
     imgSrc: "img/mixer/tool-submenu-wacky-mixer-172.png",
     handler: function () {
-      // Hexagonal pixelate from the click point: shatters the picture into faceted
-      // glass-like cells. Drag distance controls cell size (JumbleFx.HEXAGON).
+      // Shatter the picture into many jagged shards that blow apart from the click
+      // point, with white cracks between them. Drag farther to break it apart more.
       KiddoPaint.Display.canvas.classList = "";
       KiddoPaint.Display.canvas.classList.add("cursor-guy-smile");
-      KiddoPaint.Tools.WholeCanvasEffect.effect = JumbleFx.HEXAGON;
-      KiddoPaint.Current.tool = KiddoPaint.Tools.WholeCanvasEffect;
+      KiddoPaint.Current.tool = KiddoPaint.Tools.MixerBrokenGlass;
     },
   },
   {
@@ -115,11 +113,11 @@ KiddoPaint.Submenu.jumble = [
     name: "The Highlighter",
     imgSrc: "img/mixer/tool-submenu-wacky-mixer-174.png",
     handler: function () {
-      // Crank saturation: makes the picture's colors pop like a highlighter pen.
-      // Drag distance controls how vivid (JumbleFx.SAT in wholefx.js).
+      // "Highlights everything": brightens the whole picture toward white like a
+      // highlighter pen. Drag distance controls how bright (JumbleFx.HIGHLIGHT).
       KiddoPaint.Display.canvas.classList = "";
       KiddoPaint.Display.canvas.classList.add("cursor-guy-smile");
-      KiddoPaint.Tools.WholeCanvasEffect.effect = JumbleFx.SAT;
+      KiddoPaint.Tools.WholeCanvasEffect.effect = JumbleFx.HIGHLIGHT;
       KiddoPaint.Current.tool = KiddoPaint.Tools.WholeCanvasEffect;
     },
   },
