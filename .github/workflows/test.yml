@@ -5,10 +5,27 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Cancel a previous run when the same branch/PR is pushed again, so force-pushes don't
+# leave hour-long zombie runs piling up.
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     name: Full Test Suite
     runs-on: ubuntu-latest
+    # Run inside Playwright's official image, which ships the matching browsers AND their
+    # system deps preinstalled. Root reason: `playwright install chromium` deterministically
+    # hangs at 100% of the download on hosted runners for this version (confirmed 3/3 — the
+    # bytes arrive in ~1s, then the process waits forever). The container has no download
+    # step, so the hang cannot occur. The image tag MUST match the @playwright/test version
+    # in package.json (1.56.1); bump both together.
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-noble
+    # Hard cap: without this, a hung step runs to GitHub's 6-hour default and never reports
+    # logs. With it, a hang fails fast and the step logs become visible.
+    timeout-minutes: 25
 
     steps:
       - name: Checkout code
@@ -18,7 +35,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "24"
-          cache: "yarn"
+
+      # The Playwright image ships Node + corepack but not yarn; corepack activates the
+      # exact yarn pinned in package.json's "packageManager" field.
+      - name: Enable Corepack (yarn)
+        run: corepack enable
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
@@ -26,13 +47,12 @@ jobs:
       - name: Run unit tests with coverage
         run: yarn test:coverage
 
-      - name: Install Playwright (chromium only)
-        run: yarn playwright install --with-deps chromium
-
       - name: Run E2E tests (chromium only)
+        timeout-minutes: 15
         run: yarn exec playwright test -- --project=chromium --workers=1 --reporter=line
 
       - name: Run parity gate (core tools must match committed legacy goldens)
+        timeout-minutes: 10
         run: yarn test:parity
 
       - name: Upload E2E test results
