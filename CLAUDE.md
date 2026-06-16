@@ -4,9 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Quick Reference
 
-- **Live App**: https://justinpearson.github.io/kidpix/
-- **Main Branch**: `main`
-- **Current Branch**: `name-stamps` (as of October 2025)
+- **Live App**: https://eriqueo.github.io/kidpix/ (this fork; auto-deployed from `main`)
+  - Upstream's separate deploy: https://justinpearson.github.io/kidpix/ — does NOT contain this fork's work
+- **Repo**: `eriqueo/kidpix` (`origin`); upstream is `justinpearson/kidpix`
+- **Main Branch**: `main` (work happens on feature branches off `main`)
 - **Tech Stack**: Vanilla JS (~16,300 lines) + Vite 6.4.1 + Vitest + Playwright
 - **No Linting**: ESLint/Prettier removed - AI writes correct code without them
 - **Dev Server**: `yarn dev-app` → http://localhost:5173/
@@ -88,8 +89,9 @@ The project uses GitHub Actions for continuous integration and deployment:
 1. **build-and-deploy-all.yml** (PRIMARY - Active)
    - Triggers: Push to main, manual workflow_dispatch
    - Builds app with Vite (to `dist/` and `dist-gh/`)
-   - Deploys to GitHub Pages at https://justinpearson.github.io/kidpix/
+   - Deploys to GitHub Pages at https://eriqueo.github.io/kidpix/ (deploys `dist-gh/`)
    - Sets base URL to `/kidpix/` for GitHub Pages
+   - Deploy is gated on `yarn typecheck` + `yarn test` passing
 
 2. **release.yml** (Active)
    - Triggers: Tag push matching `v*` pattern
@@ -132,8 +134,8 @@ The release workflow automatically:
 
 ### Deployment URLs
 
-- **Live App**: https://justinpearson.github.io/kidpix/
-- **Releases**: https://github.com/justinpearson/kidpix/releases
+- **Live App**: https://eriqueo.github.io/kidpix/
+- **Releases**: https://github.com/eriqueo/kidpix/releases
 
 ## Development Commands
 
