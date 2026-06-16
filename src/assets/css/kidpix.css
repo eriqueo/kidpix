@@ -296,6 +296,9 @@ body {
 
 #paint {
   position: relative; /* anchor for the absolutely-stacked canvas layers */
+  /* White "paper" behind the (transparent) canvas layers, so clearing/erasing reveals
+     white — not the grey stage mat. The Kid Pix canvas is white. */
+  background: #fff;
   /* The frame/border is never a pointer target; only the canvas layers receive input,
      so a hover near the edge or mid-resize can't be intercepted by #paint. */
   pointer-events: none;
