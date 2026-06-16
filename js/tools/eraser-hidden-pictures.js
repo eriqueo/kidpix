@@ -15,7 +15,8 @@ KiddoPaint.Tools.Toolbox.EraserHiddenPicture = function () {
     "img/hidden-pictures/kp-h-octopus.png",
   ];
   this.isDown = false;
-  this.size = 32;
+  // Bigger reveal window so uncovering the hidden picture isn't so tedious.
+  this.size = 64;
   this.hiddenPattern = null;
 
   this.reset = function () {
