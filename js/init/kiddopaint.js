@@ -286,7 +286,7 @@ KiddoPaint.ToolDescriptions = {
   "Fade Away": "Watch your picture slowly fade away.",
   "Drop Out": "Chunks drop out until nothing's left.",
   "Black Hole": "A black hole swallows everything!",
-  "Count Down": "Counts down to today's date and time.",
+  "Count Down": "Counts down, then reveals a silly surprise message.",
   Sweep: "Spins and sweeps your picture away.",
 };
 
