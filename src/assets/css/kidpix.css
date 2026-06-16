@@ -137,7 +137,9 @@ body {
   flex-wrap: wrap;
   align-content: flex-start;
   justify-content: center;
-  width: 78px;
+  /* Two columns of 64px tools (2*64 + a little slack), so the rail no longer
+     stacks into one tall scrolling column. */
+  width: 132px;
   overflow-y: auto;
   background-color: #ececec;
   border-right: 2px solid #999;
@@ -219,6 +221,9 @@ body {
   width: 64px;
   height: 64px;
   padding: 0px 0px 0px 0px;
+  /* Keep the 64px footprint fixed (border included) so two columns tile cleanly
+     and the red selected-border doesn't reflow the rail. */
+  box-sizing: border-box;
   vertical-align: middle;
   display: inline-block;
   -webkit-border-radius: 0px;
@@ -255,6 +260,11 @@ body {
   width: 48px;
   height: 48px;
   margin: 0px;
+  /* Zero the default button padding and fix the footprint at 48px so two swatch
+     columns fit the color rail (previously the UA padding bloated each to ~64px,
+     forcing a single column). */
+  padding: 0;
+  box-sizing: border-box;
   -webkit-border-radius: 0px;
   -webkit-appearance: none;
   border-radius: 0;
