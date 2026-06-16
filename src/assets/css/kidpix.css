@@ -179,7 +179,10 @@ body {
   flex: 0 0 auto;
   align-self: stretch;
   float: none;
-  width: 108px;
+  /* Wide enough for two 48px swatch columns *plus* the vertical scrollbar (~17px):
+     2*48 + 17 + 2px border ≈ 115, rounded up. Without the extra, the scrollbar ate
+     into the content and only one column fit. */
+  width: 124px;
   overflow-y: auto;
   background-color: #ececec;
   border-left: 2px solid #999;

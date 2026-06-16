@@ -136,55 +136,80 @@ KiddoPaint.Tools.Toolbox.WholeCanvasEffect = function () {
             .update();
           break;
         case JumbleFx.EDGE:
-          // Floor the radius: edgeWork(0) — what a pure click (drawDistance 0)
-          // produced — returns a flat grey frame that wipes the picture. The original
-          // Outliner outlines on a click, so give a click a real radius and let
-          // dragging thicken the outlines from there.
-          var renderedGfx = tool.gfx
+          // Outline every line but KEEP the picture's color. edgeWork renders a 50%-grey
+          // field with dark/light edge lines; 50% grey is neutral under the 'overlay'
+          // blend, so compositing the edges over the original embosses just the outlines
+          // and leaves flat color areas as-is. (radius floored so a plain click — which
+          // is drawDistance 0 — still produces real outlines instead of a grey wipe.)
+          var edges = tool.gfx
             .draw(tool.textureGfx)
             .edgeWork(Math.max(2, drawDistance / 10.0))
             .update();
+          var ec = document.createElement("canvas");
+          ec.width = KiddoPaint.Display.main_canvas.width;
+          ec.height = KiddoPaint.Display.main_canvas.height;
+          var ectx = ec.getContext("2d");
+          ectx.drawImage(
+            KiddoPaint.Display.imageTypeToCanvas(tool.mainImageData, false),
+            0,
+            0,
+          );
+          ectx.globalCompositeOperation = "overlay";
+          ectx.drawImage(edges, 0, 0);
+          var renderedGfx = ec;
           break;
         case JumbleFx.HIGHLIGHT:
-          // "Highlights everything": brighten the whole picture toward white, like
-          // swiping a highlighter over it. Drag farther = brighter. A touch of contrast
-          // keeps it from washing out to flat grey.
-          var brightness = remap(0, 500, 0, 0.6, clamp(0, 500, drawDistance));
+          // "Highlights everything": make the colors pop like a highlighter — a gentle
+          // brightness/contrast lift plus a saturation boost that grows with the drag,
+          // instead of washing the whole picture out to white.
+          var sat = remap(0, 500, 0, 0.9, clamp(0, 500, drawDistance));
           var renderedGfx = tool.gfx
             .draw(tool.textureGfx)
-            .brightnessContrast(brightness, 0.15)
+            .brightnessContrast(0.12, 0.12)
+            .hueSaturation(0, sat)
             .update();
           break;
         case JumbleFx.PANCAKE:
-          var renderedGfx = tool.gfx
+          // A real "stack of pancakes" that's visible on ANY background. The old version
+          // drew full-canvas copies offset in the drag direction — on a full-bleed
+          // picture those copies' edges land off-screen, so nothing showed unless the
+          // background was white/erased. Instead bake a pile: the full picture on the
+          // bottom, then progressively smaller copies shifted toward the drag direction,
+          // each with a drop shadow so the layers separate against any colors. Drag
+          // farther = taller stack.
+          var baseImg = tool.gfx
             .draw(tool.textureGfx)
             .brightnessContrast(0, 0)
             .update();
-          // Build a visible "stack of pancakes": several copies of the picture offset
-          // and receding in the drag direction, with the crisp original drawn on top
-          // by the shared drawImage below. The upstream values (2 copies, 16px spacing,
-          // alpha fading to 0) made the stack peek only a few faint pixels out from
-          // behind that top copy, so on a short drag / large canvas it looked like
-          // nothing happened. Use more copies, wider spacing, and a floored opacity so
-          // the stack actually reads as a stack.
-          var howManyPancakes = 3 + drawDistance / 48;
-          var increment = KiddoPaint.Current.modifiedAlt ? 10 : 24;
-          var furthestAway = howManyPancakes * increment;
+          var pw = KiddoPaint.Display.main_canvas.width;
+          var ph = KiddoPaint.Display.main_canvas.height;
+          var pc = document.createElement("canvas");
+          pc.width = pw;
+          pc.height = ph;
+          var pctx = pc.getContext("2d");
+          pctx.imageSmoothingEnabled = false;
+          pctx.drawImage(baseImg, 0, 0); // bottom pancake = the whole picture
 
-          var deltax = ev._x - tool.initialClick._x;
-          var deltay = ev._y - tool.initialClick._y;
-
-          for (var i = 1; i < howManyPancakes; i++) {
-            // Nearer copies are more opaque; floor at 0.35 so far copies stay visible.
-            KiddoPaint.Display.context.globalAlpha =
-              0.35 + 0.65 * (i / howManyPancakes);
-            KiddoPaint.Display.context.drawImage(
-              renderedGfx,
-              (furthestAway - i * increment) * Math.sign(deltax),
-              (furthestAway - i * increment) * Math.sign(deltay),
-            );
+          var dirx = Math.sign(ev._x - tool.initialClick._x) || 1;
+          var diry = Math.sign(ev._y - tool.initialClick._y) || 1;
+          var layers = Math.min(8, 2 + Math.floor(drawDistance / 60));
+          var step = KiddoPaint.Current.modifiedAlt ? 12 : 28;
+          for (var i = 1; i <= layers; i++) {
+            var scale = 1 - i * 0.1; // each pancake a little smaller
+            if (scale <= 0.15) break;
+            var lw = pw * scale;
+            var lh = ph * scale;
+            var lx = (pw - lw) / 2 + i * step * dirx;
+            var ly = (ph - lh) / 2 + i * step * diry;
+            pctx.shadowColor = "rgba(0,0,0,0.5)";
+            pctx.shadowBlur = 6;
+            pctx.shadowOffsetX = 2;
+            pctx.shadowOffsetY = 2;
+            pctx.drawImage(baseImg, lx, ly, lw, lh);
           }
-          KiddoPaint.Display.context.globalAlpha = 1;
+          pctx.shadowBlur = 0;
+          pctx.shadowColor = "transparent";
+          var renderedGfx = pc;
           break;
         case JumbleFx.PIXELATE:
           var renderedGfx = tool.gfx
