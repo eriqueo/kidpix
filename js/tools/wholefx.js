@@ -170,13 +170,10 @@ KiddoPaint.Tools.Toolbox.WholeCanvasEffect = function () {
             .update();
           break;
         case JumbleFx.PANCAKE:
-          // A real "stack of pancakes" that's visible on ANY background. The old version
-          // drew full-canvas copies offset in the drag direction — on a full-bleed
-          // picture those copies' edges land off-screen, so nothing showed unless the
-          // background was white/erased. Instead bake a pile: the full picture on the
-          // bottom, then progressively smaller copies shifted toward the drag direction,
-          // each with a drop shadow so the layers separate against any colors. Drag
-          // farther = taller stack.
+          // Localized "stack of pancakes": leave the picture intact and pile up shrinking,
+          // shadowed copies of a SMALL region around where you clicked. Stacking the whole
+          // canvas was too broad/jarring; this keeps the effect but contains it. Drag
+          // farther = taller pile, shifted toward the drag direction.
           var baseImg = tool.gfx
             .draw(tool.textureGfx)
             .brightnessContrast(0, 0)
@@ -188,24 +185,29 @@ KiddoPaint.Tools.Toolbox.WholeCanvasEffect = function () {
           pc.height = ph;
           var pctx = pc.getContext("2d");
           pctx.imageSmoothingEnabled = false;
-          pctx.drawImage(baseImg, 0, 0); // bottom pancake = the whole picture
+          pctx.drawImage(baseImg, 0, 0); // picture stays intact underneath
+
+          // The chunk we stack: a square ~a third of the short side, around the click.
+          var region = Math.round(Math.min(pw, ph) * 0.33);
+          var rx = clamp(0, pw - region, Math.round(tool.initialClick._x - region / 2));
+          var ry = clamp(0, ph - region, Math.round(tool.initialClick._y - region / 2));
 
           var dirx = Math.sign(ev._x - tool.initialClick._x) || 1;
           var diry = Math.sign(ev._y - tool.initialClick._y) || 1;
-          var layers = Math.min(8, 2 + Math.floor(drawDistance / 60));
-          var step = KiddoPaint.Current.modifiedAlt ? 12 : 28;
+          var layers = Math.min(7, 2 + Math.floor(drawDistance / 60));
+          var step = KiddoPaint.Current.modifiedAlt ? 8 : 18;
           for (var i = 1; i <= layers; i++) {
             var scale = 1 - i * 0.1; // each pancake a little smaller
-            if (scale <= 0.15) break;
-            var lw = pw * scale;
-            var lh = ph * scale;
-            var lx = (pw - lw) / 2 + i * step * dirx;
-            var ly = (ph - lh) / 2 + i * step * diry;
+            if (scale <= 0.2) break;
+            var dw = region * scale;
+            var dh = region * scale;
+            var dx = rx + i * step * dirx;
+            var dy = ry + i * step * diry;
             pctx.shadowColor = "rgba(0,0,0,0.5)";
             pctx.shadowBlur = 6;
             pctx.shadowOffsetX = 2;
             pctx.shadowOffsetY = 2;
-            pctx.drawImage(baseImg, lx, ly, lw, lh);
+            pctx.drawImage(baseImg, rx, ry, region, region, dx, dy, dw, dh);
           }
           pctx.shadowBlur = 0;
           pctx.shadowColor = "transparent";
