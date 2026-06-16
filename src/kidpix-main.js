@@ -35,6 +35,8 @@ import "../js/tools/oval.js";
 import "../js/tools/composite.js";
 import "../js/tools/contours.js";
 import "../js/tools/cut.js";
+import "../js/tools/eraser-black-hole.js";
+import "../js/tools/eraser-count-down.js";
 import "../js/tools/eraser-doorbell.js";
 import "../js/tools/eraser-fade-away.js";
 import "../js/tools/eraser-hidden-pictures.js";
