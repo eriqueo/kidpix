@@ -136,9 +136,13 @@ KiddoPaint.Tools.Toolbox.WholeCanvasEffect = function () {
             .update();
           break;
         case JumbleFx.EDGE:
+          // Floor the radius: edgeWork(0) — what a pure click (drawDistance 0)
+          // produced — returns a flat grey frame that wipes the picture. The original
+          // Outliner outlines on a click, so give a click a real radius and let
+          // dragging thicken the outlines from there.
           var renderedGfx = tool.gfx
             .draw(tool.textureGfx)
-            .edgeWork(drawDistance / 10.0)
+            .edgeWork(Math.max(2, drawDistance / 10.0))
             .update();
           break;
         case JumbleFx.HIGHLIGHT:
