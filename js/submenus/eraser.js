@@ -117,8 +117,7 @@ KiddoPaint.Submenu.eraser = [
     handler: function () {
       KiddoPaint.Display.canvas.classList = "";
       KiddoPaint.Display.canvas.classList.add("cursor-crosshair");
-      KiddoPaint.Current.tool = KiddoPaint.Tools.Eraser;
-      KiddoPaint.Sounds.todo();
+      KiddoPaint.Current.tool = KiddoPaint.Tools.EraserBlackHole;
     },
   },
   {
@@ -127,8 +126,7 @@ KiddoPaint.Submenu.eraser = [
     handler: function () {
       KiddoPaint.Display.canvas.classList = "";
       KiddoPaint.Display.canvas.classList.add("cursor-crosshair");
-      KiddoPaint.Current.tool = KiddoPaint.Tools.Eraser;
-      KiddoPaint.Sounds.todo();
+      KiddoPaint.Current.tool = KiddoPaint.Tools.EraserCountDown;
     },
   },
   /*
