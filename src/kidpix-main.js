@@ -76,6 +76,8 @@ import "../js/tools/mixer-inverter.js";
 import "../js/tools/mixer-pattern.js";
 import "../js/tools/mixer-pip.js";
 import "../js/tools/mixer-shadow-boxes.js";
+import "../js/tools/mixer-snowflakes.js";
+import "../js/tools/mixer-splash.js";
 import "../js/tools/mixer-venetian-blinds.js";
 import "../js/tools/mixer-wallpaper.js";
 import "../js/tools/mixer-wraparound.js";

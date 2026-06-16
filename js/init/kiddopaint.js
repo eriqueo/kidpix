@@ -237,6 +237,8 @@ KiddoPaint.ToolDescriptions = {
   "The Highlighter": "Makes the whole picture brighter and bolder.",
   "Pattern Maker": "Turns your picture into a pattern.",
   "Wrap Around": "Slides your picture; edges wrap around.",
+  "Snow Flakes And Rain Drops": "Drag to scatter snow; hold Option for raindrops.",
+  "Splash!": "Hold down to splash on more paint blobs.",
   Swirl: "Swirls things into a spiral.",
   "Pancake Stack": "Stacks your picture like a pile of pancakes.",
 
