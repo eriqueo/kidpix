@@ -140,13 +140,28 @@ KiddoPaint.Submenu.jumble = [
       KiddoPaint.Current.tool = KiddoPaint.Tools.MixerWrapAround;
     },
   },
-  /*
-{
-    name: 'Snow Flakes And Rain Drops',
-    imgSrc: 'img/mixer/tool-submenu-wacky-mixer-177.png',
-    handler: function() {}
-},
-*/
+  {
+    name: "Snow Flakes And Rain Drops",
+    emoji: "❄️",
+    handler: function () {
+      // Drag to scatter snow over the picture (drag farther = thicker snow). Hold Option
+      // to melt the flakes into blue raindrops. See js/tools/mixer-snowflakes.js.
+      KiddoPaint.Display.canvas.classList = "";
+      KiddoPaint.Display.canvas.classList.add("cursor-guy-smile");
+      KiddoPaint.Current.tool = KiddoPaint.Tools.MixerSnowflakes;
+    },
+  },
+  {
+    name: "Splash!",
+    emoji: "💦",
+    handler: function () {
+      // Hold the mouse button down to splash big multicolor paint blobs onto the picture —
+      // the longer you hold, the more blobs. See js/tools/mixer-splash.js.
+      KiddoPaint.Display.canvas.classList = "";
+      KiddoPaint.Display.canvas.classList.add("cursor-guy-smile");
+      KiddoPaint.Current.tool = KiddoPaint.Tools.MixerSplash;
+    },
+  },
   {
     name: "Swirl",
     emoji: "🍭",
