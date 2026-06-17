@@ -1,3 +1,7 @@
+// Load Small Kids Mode early so its body-class toggle and key blocker are in
+// place before any submenu/tool wiring runs. See js/util/kids-mode.js.
+import "../util/kids-mode.js";
+
 KiddoPaint.Submenu = {};
 
 /**

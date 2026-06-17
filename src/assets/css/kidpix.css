@@ -1261,3 +1261,19 @@ kbd {
   font-style: italic;
   margin-top: 12px !important;
 }
+
+/* ---------------------------------------------------------------------------
+   Small Kids Mode — toggled by adding `kids-mode` to <body>. Hides chrome a
+   four-year-old can wander into (titlebar, tool-options submenu, frame toggle,
+   palette navigation links). Keeps the main toolbar (so the current tool stays
+   visible), the canvas, and Undo/Save reachable.
+   --------------------------------------------------------------------------- */
+body.kids-mode #titlebar,
+body.kids-mode #subtoolbars,
+body.kids-mode #frame-toggle,
+body.kids-mode #palette-nav,
+body.kids-mode #palette-name,
+body.kids-mode #statusbar #statusbar-text,
+body.kids-mode #colorbar .colornav {
+  display: none !important;
+}
