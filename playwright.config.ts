@@ -25,7 +25,21 @@ export default defineConfig({
     // backing size; the tests hover at fixed positions that assume a full-size canvas.
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"], viewport: { width: 1700, height: 1000 } },
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: 1700, height: 1000 },
+        launchOptions: {
+          // Auto-grant + fake the mic so MediaRecorder works in CI without a
+          // physical device or a permission prompt (record-sound.spec.ts).
+          args: [
+            "--mute-audio",
+            "--disable-audio-output",
+            "--autoplay-policy=no-user-gesture-required",
+            "--use-fake-ui-for-media-stream",
+            "--use-fake-device-for-media-stream",
+          ],
+        },
+      },
     },
     {
       name: "firefox",
