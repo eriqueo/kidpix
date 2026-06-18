@@ -1,6 +1,10 @@
 // Kiddo Paint Applications
 // Use global KiddoPaint object initialized in main entry file
 
+// Voice memo: capture/playback. Imported for its side effect of attaching
+// KiddoPaint.SoundRecord to window so init_sound_record_menu() can wire it.
+import "../util/sound-record.js";
+
 window.init_kiddo_paint = function init_kiddo_paint() {
   document.addEventListener(
     "contextmenu",
@@ -110,8 +114,64 @@ window.init_kiddo_paint = function init_kiddo_paint() {
     init_statusbar();
     init_canvas_fit();
     init_frame_toggle();
+    init_sound_record_menu();
   }
 };
+
+// Voice-memo menu: injects Record (toggle) and Play buttons into #mainbar and
+// wires them to KiddoPaint.SoundRecord (js/util/sound-record.js). Record
+// flips its label between "Record" and "Stop" while a clip is being captured;
+// auto-stop at the 15s cap returns the label too.
+function init_sound_record_menu() {
+  var mainbar = document.getElementById("mainbar");
+  if (!mainbar) return;
+  var SR = window.KiddoPaint && window.KiddoPaint.SoundRecord;
+  if (!SR) return;
+
+  function makeBtn(id, label, titleText) {
+    var b = document.createElement("button");
+    b.className = "tool";
+    b.id = id;
+    b.title = titleText;
+    b.textContent = label;
+    b.style.minWidth = "48px";
+    b.style.height = "48px";
+    b.style.fontSize = "12px";
+    return b;
+  }
+
+  var recordBtn = makeBtn("record", "Record", "Record");
+  var playBtn = makeBtn("play", "Play", "Play");
+  mainbar.appendChild(recordBtn);
+  mainbar.appendChild(playBtn);
+
+  function resetRecordLabel() {
+    recordBtn.textContent = "Record";
+    recordBtn.style.borderColor = "";
+  }
+
+  recordBtn.addEventListener("click", function () {
+    if (SR.isRecording()) {
+      SR.stop();
+      return;
+    }
+    recordBtn.textContent = "Stop";
+    recordBtn.style.borderColor = "red";
+    SR.record().then(resetRecordLabel, function (err) {
+      resetRecordLabel();
+      // Friendly hint: only the permission-denied path is worth surfacing.
+      if (err && err.message === "permission-denied") {
+        try {
+          alert("Microphone permission was denied.");
+        } catch (e) {}
+      }
+    });
+  });
+
+  playBtn.addEventListener("click", function () {
+    SR.playLatest();
+  });
+}
 
 // Cycle the decorative canvas frame (Wood is default). The chosen style is a CSS class on
 // #paint and persists across reloads. Changing the frame changes the border width, so we
