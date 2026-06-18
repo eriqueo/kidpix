@@ -5,15 +5,13 @@
 // and in the bundled build. A test injector (setAssetsForTest) is exposed so unit
 // tests don't depend on the bundler.
 
-const isVite =
-  typeof import.meta !== "undefined" &&
-  typeof import.meta.glob === "function";
-
-// Map of name -> URL string (resolved by Vite).
+// Map of name -> URL string (resolved by Vite at build time).
+// `import.meta.glob` is a syntactic marker Vite rewrites; it does not exist at
+// runtime, so we call it unconditionally and guard with try/catch for non-Vite
+// environments (e.g. raw vitest jsdom without a transform).
 let assets = {};
-
-if (isVite) {
-  // eager:true returns { 'path': {default: url} }; we flatten to { name: url }.
+try {
+  // eager:true returns { 'path': url } when import:'default' is set.
   const raw = import.meta.glob("../../src/assets/colorme/*.png", {
     eager: true,
     query: "?url",
@@ -23,6 +21,9 @@ if (isVite) {
     const m = /([^/]+)\.png$/.exec(path);
     if (m) assets[m[1]] = raw[path];
   }
+} catch (_e) {
+  // Non-Vite host (test runner without transform). Tests inject via
+  // _setAssetsForTest, so empty default is fine.
 }
 
 const ColorMe = {
