@@ -1,5 +1,6 @@
 // Kiddo Paint Applications
 // Use global KiddoPaint object initialized in main entry file
+import "./drawme.js";
 
 window.init_kiddo_paint = function init_kiddo_paint() {
   document.addEventListener(
