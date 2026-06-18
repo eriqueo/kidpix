@@ -135,6 +135,9 @@ import "../js/builders/road.js";
 import "../js/stamps/stamp-names-data.js"; // Load stamp names first
 import "../js/stamps/text.js";
 import "../js/stamps/stamps.js";
+import "../js/stamps/editor.js";
+import "../js/stamps/editor-ui.js";
+import "../js/init/edit-stamp.js";
 
 // js/sounds/*
 import "../js/sounds/sounds.js";
