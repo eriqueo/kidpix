@@ -1,6 +1,11 @@
 // Kiddo Paint Applications
 // Use global KiddoPaint object initialized in main entry file
 
+// Pull in the File > Open / Import module (KiddoPaint.FileImport). Lives under
+// js/util/ for testability; we register it here so Vite includes it in the
+// bundle without having to edit src/kidpix-main.js.
+import "../util/file-import.js";
+
 window.init_kiddo_paint = function init_kiddo_paint() {
   document.addEventListener(
     "contextmenu",
@@ -110,6 +115,13 @@ window.init_kiddo_paint = function init_kiddo_paint() {
     init_statusbar();
     init_canvas_fit();
     init_frame_toggle();
+
+    // File > Open / Import: drop-on-canvas, paste-on-document, and a picker
+    // button injected next to Save. Runs after init_tool_bar so the Save
+    // button exists for the insertBefore call.
+    if (KiddoPaint.FileImport && KiddoPaint.FileImport.installListeners) {
+      KiddoPaint.FileImport.installListeners(tmpCanvas);
+    }
   }
 };
 
