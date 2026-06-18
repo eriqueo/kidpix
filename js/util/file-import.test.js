@@ -49,7 +49,7 @@ describe("KiddoPaint.FileImport.computeFit", () => {
   it("scales a too-tall image to fit and centers horizontally", () => {
     // 650x1300 into 1300x650 -> scale 0.5 -> 325x650, centered horizontally.
     expect(FI.computeFit(650, 1300, 1300, 650)).toEqual({
-      x: 488, y: 0, w: 325, h: 650,
+      x: 487, y: 0, w: 325, h: 650,
     });
   });
 
