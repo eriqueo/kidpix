@@ -162,17 +162,19 @@
       ns.FileImport.importImage(f);
     });
 
-    // 3) File-picker button injected next to Save. (We're inside the blast
-    //    radius for js/init, but cannot touch index.html, so we DOM-inject.)
-    var savebtn = document.getElementById("save");
-    if (savebtn && !document.getElementById("file-open")) {
+    // 3) File-picker button: position:fixed in the top-right corner so we
+    //    don't disturb the flex-wrap layout of #mainbar (adding it inside
+    //    mainbar shifts a button to the next row and breaks unrelated
+    //    layout-position tests). Functions exactly like a normal button.
+    if (!document.getElementById("file-open")) {
       var btn = document.createElement("button");
-      btn.className = "tool";
       btn.id = "file-open";
       btn.title = "Open Picture";
       btn.setAttribute("aria-label", "Open Picture");
-      // Plain text label keeps us off the asset path (no toolbar image change).
       btn.textContent = "Open";
+      btn.style.cssText =
+        "position:fixed;top:4px;right:4px;z-index:10001;" +
+        "padding:4px 8px;font-size:12px;cursor:pointer;";
 
       var input = document.createElement("input");
       input.type = "file";
@@ -186,8 +188,8 @@
       });
 
       btn.addEventListener("click", function () { input.click(); });
-      savebtn.parentNode.insertBefore(btn, savebtn.nextSibling);
-      savebtn.parentNode.insertBefore(input, btn.nextSibling);
+      document.body.appendChild(btn);
+      document.body.appendChild(input);
     }
   };
 })();

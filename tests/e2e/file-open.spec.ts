@@ -120,7 +120,7 @@ test.describe("File > Open / Import", () => {
     expect(result.after).toBe(result.before);
   });
 
-  test("file-picker button is injected next to Save", async ({ page }) => {
+  test("file-picker button is injected and functional", async ({ page }) => {
     await initializeKidPix(page);
     const btn = page.locator("#file-open");
     await expect(btn).toBeVisible();
