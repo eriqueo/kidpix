@@ -1,6 +1,9 @@
 // Kiddo Paint Applications
 // Use global KiddoPaint object initialized in main entry file
 
+// Side-effect import: registers the ColorMe toolbar button + picker on DOMContentLoaded.
+import "./colorme-button.js";
+
 window.init_kiddo_paint = function init_kiddo_paint() {
   document.addEventListener(
     "contextmenu",
