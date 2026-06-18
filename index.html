@@ -37,6 +37,10 @@
       window.KiddoPaint.Sprite = {};
     </script>
 
+    <!-- File menu helpers (Save/Print). Loaded before the main entry so that
+         KiddoPaint.FileExport is attached by the time init_kiddo_paint binds buttons
+         (module scripts execute in document order). -->
+    <script type="module" src="/js/util/file-export.js"></script>
     <!-- Bundled KidPix JavaScript modules -->
     <script type="module" src="/src/kidpix-main.js"></script>
   </head>
@@ -48,6 +52,9 @@
         <div id="toolbar">
           <div id="mainbar">
             <button class="tool" id="save" title="Save">
+              <img src="img/toolbar/kp-m_27.png" class="pixelated" />
+            </button>
+            <button class="tool" id="print" title="Print">
               <img src="img/toolbar/kp-m_27.png" class="pixelated" />
             </button>
             <button class="tool" id="pencil" title="Pencil">

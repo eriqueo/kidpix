@@ -203,6 +203,7 @@ function init_canvas_fit() {
 // no entry fall back to just their name.
 KiddoPaint.ToolDescriptions = {
   Save: "Save your picture.",
+  Print: "Print your picture.",
   Pencil: "Draw thin freehand lines.",
   Line: "Drag to draw a straight line.",
   Rectangle: "Drag to draw a rectangle.",
@@ -630,6 +631,21 @@ function init_tool_bar() {
     KiddoPaint.Sounds.mainmenu();
     save_to_file();
   });
+
+  // File menu: Print (window.print, gated by the print stylesheet that hides
+  // everything except #kiddopaint). The button is wired only if present so older
+  // markup keeps working.
+  var printBtn = document.getElementById("print");
+  if (printBtn) {
+    printBtn.addEventListener("mousedown", function () {
+      KiddoPaint.Sounds.mainmenu();
+      if (KiddoPaint.FileExport && KiddoPaint.FileExport.printCanvas) {
+        KiddoPaint.FileExport.printCanvas();
+      } else if (typeof window.print === "function") {
+        window.print();
+      }
+    });
+  }
 
   document.getElementById("pencil").addEventListener("mousedown", function () {
     highlightSelectedTool("pencil");
@@ -1082,15 +1098,18 @@ function mouse_wheel(ev) {
 }
 
 function save_to_file() {
-  // jpp - always crop saved png, and remove its transparency.
+  // Route through KiddoPaint.FileExport when available so Save composites all
+  // five canvas layers (main → bnim → anim → preview → tmp) per the documented
+  // multi-layer system. Falls back to the legacy main-only PNG path if the
+  // FileExport module is missing.
+  if (KiddoPaint.FileExport && KiddoPaint.FileExport.exportPNG) {
+    KiddoPaint.FileExport.exportPNG();
+    return;
+  }
+
+  // Legacy fallback: crop + flatten the main canvas only.
   var canvasToSave = trimAndFlattenCanvas(KiddoPaint.Display.main_canvas);
-  // orig:
-  // var canvasToSave = KiddoPaint.Current.modifiedAlt ? trimAndFlattenCanvas(KiddoPaint.Display.main_canvas) : KiddoPaint.Display.main_canvas;
-
   var image = canvasToSave.toDataURL("image/png");
-
-  // nice format for timestamp in filename
-  // https://chat.openai.com/c/926c6bbf-c626-456e-9832-08e5088ecf2b
   const d = new Date();
   const formattedDate = [
     d.getFullYear(),
@@ -1100,9 +1119,6 @@ function save_to_file() {
     d.getMinutes().toString().padStart(2, "0"),
     d.getSeconds().toString().padStart(2, "0"),
   ].join("-");
-  // old:
-  // const formattedDate = Date.now();
-
   var a = document.createElement("a");
   a.href = image;
   a.download = "kidpix-" + formattedDate + ".png";
