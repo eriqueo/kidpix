@@ -156,6 +156,10 @@ import "../kidpix-manual-fidelity/09-edit-stamp-editor/transforms.js";
 import "../kidpix-manual-fidelity/09-edit-stamp-editor/stamp-overrides.js";
 import "../kidpix-manual-fidelity/09-edit-stamp-editor/editor-modal.js";
 
+// Record Sound / Play Sound feature. Self-contained, feature-flagged
+// (?nosoundrec or localStorage.kiddopaint_soundrec_off=1 disables).
+import "../js/sound-recording/sound-recording.js";
+
 // Data-driven registries (new TS core) layered onto the legacy engine.
 // Must come AFTER sounds.js so KiddoPaint.Sounds.Library exists. See ADR-0001.
 import "./registry-init";
