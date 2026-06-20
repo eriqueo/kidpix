@@ -215,6 +215,7 @@ KiddoPaint.ToolDescriptions = {
   Stamp: "Stamp fun pictures and stickers.",
   Truck: "Drive a truck that builds roads and rails.",
   "Color Picker": "Pick a color from the picture.",
+  ColorMe: "Fill in a coloring-book page with colors.",
   Undo: "Undo your last change.",
   Redo: "Redo what you undid.",
 
@@ -609,6 +610,8 @@ function show_sub_toolbar(subtoolbar) {
 function highlightSelectedTool(selectedToolId) {
   // Clear all tool highlights
   document.getElementById("pencil").style = "";
+  var colormeBtn = document.getElementById("colorme");
+  if (colormeBtn) colormeBtn.style = "";
   document.getElementById("line").style = "";
   document.getElementById("square").style = "";
   document.getElementById("circle").style = "";
@@ -857,6 +860,36 @@ function init_tool_bar() {
         }
       }, 0);
     });
+
+  var colormeButton = document.getElementById("colorme");
+  if (colormeButton) {
+    colormeButton.addEventListener("mousedown", function () {
+      highlightSelectedTool("colorme");
+      KiddoPaint.Sounds.mainmenu();
+      show_generic_submenu("colorme");
+      KiddoPaint.Current.tool = KiddoPaint.Tools.ColorMe;
+      KiddoPaint.Display.canvas.classList = "";
+      KiddoPaint.Display.canvas.classList.add("cursor-bucket");
+      // Auto-load the first page so the user has something to color immediately.
+      if (
+        KiddoPaint.ColorMe &&
+        KiddoPaint.ColorMe.pages &&
+        KiddoPaint.ColorMe.pages.length > 0 &&
+        !KiddoPaint.ColorMe.currentPage
+      ) {
+        KiddoPaint.Tools.ColorMe.loadPage(KiddoPaint.ColorMe.pages[0]);
+      }
+      // Highlight first page in the submenu.
+      setTimeout(function () {
+        var buttons = document
+          .getElementById("genericsubmenu")
+          .getElementsByTagName("button");
+        if (buttons[0]) {
+          buttons[0].style = "border-color:red; border-width: 5px";
+        }
+      }, 0);
+    });
+  }
 
   document.getElementById("undo").addEventListener("mousedown", function () {
     KiddoPaint.Sounds.mainmenu();

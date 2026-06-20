@@ -83,6 +83,7 @@ import "../js/tools/mixer-wallpaper.js";
 import "../js/tools/mixer-wraparound.js";
 import "../js/tools/mixer-zoomin.js";
 import "../js/tools/wholefx.js";
+import "../js/tools/colorme.js";
 
 // js/textures/*
 import "../js/textures/gco.js";
@@ -102,6 +103,7 @@ import "../js/submenus/sprites.js";
 import "../js/submenus/rectangle.js";
 import "../js/submenus/stickers.js";
 import "../js/submenus/truck.js";
+import "../js/submenus/colorme.js";
 
 // js/brushes/*
 import "../js/brushes/bubbles.js";
@@ -142,6 +144,10 @@ import "../js/sounds/sounds.js";
 // Data-driven registries (new TS core) layered onto the legacy engine.
 // Must come AFTER sounds.js so KiddoPaint.Sounds.Library exists. See ADR-0001.
 import "./registry-init";
+
+// ColorMe bridge — exposes the flood-fill primitive + page list on KiddoPaint.ColorMe
+// so the legacy tool/submenu can use them. Must come after KiddoPaint exists.
+import "./colorme-init";
 
 // Core tools via the strangler-fig bridge (opt-in with ?core). After tools load.
 import "./core-tools-init";
