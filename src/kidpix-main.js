@@ -151,6 +151,7 @@ import "./colorme-init";
 
 // Core tools via the strangler-fig bridge (opt-in with ?core). After tools load.
 import "./core-tools-init";
+import "./slideshow/install";
 
 // DrawMe prompt-generator UI hook (kidpix-manual-fidelity/03-drawme-prompt-generator).
 // Mounts a minimal "DrawMe" button into the status bar.
