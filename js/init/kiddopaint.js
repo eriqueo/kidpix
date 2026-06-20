@@ -110,8 +110,27 @@ window.init_kiddo_paint = function init_kiddo_paint() {
     init_statusbar();
     init_canvas_fit();
     init_frame_toggle();
+    init_small_kids_toggle();
   }
 };
+
+// Small Kids Mode toggle in the status bar. Persists via KiddoPaint.Settings;
+// the gating itself is declarative CSS keyed off body.small-kids-mode.
+function init_small_kids_toggle() {
+  var btn = document.getElementById("small-kids-toggle");
+  if (!btn || !KiddoPaint.Settings) return;
+  function render() {
+    btn.textContent =
+      "Kids Mode: " +
+      (KiddoPaint.Settings.isSmallKidsMode() ? "On" : "Off");
+  }
+  KiddoPaint.Settings.applySmallKidsModeToDom();
+  render();
+  KiddoPaint.Settings.onSmallKidsModeChange(render);
+  btn.addEventListener("click", function () {
+    KiddoPaint.Settings.toggleSmallKidsMode();
+  });
+}
 
 // Cycle the decorative canvas frame (Wood is default). The chosen style is a CSS class on
 // #paint and persists across reloads. Changing the frame changes the border width, so we
