@@ -85,7 +85,7 @@ KiddoPaint.Tools.Toolbox.MixerSnowflakes = function () {
     // Light, throttled sound as the snow thickens (avoid per-pixel audio spam).
     if (n > tool.lastShown + tool.MAX_FLAKES / 12) {
       tool.lastShown = n;
-      KiddoPaint.Sounds.bubblepops();
+      KiddoPaint.Sounds.mixersnowflakes();
     }
   };
 

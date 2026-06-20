@@ -62,7 +62,7 @@ KiddoPaint.Tools.Toolbox.MixerSplash = function () {
     KiddoPaint.Display.clearPreview();
     KiddoPaint.Display.previewContext.drawImage(tool.splatCanvas, 0, 0);
 
-    KiddoPaint.Sounds.bubblepops();
+    KiddoPaint.Sounds.mixersplash();
   };
 
   // One irregular paint blob: a fat central splat plus a few satellite droplets, so it

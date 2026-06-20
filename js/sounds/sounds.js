@@ -103,6 +103,24 @@ KiddoPaint.Sounds.Library.mixerframe = [
   new Audio("snd/misc/western-gun-shot-twirl.mp3"),
 ];
 
+// New custom kid-friendly sounds for the new tools (Count Down, Black Hole,
+// Snowflakes, Splash). Stylistic fan-build equivalents — see PR for details.
+KiddoPaint.Sounds.Library.countdowntick = [
+  new Audio("snd/eraser/countdown-tick.mp3"),
+];
+KiddoPaint.Sounds.Library.countdownding = [
+  new Audio("snd/eraser/countdown-ding.mp3"),
+];
+KiddoPaint.Sounds.Library.blackholewhoosh = [
+  new Audio("snd/eraser/blackhole-whoosh.mp3"),
+];
+KiddoPaint.Sounds.Library.mixersnowflakes = [
+  new Audio("snd/mixer/snowflake-sparkle.mp3"),
+];
+KiddoPaint.Sounds.Library.mixersplash = [
+  new Audio("snd/mixer/splash-splat.mp3"),
+];
+
 KiddoPaint.Sounds.Library.unimpl = [new Audio("snd/misc/chord.mp3")];
 KiddoPaint.Sounds.Library.todo = [new Audio("snd/misc/todo.m4a")];
 
@@ -445,4 +463,19 @@ KiddoPaint.Sounds.eraser = function () {
 };
 KiddoPaint.Sounds.eraserfadeb = function () {
   KiddoPaint.Sounds.Library.playSingle("mixerpip");
+};
+KiddoPaint.Sounds.countdowntick = function () {
+  KiddoPaint.Sounds.Library.playSingle("countdowntick");
+};
+KiddoPaint.Sounds.countdownding = function () {
+  KiddoPaint.Sounds.Library.playSingle("countdownding");
+};
+KiddoPaint.Sounds.blackholewhoosh = function () {
+  KiddoPaint.Sounds.Library.playSingle("blackholewhoosh");
+};
+KiddoPaint.Sounds.mixersnowflakes = function () {
+  KiddoPaint.Sounds.Library.playSingle("mixersnowflakes");
+};
+KiddoPaint.Sounds.mixersplash = function () {
+  KiddoPaint.Sounds.Library.playSingle("mixersplash");
 };

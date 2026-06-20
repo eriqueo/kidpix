@@ -85,6 +85,7 @@ KiddoPaint.Tools.Toolbox.EraserCountDown = function () {
         ctx.textBaseline = "middle";
         ctx.font = "bold " + Math.round(h * 0.6) + "px Geneva, sans-serif";
         ctx.fillText(String(n), w / 2, h / 2);
+        KiddoPaint.Sounds.countdowntick();
         n--;
         return;
       }
@@ -93,6 +94,7 @@ KiddoPaint.Tools.Toolbox.EraserCountDown = function () {
       clearInterval(intervalID);
       KiddoPaint.Display.clearPreview();
       KiddoPaint.Display.clearAll();
+      KiddoPaint.Sounds.countdownding();
 
       tool.stampMessage(
         tool.messages.random(),

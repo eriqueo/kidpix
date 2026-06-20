@@ -4,6 +4,9 @@
 // click until it has eaten the whole picture, then the canvas is left clean (white).
 // Same animation shape as the TNT tool (js/tools/tnt.js): drive it with a timer, pause
 // undo while it runs so the whole thing is a single undo step.
+//
+// Sound: a descending whoosh/vacuum-slurp fires at activation — fits the "swallowing"
+// visual better than the generic TNT explosion the tool first shipped with.
 KiddoPaint.Tools.Toolbox.EraserBlackHole = function () {
   var tool = this;
   this.isDown = false;
@@ -24,7 +27,7 @@ KiddoPaint.Tools.Toolbox.EraserBlackHole = function () {
   this.animate = function (ev) {
     KiddoPaint.Display.saveUndo();
     KiddoPaint.Display.pauseUndo();
-    KiddoPaint.Sounds.explosion();
+    KiddoPaint.Sounds.blackholewhoosh();
 
     var cx = ev._x;
     var cy = ev._y;
