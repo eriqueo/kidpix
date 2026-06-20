@@ -139,6 +139,10 @@ import "../js/stamps/stamps.js";
 // js/sounds/*
 import "../js/sounds/sounds.js";
 
+// Record Sound / Play Sound feature. Self-contained, feature-flagged
+// (?nosoundrec or localStorage.kiddopaint_soundrec_off=1 disables).
+import "../js/sound-recording/sound-recording.js";
+
 // Data-driven registries (new TS core) layered onto the legacy engine.
 // Must come AFTER sounds.js so KiddoPaint.Sounds.Library exists. See ADR-0001.
 import "./registry-init";
