@@ -139,6 +139,13 @@ import "../js/stamps/stamps.js";
 // js/sounds/*
 import "../js/sounds/sounds.js";
 
+// kidpix-manual-fidelity/09-edit-stamp-editor
+// Load after stamps.js so the override shim can wrap KiddoPaint.Stamps.stamp.
+import "../kidpix-manual-fidelity/09-edit-stamp-editor/pixel-grid.js";
+import "../kidpix-manual-fidelity/09-edit-stamp-editor/transforms.js";
+import "../kidpix-manual-fidelity/09-edit-stamp-editor/stamp-overrides.js";
+import "../kidpix-manual-fidelity/09-edit-stamp-editor/editor-modal.js";
+
 // Data-driven registries (new TS core) layered onto the legacy engine.
 // Must come AFTER sounds.js so KiddoPaint.Sounds.Library exists. See ADR-0001.
 import "./registry-init";
