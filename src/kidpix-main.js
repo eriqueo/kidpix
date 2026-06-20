@@ -14,6 +14,7 @@ import "../js/util/filters.js";
 import "../js/util/fit-curve.js";
 import "../js/util/glfx.js";
 import "../js/util/html.js";
+import "../js/util/image-import.js";
 import "../js/util/kdtree.js";
 import "../js/util/settings.js";
 import "../js/util/keyboard-help.js";
