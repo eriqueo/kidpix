@@ -145,6 +145,7 @@ import "./registry-init";
 
 // Core tools via the strangler-fig bridge (opt-in with ?core). After tools load.
 import "./core-tools-init";
+import "./slideshow/install";
 
 // Initialize the application after all modules are loaded.
 // With Vite's dev server processing 100+ module imports, DOMContentLoaded
