@@ -483,6 +483,18 @@ function init_listeners(canvas) {
       return;
     }
 
+    // Text tool: speak A-Z / 0-9 aloud as the user types. Runs regardless of
+    // the keyboard-shortcuts-enabled setting because this is text input, not
+    // a shortcut. Skipped during IME composition, with modifier shortcuts,
+    // and when focus is inside an editable field.
+    if (
+      KiddoPaint.Speech &&
+      typeof handle_text_tool_key === "function" &&
+      handle_text_tool_key(e)
+    ) {
+      return;
+    }
+
     // Single-key shortcuts - only work when enabled
     if (!KiddoPaint.Settings.isKeyboardShortcutsEnabled()) {
       return; // Exit early if shortcuts disabled
@@ -1041,7 +1053,76 @@ function init_pencil_subtoolbar() {
   }, 0);
 }
 
+// Returns true when the keystroke was claimed by the text-tool speech
+// pipeline so the caller can short-circuit other shortcut handling.
+function handle_text_tool_key(e) {
+  if (!KiddoPaint.Speech) return false;
+  var textbar = document.getElementById("texttoolbar");
+  if (!textbar || textbar.classList.contains("hidden")) return false;
+  // Skip IME composition.
+  if (e.isComposing || e.keyCode === 229) return false;
+  // Don't intercept modifier shortcuts (Cmd/Ctrl/Alt + letter).
+  if (e.ctrlKey || e.altKey || e.metaKey) return false;
+  // Don't intercept when the user is typing in a real input field.
+  var t = e.target;
+  if (t && t.tagName) {
+    var tag = t.tagName.toLowerCase();
+    if (tag === "input" || tag === "textarea" || t.isContentEditable) {
+      return false;
+    }
+  }
+  var ch = typeof e.key === "string" ? e.key : "";
+  if (!KiddoPaint.Speech.SPEAK_PATTERN.test(ch)) return false;
+  var upper = ch.toUpperCase();
+  KiddoPaint.Tools.Stamp.stamp = upper;
+  // If the matching letter button is currently visible, highlight it so the
+  // UI mirrors keyboard selection. If the typed character isn't on the
+  // current page, leave the existing highlight alone.
+  var buttons = document.querySelectorAll('*[id^="xal"]');
+  var match = null;
+  for (var i = 0; i < buttons.length; i++) {
+    if (buttons[i].firstChild && buttons[i].firstChild.nodeValue === upper) {
+      match = buttons[i];
+      break;
+    }
+  }
+  if (match) {
+    for (var j = 0; j < buttons.length; j++) {
+      var b = buttons[j];
+      if (!b.firstChild) continue;
+      b.style = "display: block;";
+    }
+    match.style = "display: block; border-color:red; border-width: 5px";
+  }
+  KiddoPaint.Speech.speak(upper);
+  // Prevent the key from being treated as a single-key shortcut (e.g. digit
+  // multiplier, 'n' next color) when shortcuts are enabled.
+  e.preventDefault();
+  return true;
+}
+
+function update_speech_mute_button() {
+  var btn = document.getElementById("speechmute");
+  if (!btn || !KiddoPaint.Speech) return;
+  var muted = KiddoPaint.Speech.isMuted();
+  var label = muted ? "Unmute typed-letter speech" : "Mute typed-letter speech";
+  btn.title = label;
+  btn.setAttribute("aria-label", label);
+  btn.setAttribute("aria-pressed", muted ? "true" : "false");
+  var h1 = btn.querySelector("h1");
+  if (h1) h1.textContent = muted ? "🔇" : "🔊";
+}
+
 function init_text_subtoolbar() {
+  var muteBtn = document.getElementById("speechmute");
+  if (muteBtn && KiddoPaint.Speech) {
+    muteBtn.addEventListener("mousedown", function (ev) {
+      ev.preventDefault();
+      KiddoPaint.Speech.toggleMuted();
+      update_speech_mute_button();
+    });
+    update_speech_mute_button();
+  }
   var alphaselect = document.querySelectorAll('*[id^="xal"]');
   for (var i = 0; i < alphaselect.length; i++) {
     var alphaButton = alphaselect[i];

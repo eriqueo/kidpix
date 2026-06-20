@@ -17,6 +17,7 @@ import "../js/util/html.js";
 import "../js/util/image-import.js";
 import "../js/util/kdtree.js";
 import "../js/util/settings.js";
+import "../js/util/speak.js";
 import "../js/util/keyboard-help.js";
 import "../js/util/smoke.js";
 import "../js/util/smooth.js";
