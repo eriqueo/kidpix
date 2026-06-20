@@ -88,10 +88,12 @@ body {
   margin-left: 14px;
 }
 
-/* Frame-style toggle, parked at the right of the status bar. */
-#frame-toggle {
+/* Right-of-statusbar buttons (Print, Project, Frame). Frame stays anchored to the
+   right edge; Print/Project sit just to its left in the order they appear in the DOM. */
+#frame-toggle,
+#print-btn,
+#project-btn {
   position: absolute;
-  right: 14px;
   top: 50%;
   transform: translateY(-50%);
   height: 40px;
@@ -105,10 +107,18 @@ body {
   border-radius: 6px;
   cursor: pointer;
 }
-#frame-toggle:hover {
+#frame-toggle { right: 14px; }
+#project-btn  { right: 130px; }
+#print-btn    { right: 230px; }
+
+#frame-toggle:hover,
+#print-btn:hover,
+#project-btn:hover {
   background-color: #f0f0ff;
 }
-#frame-toggle:active {
+#frame-toggle:active,
+#print-btn:active,
+#project-btn:active {
   background-color: #e0e0ef;
 }
 
@@ -1308,4 +1318,114 @@ kbd {
   color: #666;
   font-style: italic;
   margin-top: 12px !important;
+}
+
+/* ================================================
+   File actions (Project modal + Print)
+   ================================================ */
+
+/* Project modal action buttons — styled to match the Kid Pix-flavored modal header. */
+.project-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 16px 0;
+}
+
+.project-action-btn {
+  display: inline-block;
+  padding: 10px 18px;
+  background: linear-gradient(180deg, #ffd966 0%, #f1a226 100%);
+  border: 3px solid #000;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 1.05em;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.3);
+  color: #000;
+  font-family: inherit;
+  text-align: center;
+  line-height: 1.2;
+  user-select: none;
+}
+
+.project-action-btn:hover {
+  background: linear-gradient(180deg, #ffe28a 0%, #ffb74d 100%);
+}
+
+.project-action-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.3);
+}
+
+.project-load-label {
+  /* Render the <label> like a button. */
+  display: inline-block;
+}
+
+.project-status {
+  margin: 8px 0;
+  font-weight: bold;
+  min-height: 1.2em;
+}
+
+.project-note {
+  margin-top: 16px;
+  color: #555;
+  font-size: 0.95em;
+  font-style: italic;
+}
+
+/* ================================================
+   Print stylesheet
+   ================================================
+   The "printing" class is added to <body> right before window.print() and removed on
+   afterprint, isolating the print rules from any accidental @media print interaction
+   when the user opens the dev tools' print preview. We hide chrome and scale just the
+   canvas to fit a single page; background fills are forced so toolbar-white canvases
+   actually render on paper.
+*/
+@media print {
+  body.printing #toolbar,
+  body.printing #subtoolbars,
+  body.printing #statusbar,
+  body.printing #titlebar,
+  body.printing #project-modal,
+  body.printing #keyboard-shortcuts-popup {
+    display: none !important;
+  }
+  body.printing,
+  body.printing html,
+  body.printing #js-root,
+  body.printing #container,
+  body.printing #hcontainer,
+  body.printing #canvas-stage {
+    background: #fff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+  body.printing #paint {
+    border: none !important;
+    box-shadow: none !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    background: #fff !important;
+    width: auto !important;
+    height: auto !important;
+  }
+  body.printing #kiddopaint {
+    display: block;
+    max-width: 100%;
+    max-height: 100vh;
+    width: auto;
+    height: auto;
+    /* Force background fills (white canvas) to render on paper across browsers. */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  @page {
+    margin: 0.5in;
+  }
 }
