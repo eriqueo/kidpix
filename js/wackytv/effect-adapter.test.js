@@ -24,6 +24,12 @@ globalThis.ImageData = FakeImageData;
 beforeAll(async () => {
   global.KiddoPaint = global.KiddoPaint || {};
   KiddoPaint.Display = KiddoPaint.Display || {};
+  // At runtime KiddoPaint.Display.context is the app's real canvas 2d context;
+  // Dither.bayer uses context.createImageData(image). Stub the one method the
+  // dither paths touch so the test env matches what the live app provides.
+  KiddoPaint.Display.context = KiddoPaint.Display.context || {
+    createImageData: (img) => new FakeImageData(img.width, img.height),
+  };
   // Filters / Dither write themselves onto window at load.
   await import("../util/filters.js");
   await import("../util/dither.js");

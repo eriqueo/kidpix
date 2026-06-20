@@ -165,3 +165,9 @@ class CanvasDither {
 }
 
 var Dither = new CanvasDither();
+// Expose Dither as a global, mirroring `window.Filters` in filters.js. Loaded as
+// an ES module (src/kidpix-main.js `import "../js/util/dither.js"`), so `var Dither`
+// is module-scoped and would otherwise be invisible to other modules that use the
+// bare global (e.g. js/wackytv/effect-adapter.js Dither.floydsteinberg). Without
+// this, Wacky TV's dither effects throw "Dither is not defined" at runtime.
+window.Dither = Dither;
