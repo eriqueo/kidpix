@@ -509,6 +509,9 @@ function init_listeners(canvas) {
     } else if (e.keyCode == 83) {
       // 's' key - save to file
       save_to_file();
+    } else if (e.keyCode == 79) {
+      // 'o' key - open picture
+      if (KiddoPaint.ImageImport) KiddoPaint.ImageImport.triggerFilePicker();
     } else if (e.keyCode > 48 && e.keyCode < 58) {
       // Number keys 1-9 - set multiplier
       KiddoPaint.Current.multiplier = e.keyCode - 48;
@@ -652,6 +655,24 @@ function init_tool_bar() {
     KiddoPaint.Sounds.mainmenu();
     save_to_file();
   });
+
+  var openBtn = document.getElementById("open");
+  if (openBtn) {
+    openBtn.addEventListener("mousedown", function () {
+      KiddoPaint.Sounds.mainmenu();
+      KiddoPaint.ImageImport.triggerFilePicker();
+    });
+  }
+  var openInput = document.getElementById("open-picture-input");
+  if (openInput) {
+    openInput.addEventListener("change", function (ev) {
+      var file = ev.target.files && ev.target.files[0];
+      if (!file) return;
+      KiddoPaint.ImageImport.openFile(file).catch(function (err) {
+        console.warn("Open Picture failed:", err && err.message ? err.message : err);
+      });
+    });
+  }
 
   document.getElementById("pencil").addEventListener("mousedown", function () {
     highlightSelectedTool("pencil");
@@ -1162,30 +1183,32 @@ function save_to_file() {
 }
 
 function image_upload(ev) {
-  var files = ev.dataTransfer.files;
-  if (files.length > 0) {
+  var files = ev.dataTransfer && ev.dataTransfer.files;
+  if (files && files.length > 0) {
     var file = files[0];
-    if (typeof FileReader !== "undefined") {
+    // Alt-drop preserves the legacy placer-tool flow (drag-to-position the
+    // image at native size). Default drop routes through the shared
+    // Open/Import pipeline: decode + letterbox-fit + single undoable composite.
+    if (KiddoPaint.Current.modifiedAlt && typeof FileReader !== "undefined") {
       var reader = new FileReader();
       reader.onload = function (evt) {
         var img = new Image();
         img.onload = function () {
-          if (KiddoPaint.Current.modifiedAlt) {
-            KiddoPaint.Display.context.drawImage(img, 0, 0);
-            KiddoPaint.Display.saveMain();
-          } else {
-            KiddoPaint.Tools.Placer.image = img;
-            KiddoPaint.Tools.Placer.size = {
-              width: img.width,
-              height: img.height,
-            };
-            KiddoPaint.Tools.Placer.prevTool = KiddoPaint.Current.tool;
-            KiddoPaint.Current.tool = KiddoPaint.Tools.Placer;
-          }
+          KiddoPaint.Tools.Placer.image = img;
+          KiddoPaint.Tools.Placer.size = {
+            width: img.width,
+            height: img.height,
+          };
+          KiddoPaint.Tools.Placer.prevTool = KiddoPaint.Current.tool;
+          KiddoPaint.Current.tool = KiddoPaint.Tools.Placer;
         };
         img.src = evt.target.result;
       };
       reader.readAsDataURL(file);
+    } else if (KiddoPaint.ImageImport) {
+      KiddoPaint.ImageImport.openFile(file).catch(function (err) {
+        console.warn("drop import failed:", err && err.message ? err.message : err);
+      });
     }
   }
   if (ev.preventDefault) {
