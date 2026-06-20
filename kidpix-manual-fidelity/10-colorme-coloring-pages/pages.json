@@ -1,0 +1,48 @@
+{
+  "description": "ColorMe coloring-book pages — stylistic-equivalent fan-original line art.",
+  "width": 1300,
+  "height": 650,
+  "lineWeight": 3,
+  "pages": [
+    {
+      "file": "01-cozy-house.png",
+      "title": "Cozy House"
+    },
+    {
+      "file": "02-friendly-fish.png",
+      "title": "Friendly Fish"
+    },
+    {
+      "file": "03-happy-robot.png",
+      "title": "Happy Robot"
+    },
+    {
+      "file": "04-three-flowers.png",
+      "title": "Three Flowers"
+    },
+    {
+      "file": "05-sunny-car.png",
+      "title": "Sunny Car"
+    },
+    {
+      "file": "06-big-butterfly.png",
+      "title": "Big Butterfly"
+    },
+    {
+      "file": "07-little-sailboat.png",
+      "title": "Little Sailboat"
+    },
+    {
+      "file": "08-dino-stomp.png",
+      "title": "Dino Stomp"
+    },
+    {
+      "file": "09-balloon-bunch.png",
+      "title": "Balloon Bunch"
+    },
+    {
+      "file": "10-curly-cat.png",
+      "title": "Curly Cat"
+    }
+  ]
+}
