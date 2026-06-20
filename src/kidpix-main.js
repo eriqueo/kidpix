@@ -152,6 +152,10 @@ import "./colorme-init";
 // Core tools via the strangler-fig bridge (opt-in with ?core). After tools load.
 import "./core-tools-init";
 
+// DrawMe prompt-generator UI hook (kidpix-manual-fidelity/03-drawme-prompt-generator).
+// Mounts a minimal "DrawMe" button into the status bar.
+import "./drawme-init";
+
 // Initialize the application after all modules are loaded.
 // With Vite's dev server processing 100+ module imports, DOMContentLoaded
 // may fire before this module finishes evaluating. Handle both cases.
