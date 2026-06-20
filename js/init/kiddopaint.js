@@ -237,6 +237,7 @@ KiddoPaint.ToolDescriptions = {
   ColorMe: "Fill in a coloring-book page with colors.",
   Undo: "Undo your last change.",
   Redo: "Redo what you undid.",
+  "Wacky TV": "Play a video with live Mixer effects, then snap a frame.",
 
   // --- Submenu option descriptions (shown in the status bar on hover) ---
   // The status bar reads any hovered [title]; submenu buttons set title = option name,
@@ -941,6 +942,18 @@ function init_tool_bar() {
     KiddoPaint.Sounds.oops();
     KiddoPaint.Display.redo();
   });
+
+  var wackyBtn = document.getElementById("wacky-tv");
+  if (wackyBtn) {
+    wackyBtn.addEventListener("mousedown", function () {
+      if (KiddoPaint.Sounds && KiddoPaint.Sounds.mainmenu) {
+        KiddoPaint.Sounds.mainmenu();
+      }
+      if (KiddoPaint.WackyTV && KiddoPaint.WackyTV.open) {
+        KiddoPaint.WackyTV.open();
+      }
+    });
+  }
 
   document.getElementById("alnext").addEventListener("mousedown", function () {
     KiddoPaint.Sounds.submenuoption();
