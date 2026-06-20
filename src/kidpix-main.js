@@ -25,6 +25,7 @@ import "../js/util/utils.js";
 // js/init/* (load after utilities since they depend on them)
 import "../js/init/submenus.js";
 import "../js/init/kiddopaint.js";
+import "../js/init/file-actions.js";
 
 // js/tools/*
 import "../js/tools/animbrush.js";
