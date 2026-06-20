@@ -84,6 +84,11 @@ import "../js/tools/mixer-wraparound.js";
 import "../js/tools/mixer-zoomin.js";
 import "../js/tools/wholefx.js";
 
+// Wacky TV (additive — modal-based, does not register as a Toolbox tool)
+import "../js/wackytv/effect-adapter.js";
+import "../js/wackytv/capture.js";
+import "../js/wackytv/wacky-tv.js";
+
 // js/textures/*
 import "../js/textures/gco.js";
 import "../js/textures/textures.js";
