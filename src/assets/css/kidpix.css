@@ -112,6 +112,54 @@ body {
   background-color: #e0e0ef;
 }
 
+/* Small Kids Mode toggle, sits just to the left of #frame-toggle. Same
+   pill shape so the status bar stays visually consistent. */
+#small-kids-toggle {
+  position: absolute;
+  right: 160px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 40px;
+  padding: 0 16px;
+  font-family: Geneva, Tahoma, sans-serif;
+  font-size: 15px;
+  font-weight: bold;
+  color: #222;
+  background-color: #fff;
+  border: 2px solid #555;
+  border-radius: 6px;
+  cursor: pointer;
+}
+#small-kids-toggle:hover {
+  background-color: #f0f0ff;
+}
+#small-kids-toggle:active {
+  background-color: #e0e0ef;
+}
+body.small-kids-mode #small-kids-toggle {
+  background-color: #ffe9a3;
+  border-color: #c08a00;
+}
+
+/* Small Kids Mode: simplified toolbar slice.
+   Hide power tools when the body class is set. Single declarative rule —
+   toggling the flag off removes every gated effect with zero JS branches. */
+body.small-kids-mode #mainbar #text,
+body.small-kids-mode #mainbar #colorpicker,
+body.small-kids-mode #mainbar #truck,
+body.small-kids-mode #mainbar #save,
+body.small-kids-mode #mainbar #undo,
+body.small-kids-mode #mainbar #redo {
+  display: none;
+}
+
+/* Sub-toolbar opt-in hook: any submenu button can mark itself as
+   advanced by adding the `small-kids-hidden` class; it will only be
+   hidden when Small Kids Mode is on. v1 ships the seam, not the list. */
+body.small-kids-mode .small-kids-hidden {
+  display: none !important;
+}
+
 /* #toolbar wraps #mainbar (tools) + #colorbar (colors) in the HTML. Make it a no-box
    wrapper so its two children become direct columns of #container — that lets colors
    move to the RIGHT via `order`, without relocating the (base64-heavy) color HTML. */
