@@ -19,6 +19,12 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src", "core", "adapters", "js/**/*", "types/**/*"],
-  "exclude": ["src/**/*.test.tsx", "src/**/*.test.ts", "core/**/*.test.ts", "src/test-setup.ts"]
+  "include": ["src", "core", "adapters", "js/**/*", "types/**/*", "kidpix-manual-fidelity/**/*"],
+  "exclude": [
+    "src/**/*.test.tsx",
+    "src/**/*.test.ts",
+    "core/**/*.test.ts",
+    "src/test-setup.ts",
+    "kidpix-manual-fidelity/**/*.test.ts"
+  ]
 }
