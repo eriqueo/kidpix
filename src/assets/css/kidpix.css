@@ -194,7 +194,9 @@ body.small-kids-mode .small-kids-hidden {
   flex-direction: row;
   flex-wrap: wrap;
   align-content: flex-start;
-  justify-content: center;
+  /* flex-start (not center) so a lone trailing tool snaps to the left column
+     instead of floating in the middle — keeps the 2-column grid uniform. */
+  justify-content: flex-start;
   /* Two columns of 64px tools (2*64 + a little slack), so the rail no longer
      stacks into one tall scrolling column. */
   width: 132px;
