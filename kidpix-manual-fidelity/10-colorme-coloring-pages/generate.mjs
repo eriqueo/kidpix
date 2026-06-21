@@ -150,7 +150,8 @@ function pageHouse(buf) {
 
 function pageFish(buf) {
   // Cartoon fish, big eye, tail, bubbles
-  arc(buf, 650, 325, 200, -Math.PI * 0.8, Math.PI * 0.8);
+  // Closed circular body so the paint-bucket can't leak out the (formerly open) arc.
+  circle(buf, 650, 325, 200);
   // Tail
   polygon(buf, [
     [850, 325],
@@ -269,12 +270,14 @@ function pageButterfly(buf) {
   // Antennae
   arc(buf, cx - 30, cy - 150, 40, 0, Math.PI / 2);
   arc(buf, cx + 30, cy - 150, 40, Math.PI / 2, Math.PI);
+  // Wings as closed circles (the old half-circle arcs were open on the straight
+  // edge, so a fill leaked straight out of the wing into the background).
   // Upper wings
-  arc(buf, cx - 180, cy - 80, 180, -Math.PI / 2, Math.PI / 2);
-  arc(buf, cx + 180, cy - 80, 180, Math.PI / 2, (3 * Math.PI) / 2);
+  circle(buf, cx - 150, cy - 70, 120);
+  circle(buf, cx + 150, cy - 70, 120);
   // Lower wings
-  arc(buf, cx - 130, cy + 100, 130, -Math.PI / 2, Math.PI / 2);
-  arc(buf, cx + 130, cy + 100, 130, Math.PI / 2, (3 * Math.PI) / 2);
+  circle(buf, cx - 120, cy + 110, 90);
+  circle(buf, cx + 120, cy + 110, 90);
   // Decorative circles
   circle(buf, cx - 200, cy - 80, 30);
   circle(buf, cx + 200, cy - 80, 30);
