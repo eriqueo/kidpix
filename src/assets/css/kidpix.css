@@ -59,10 +59,10 @@ body {
   height: 76px;
   display: flex;
   align-items: center;
-  justify-content: center; /* center the description text */
   width: 100%;
   box-sizing: border-box;
   padding: 0 16px;
+  gap: 12px;
   background-color: #ececec;
   border-top: 2px solid #999;
   font-family: Geneva, Tahoma, sans-serif;
@@ -71,7 +71,13 @@ body {
   overflow: hidden;
 }
 
+/* Description grows to fill the bar so the action group is pushed flush right;
+   it stays centered within its own slack and ellipsizes rather than shoving
+   the buttons. */
 #statusbar-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: center;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -88,14 +94,17 @@ body {
   margin-left: 14px;
 }
 
-/* Right-of-statusbar buttons (Print, Project, Frame). Frame stays anchored to the
-   right edge; Print/Project sit just to its left in the order they appear in the DOM. */
-#frame-toggle,
-#print-btn,
-#project-btn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
+/* Right-of-statusbar action group (Kids Mode, Print, Project, Frame, plus the
+   JS-mounted DrawMe button). A flex row with gaps — no hardcoded right: offsets,
+   so changing a label (e.g. "Frame: Wood" -> "Frame: Rainbow") never overlaps a
+   neighbor the way the old absolute-positioned magic numbers did. */
+#statusbar-actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#statusbar-actions button {
   height: 40px;
   padding: 0 16px;
   font-family: Geneva, Tahoma, sans-serif;
@@ -106,44 +115,12 @@ body {
   border: 2px solid #555;
   border-radius: 6px;
   cursor: pointer;
+  white-space: nowrap;
 }
-#frame-toggle { right: 14px; }
-#project-btn  { right: 130px; }
-#print-btn    { right: 230px; }
-
-#frame-toggle:hover,
-#print-btn:hover,
-#project-btn:hover {
+#statusbar-actions button:hover {
   background-color: #f0f0ff;
 }
-#frame-toggle:active,
-#print-btn:active,
-#project-btn:active {
-  background-color: #e0e0ef;
-}
-
-/* Small Kids Mode toggle, sits just to the left of #frame-toggle. Same
-   pill shape so the status bar stays visually consistent. */
-#small-kids-toggle {
-  position: absolute;
-  right: 160px;
-  top: 50%;
-  transform: translateY(-50%);
-  height: 40px;
-  padding: 0 16px;
-  font-family: Geneva, Tahoma, sans-serif;
-  font-size: 15px;
-  font-weight: bold;
-  color: #222;
-  background-color: #fff;
-  border: 2px solid #555;
-  border-radius: 6px;
-  cursor: pointer;
-}
-#small-kids-toggle:hover {
-  background-color: #f0f0ff;
-}
-#small-kids-toggle:active {
+#statusbar-actions button:active {
   background-color: #e0e0ef;
 }
 body.small-kids-mode #small-kids-toggle {

@@ -9,7 +9,14 @@
 import { mountDrawMeButton } from "../kidpix-manual-fidelity/03-drawme-prompt-generator/ui-hook";
 
 function mount(): void {
-  mountDrawMeButton();
+  // Prefer the right-aligned status-bar action group so DrawMe lines up with
+  // Print/Project/Frame instead of floating in the centered description slot.
+  const actions = document.getElementById("statusbar-actions");
+  const button = mountDrawMeButton(actions ? { host: actions } : {});
+  // Put DrawMe first in the group (it's a kid-facing action, not a setting).
+  if (button && actions && actions.firstChild) {
+    actions.insertBefore(button, actions.firstChild);
+  }
 }
 
 if (typeof document !== "undefined") {
