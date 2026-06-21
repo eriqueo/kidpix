@@ -19,14 +19,49 @@ interface PageMeta {
   file: string;
   title: string;
   url: string;
+  // True for user-uploaded pages (persisted in localStorage); absent for the
+  // bundled set so we never re-serialize the built-in pages.
+  custom?: boolean;
 }
 
 interface ColorMeNS {
   pages: PageMeta[];
   floodFill: typeof floodFill;
+  // Append a user-uploaded page, persist it, and return it.
+  addCustomPage: (meta: PageMeta) => PageMeta;
   // mutable runtime state set by the tool
   active: boolean;
   currentPage: PageMeta | null;
+}
+
+// localStorage key holding the array of user-uploaded coloring pages.
+const CUSTOM_KEY = "kiddopaint_colorme_custom";
+
+// Read persisted custom pages, tolerating absent/corrupt storage.
+function loadCustomPages(): PageMeta[] {
+  try {
+    const raw =
+      typeof localStorage !== "undefined" ? localStorage.getItem(CUSTOM_KEY) : null;
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter(
+        (p): p is { file?: unknown; title: unknown; url: unknown } =>
+          !!p &&
+          typeof (p as { title?: unknown }).title === "string" &&
+          typeof (p as { url?: unknown }).url === "string",
+      )
+      .map((p) => ({
+        file:
+          typeof p.file === "string" ? p.file : String(p.title),
+        title: String(p.title),
+        url: String(p.url),
+        custom: true,
+      }));
+  } catch {
+    return [];
+  }
 }
 
 // The 10 pages (file, title, url) — mirrors pages.json (the on-disk manifest).
@@ -44,12 +79,37 @@ const pages: PageMeta[] = [
   { file: "10-curly-cat.png", title: "Curly Cat", url: page10 },
 ];
 
+// Persist every custom page currently in the list. Swallows quota/availability
+// errors: the page still lives in memory for the session, just not across reloads.
+function persistCustomPages(): void {
+  try {
+    if (typeof localStorage === "undefined") return;
+    const customs = ns.pages
+      .filter((p) => p.custom)
+      .map((p) => ({ file: p.file, title: p.title, url: p.url }));
+    localStorage.setItem(CUSTOM_KEY, JSON.stringify(customs));
+  } catch {
+    // Storage full or unavailable — keep going with the in-memory page.
+  }
+}
+
 const ns: ColorMeNS = {
   pages,
   floodFill,
+  addCustomPage(meta: PageMeta): PageMeta {
+    const stored: PageMeta = { ...meta, custom: true };
+    ns.pages.push(stored);
+    persistCustomPages();
+    return stored;
+  },
   active: false,
   currentPage: null,
 };
+
+// Merge any previously-uploaded pages so they survive reloads.
+for (const cp of loadCustomPages()) {
+  ns.pages.push(cp);
+}
 
 interface KPWithColorMe {
   ColorMe?: ColorMeNS;
