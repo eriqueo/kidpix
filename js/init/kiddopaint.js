@@ -433,7 +433,13 @@ function init_listeners(canvas) {
     KiddoPaint.Current.tool.mouseup(KiddoPaint.Current.ev);
     KiddoPaint.Display.clearPreview();
     KiddoPaint.Display.clearAnim();
-    KiddoPaint.Display.clearBnim();
+    // bnim is a transient scratch layer for most effects, so it's wiped on
+    // mouse-out — but ColorMe uses it as the *persistent* locked line-art layer.
+    // Wiping it there made the coloring page vanish the moment the pointer left
+    // the canvas (to pick a color, switch tools, etc.). Keep it while coloring.
+    if (KiddoPaint.Current.tool !== KiddoPaint.Tools.ColorMe) {
+      KiddoPaint.Display.clearBnim();
+    }
   });
   canvas.addEventListener("mousewheel", mouse_wheel);
   canvas.addEventListener(
@@ -923,14 +929,33 @@ function init_tool_bar() {
       KiddoPaint.Current.tool = KiddoPaint.Tools.ColorMe;
       KiddoPaint.Display.canvas.classList = "";
       KiddoPaint.Display.canvas.classList.add("cursor-bucket");
-      // Auto-load the first page so the user has something to color immediately.
+      // (Re)load the line art every time ColorMe is activated. bnim can be wiped
+      // while another tool is active, so re-drawing on entry keeps the page
+      // present. Prefer the page in progress, then the one persisted across a
+      // reload, and only fall back to the first page for a fresh start — so we
+      // never silently revert to "Cozy House".
       if (
         KiddoPaint.ColorMe &&
         KiddoPaint.ColorMe.pages &&
-        KiddoPaint.ColorMe.pages.length > 0 &&
-        !KiddoPaint.ColorMe.currentPage
+        KiddoPaint.ColorMe.pages.length > 0
       ) {
-        KiddoPaint.Tools.ColorMe.loadPage(KiddoPaint.ColorMe.pages[0]);
+        var page = KiddoPaint.ColorMe.currentPage;
+        if (!page) {
+          var savedFile = null;
+          try {
+            savedFile = localStorage.getItem("kiddopaint_colorme_current");
+          } catch (e) {}
+          if (savedFile) {
+            for (var i = 0; i < KiddoPaint.ColorMe.pages.length; i++) {
+              if (KiddoPaint.ColorMe.pages[i].file === savedFile) {
+                page = KiddoPaint.ColorMe.pages[i];
+                break;
+              }
+            }
+          }
+        }
+        if (!page) page = KiddoPaint.ColorMe.pages[0];
+        KiddoPaint.Tools.ColorMe.loadPage(page);
       }
       // Highlight first page in the submenu.
       setTimeout(function () {

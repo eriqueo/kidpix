@@ -36,6 +36,12 @@ KiddoPaint.Tools.Toolbox.ColorMe = function () {
       ctx.drawImage(img, dx, dy, dw, dh);
       tool.lineArtData = ctx.getImageData(0, 0, bnim.width, bnim.height);
       KiddoPaint.ColorMe.currentPage = pageMeta;
+      // Remember the page so a reload restores it instead of reverting to the
+      // first bundled page. (Page art lives on bnim, which isn't persisted, so
+      // the page id is the thing we need to carry across sessions.)
+      try {
+        localStorage.setItem("kiddopaint_colorme_current", pageMeta.file);
+      } catch (e) {}
       if (onLoaded) onLoaded();
     };
     img.src = pageMeta.url;
