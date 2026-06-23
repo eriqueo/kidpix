@@ -15,17 +15,59 @@
  * onto KiddoPaint.ColorMe by src/colorme-init.ts before this tool is used.
  */
 KiddoPaint.Tools.Toolbox.ColorMe = function () {
-  // Load a coloring page onto the main canvas (white paper + the page art,
-  // letterbox-centered to preserve aspect). One undoable action, then persist —
-  // mirrors KiddoPaint.ImageImport._placeOnMain so ColorMe pages behave just
-  // like an opened picture.
+  // Session-only per-page working snapshots. Each coloring page remembers the
+  // colored-in canvas while the app stays open, so switching between pages (and
+  // coming back) never loses in-progress work — pages behave like separate
+  // sheets, not one shared canvas. Keyed by the page object itself (a Map), which
+  // is stable for the session and sidesteps filename/title collisions between
+  // uploads. Snapshots are intentionally NOT persisted across reloads; the single
+  // "current drawing" already survives via Display's localStorage save.
+  var working = new Map();
+
+  // Capture whatever is on main right now as the snapshot for `page`.
+  function snapshotPage(page) {
+    var display = KiddoPaint.Display;
+    var snap = document.createElement("canvas");
+    snap.width = display.main_canvas.width;
+    snap.height = display.main_canvas.height;
+    snap.getContext("2d").drawImage(display.main_canvas, 0, 0);
+    working.set(page, snap);
+  }
+
+  // Load a coloring page onto the main canvas. First visit composites the page's
+  // original art (white paper + line art, letterbox-centered); a return visit
+  // restores the page's saved snapshot so its coloring is preserved. Either way
+  // it is a single undoable action that then persists — mirrors
+  // KiddoPaint.ImageImport._placeOnMain so ColorMe pages behave like an opened
+  // picture.
   this.loadPage = function (pageMeta, onLoaded) {
+    var display = KiddoPaint.Display;
+    var cw = display.main_canvas.width;
+    var ch = display.main_canvas.height;
+    var prev = KiddoPaint.ColorMe.currentPage;
+
+    // Preserve the coloring on the page we're leaving before we overwrite main.
+    if (prev && prev !== pageMeta) {
+      snapshotPage(prev);
+    }
+
+    var saved = working.get(pageMeta);
+    if (saved) {
+      // Return visit: restore the in-progress coloring for this page.
+      if (display.saveUndo()) {
+        display.main_context.clearRect(0, 0, cw, ch);
+        display.main_context.drawImage(saved, 0, 0);
+        if (display.clearTmp) display.clearTmp();
+        if (display.saveToLocalStorage) display.saveToLocalStorage();
+      }
+      KiddoPaint.ColorMe.currentPage = pageMeta;
+      if (onLoaded) onLoaded();
+      return;
+    }
+
+    // First visit: composite the original page art.
     var img = new Image();
     img.onload = function () {
-      var display = KiddoPaint.Display;
-      var cw = display.main_canvas.width;
-      var ch = display.main_canvas.height;
-
       // Fit-letterbox onto an opaque white page.
       var scale = Math.min(cw / img.width, ch / img.height);
       var dw = Math.round(img.width * scale);
