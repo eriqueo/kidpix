@@ -169,9 +169,13 @@ window.init_sprites_submenu = function init_sprites_submenu(searchTerm) {
     return;
   }
 
-  // Default view: show current row from current sheet
+  // Default view: show current row from current sheet.
+  // Each spritesheet row has 14 real stamps (cols 0-13); the original Kid Pix
+  // 15th column was a row/page indicator graphic, which this fork replaces with
+  // the explicit prev/next row & stamp-pack buttons below. Rendering it would
+  // show a garbled, clickable non-stamp, so stop at the 14 real columns.
   const sheet = KiddoPaint.Sprite.sheets[KiddoPaint.Sprite.sheetPage];
-  const maxcols = 15;
+  const maxcols = 14;
   const row = KiddoPaint.Sprite.page;
 
   for (let j = 0; j < maxcols; j++) {
