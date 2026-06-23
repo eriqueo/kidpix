@@ -495,12 +495,17 @@
 
   // Hook clearAll so wiping the canvas also drops the attached sound.
   var wrapAttempts = 0;
+  var wrapRetryTimer = null;
   function wrapClearAll() {
+    // This runs from a retry timer that can outlive the page/test environment.
+    // Bail if the global is gone (e.g. jsdom teardown between test runs) so a
+    // late tick can't throw "window is not defined".
+    if (typeof window === "undefined") return;
     // KiddoPaint.Display.clearAll is wired by init_kiddo_paint, which runs from main.js
     // either on DOMContentLoaded or synchronously at the end of import. If it isn't
     // there yet, retry on the next tick so we don't silently miss the hook.
     if (!window.KiddoPaint || !KiddoPaint.Display || !KiddoPaint.Display.clearAll) {
-      if (wrapAttempts++ < 20) setTimeout(wrapClearAll, 50);
+      if (wrapAttempts++ < 20) wrapRetryTimer = setTimeout(wrapClearAll, 50);
       return;
     }
     if (KiddoPaint.Display._soundRecWrapped) return;
@@ -522,6 +527,11 @@
   }
 
   function cleanupAll() {
+    // Cancel a still-pending clearAll-hook retry so it can't fire after unload.
+    if (wrapRetryTimer !== null) {
+      clearTimeout(wrapRetryTimer);
+      wrapRetryTimer = null;
+    }
     state.recorder.cancel();
     state.player.stop();
   }
