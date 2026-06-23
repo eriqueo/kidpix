@@ -1,9 +1,12 @@
 /**
- * ColorMe submenu — one button per coloring-book page, plus an "Upload" tile so
- * kids (or a grown-up) can drop in their own line art to color. Clicking a page
- * loads it into the locked line-art layer (bnimCanvas) and arms the ColorMe
- * paint-bucket. The page list is sourced from KiddoPaint.ColorMe.pages, which
- * src/colorme-init.ts populates at boot (bundled pages + any saved uploads).
+ * ColorMe submenu — one button per coloring-book page, plus three action tiles:
+ * "Upload" (drop in your own line art), "Save my page" (snapshot the current
+ * coloring into the persistent saved-pages store), and "My saved pages" (open
+ * the gallery to reopen a saved page and keep editing). Clicking a page loads it
+ * onto the main canvas and arms the ColorMe paint-bucket. The page list is
+ * sourced from KiddoPaint.ColorMe.pages, which src/colorme-init.ts populates at
+ * boot (bundled pages + any saved uploads); the save/gallery actions go through
+ * KiddoPaint.ColorMe.* (saveCurrentColoring / openGallery).
  */
 (function () {
   // Lazily-created hidden <input type=file> reused for every upload.
@@ -97,12 +100,50 @@
         },
       };
     });
-    // Upload tile last: pick a picture from disk to color.
+    // Upload tile: pick a picture from disk to color.
     entries.push({
       name: "Upload a coloring page…",
       text: "➕",
       handler: function () {
         ensureFileInput().click();
+      },
+    });
+    // Save tile: snapshot the current canvas into the persistent saved-pages
+    // store so this coloring can be reopened later (survives reloads). Updates
+    // the existing entry when the current page was itself reopened from a save.
+    entries.push({
+      name: "Save my page",
+      text: "💾",
+      handler: function () {
+        if (!(KiddoPaint.ColorMe && KiddoPaint.ColorMe.saveCurrentColoring)) {
+          return;
+        }
+        var dataUrl = KiddoPaint.Display.main_canvas.toDataURL("image/png");
+        var current = KiddoPaint.ColorMe.currentPage;
+        var title = (current && current.title) || "My Drawing";
+        var existingId = current && current.savedId;
+        KiddoPaint.ColorMe.saveCurrentColoring(dataUrl, title, existingId).then(
+          function (id) {
+            // Tie the in-progress page to this saved entry so a second Save
+            // overwrites it instead of piling up duplicates.
+            if (KiddoPaint.ColorMe.currentPage) {
+              KiddoPaint.ColorMe.currentPage.savedId = id;
+            }
+            if (KiddoPaint.Sounds && KiddoPaint.Sounds.stamp) {
+              KiddoPaint.Sounds.stamp();
+            }
+          },
+        );
+      },
+    });
+    // Gallery tile: open the "My Saved Pages" route to reopen saved pages.
+    entries.push({
+      name: "My saved pages",
+      text: "📂",
+      handler: function () {
+        if (KiddoPaint.ColorMe && KiddoPaint.ColorMe.openGallery) {
+          KiddoPaint.ColorMe.openGallery();
+        }
       },
     });
     KiddoPaint.Submenu.colorme = entries;

@@ -4,6 +4,13 @@
  * Loaded after the legacy engine so KiddoPaint already exists.
  */
 import { floodFill, type FillColor } from "../core/colorme/flood-fill";
+import {
+  createIndexedDbStore as createSavedStore,
+  createMemoryStore as createSavedMemoryStore,
+  type SavedColoring,
+  type SavedColoringStore,
+} from "./colorme/saved-store";
+import { createColorMeGallery } from "./colorme/gallery";
 import page01 from "../kidpix-manual-fidelity/10-colorme-coloring-pages/01-cozy-house.png";
 import page02 from "../kidpix-manual-fidelity/10-colorme-coloring-pages/02-friendly-fish.png";
 import page03 from "../kidpix-manual-fidelity/10-colorme-coloring-pages/03-happy-robot.png";
@@ -22,6 +29,9 @@ interface PageMeta {
   // True for user-uploaded pages (persisted in localStorage); absent for the
   // bundled set so we never re-serialize the built-in pages.
   custom?: boolean;
+  // Set when the page originated from (or was saved to) the persistent saved
+  // store, so a later Save updates that entry instead of duplicating it.
+  savedId?: string;
 }
 
 interface ColorMeNS {
@@ -32,6 +42,23 @@ interface ColorMeNS {
   // mutable runtime state set by the tool
   active: boolean;
   currentPage: PageMeta | null;
+
+  // --- Persistent saved coloring pages (survive reloads; see saved-store.ts) ---
+  // Snapshot the given full-canvas data URL as a saved page. Pass an existing id
+  // to overwrite that entry (re-saving a page you reopened); omit it to create a
+  // new one. Resolves to the saved page's id. Title defaults to "My Drawing".
+  saveCurrentColoring: (
+    dataUrl: string,
+    title?: string,
+    existingId?: string,
+  ) => Promise<string>;
+  // Synchronous read of the last-loaded cache (for cheap UI reads).
+  getSavedPages: () => SavedColoring[];
+  // Re-read from the store, refresh the cache, and return it.
+  reloadSavedPages: () => Promise<SavedColoring[]>;
+  deleteSavedColoring: (id: string) => Promise<void>;
+  // Open the "My Saved Pages" gallery modal.
+  openGallery: () => void;
 }
 
 // localStorage key holding the array of user-uploaded coloring pages.
@@ -93,6 +120,28 @@ function persistCustomPages(): void {
   }
 }
 
+// Persistent saved-coloring store (IndexedDB in the browser; memory fallback
+// when IDB is unavailable, e.g. tests/private-mode). `savedCache` mirrors the
+// store for cheap synchronous UI reads; it is refreshed on every mutation.
+const savedStore: SavedColoringStore = (() => {
+  try {
+    return createSavedStore();
+  } catch {
+    return createSavedMemoryStore();
+  }
+})();
+let savedCache: SavedColoring[] = [];
+
+// Prefer crypto.randomUUID; fall back to a timestamp+counter id.
+let idSeq = 0;
+function newSavedId(): string {
+  const c = (globalThis as { crypto?: { randomUUID?: () => string } }).crypto;
+  if (c?.randomUUID) return "cm-" + c.randomUUID();
+  return "cm-" + Date.now().toString(36) + "-" + (idSeq++).toString(36);
+}
+
+const gallery = createColorMeGallery();
+
 const ns: ColorMeNS = {
   pages,
   floodFill,
@@ -104,7 +153,39 @@ const ns: ColorMeNS = {
   },
   active: false,
   currentPage: null,
+
+  async saveCurrentColoring(dataUrl, title, existingId) {
+    const id = existingId || newSavedId();
+    await savedStore.put({
+      id,
+      title: title || "My Drawing",
+      dataUrl,
+      createdMs: Date.now(),
+    });
+    await ns.reloadSavedPages();
+    return id;
+  },
+  getSavedPages() {
+    return savedCache;
+  },
+  async reloadSavedPages() {
+    savedCache = await savedStore.list();
+    return savedCache;
+  },
+  async deleteSavedColoring(id) {
+    await savedStore.delete(id);
+    await ns.reloadSavedPages();
+  },
+  openGallery() {
+    void gallery.open();
+  },
 };
+
+// Warm the cache once the store is ready; failures leave an empty gallery.
+void savedStore
+  .init()
+  .then(() => ns.reloadSavedPages())
+  .catch(() => {});
 
 // Merge any previously-uploaded pages so they survive reloads.
 for (const cp of loadCustomPages()) {
