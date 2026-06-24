@@ -1,0 +1,91 @@
+/* Edit Stamp goodie — modal styling */
+
+.edit-stamp-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: sans-serif;
+}
+
+.edit-stamp-content {
+  background: #f0f0f0;
+  border: 4px solid #333;
+  border-radius: 6px;
+  padding: 16px;
+  max-height: 90vh;
+  overflow: auto;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+}
+
+.edit-stamp-header {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.edit-stamp-meta {
+  font-size: 12px;
+  color: #555;
+  margin-bottom: 12px;
+}
+
+.edit-stamp-grid {
+  display: grid;
+  gap: 0;
+  background: #999;
+  border: 2px solid #333;
+  width: max-content;
+  image-rendering: pixelated;
+}
+
+.edit-stamp-cell {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #ddd;
+  background: #fff;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.edit-stamp-cell.on {
+  background: #000;
+}
+
+.edit-stamp-toolrow,
+.edit-stamp-actionrow {
+  display: flex;
+  gap: 6px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.edit-stamp-btn {
+  font-size: 13px;
+  padding: 6px 10px;
+  border: 2px solid #333;
+  background: #fff;
+  cursor: pointer;
+}
+
+.edit-stamp-btn:hover {
+  background: #e0e0e0;
+}
+
+.edit-stamp-save {
+  background: #c9efc9;
+}
+
+.edit-stamp-launch-btn {
+  margin-left: 12px;
+  font-size: 13px;
+  padding: 4px 10px;
+  border: 2px solid #333;
+  background: #ffd;
+  cursor: pointer;
+}
