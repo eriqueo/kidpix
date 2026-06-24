@@ -89,7 +89,6 @@ import "../js/tools/wholefx.js";
 import "../js/tools/colorme.js";
 
 // Wacky Cam (additive — modal-based camera, does not register as a Toolbox tool)
-import "../js/wackytv/effect-adapter.js";
 import "../js/wackytv/capture.js";
 import "../js/wackytv/wacky-tv.js";
 

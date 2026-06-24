@@ -24,8 +24,9 @@ function imageDataToScaledCanvas(imageData, targetW, targetH) {
   scaled.width = targetW;
   scaled.height = targetH;
   var sctx = scaled.getContext("2d");
-  // Keep the chunky, pixelated look — no smoothing.
-  sctx.imageSmoothingEnabled = false;
+  // Smooth scaling so a camera photo stays crisp rather than blocky.
+  sctx.imageSmoothingEnabled = true;
+  sctx.imageSmoothingQuality = "high";
   sctx.drawImage(off, 0, 0, targetW, targetH);
   return scaled;
 }

@@ -1,8 +1,9 @@
-// Wacky Cam — modal UI: live camera → effect adapter → preview → take photo.
+// Wacky Cam — modal UI: live device camera → take a crisp photo onto the canvas.
 //
-// The device camera (getUserMedia) feeds a hidden <video>; the render loop
-// samples it, applies the selected Mixer-style effect, and the capture button
-// freezes the current frame into the main picture so kids can draw on it.
+// The device camera (getUserMedia) feeds a visible <video> shown at its native
+// resolution, so the preview and the captured photo are sharp. "Take photo"
+// grabs the current frame and pastes it into the main picture; from there kids
+// use the existing Mixer tool for wacky whole-picture effects.
 //
 // Lives alongside the legacy tool engine but does not register itself as a
 // Toolbox tool. The toolbar button just opens a modal; pointer events on the
@@ -14,22 +15,10 @@
 window.KiddoPaint = window.KiddoPaint || {};
 KiddoPaint.WackyTV = KiddoPaint.WackyTV || {};
 
-// Capped scratch size for the effect pipeline. Picture aspect-ish, low
-// enough that an O(n) effect runs comfortably inside a 66ms tick on a
-// laptop. See docs/wacky-tv-design.md.
-var SCRATCH_W = 256;
-var SCRATCH_H = 192;
-// Effects re-render at 15fps; the underlying <video> keeps playing at its
-// own framerate, we just sample it less often.
-var TICK_MS = 66;
-
-KiddoPaint.WackyTV.SCRATCH_W = SCRATCH_W;
-KiddoPaint.WackyTV.SCRATCH_H = SCRATCH_H;
-
 // --- Procedural CC0 sample (no-camera fallback) -------------------------
 // Generated on demand from a canvas + captureStream(). Used only when the
 // real camera can't start (desktop with no webcam, blocked permission), so
-// the tool still does *something* and the effects remain visible.
+// the tool still does *something* you can snap.
 function makeSampleStream() {
   var c = document.createElement("canvas");
   c.width = 320;
@@ -62,7 +51,7 @@ function makeSampleStream() {
     // Marquee text
     ctx.fillStyle = "#fff";
     ctx.font = "bold 18px sans-serif";
-    ctx.fillText("WACKY TV ✺ CC0", 16, 220);
+    ctx.fillText("WACKY CAM ✺ CC0", 16, 220);
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
@@ -77,23 +66,14 @@ function makeSampleStream() {
   return null;
 }
 
-// --- Modal construction --------------------------------------------------
+// --- Module state --------------------------------------------------------
 var modalEl = null;
-var rafHandle = null;
-var lastTick = 0;
-var currentEffect = "none";
-var scratchCanvas = null;
-var scratchCtx = null;
-var previewCanvas = null;
-var previewCtx = null;
-var videoEl = null;
+var videoEl = null; // visible live preview, shown at native resolution
 var sampleStream = null; // kept alive across opens
-var lastEffectedImageData = null;
 var cameraStream = null; // live getUserMedia stream (stopped on close)
 var facingMode = "user"; // "user" = selfie, "environment" = rear
 var statusEl = null; // permission / no-camera hint line
 var demoBtn = null; // fallback button, shown only if the camera fails
-var freezeBtn = null; // live/freeze toggle, relabelled on state change
 
 // --- Camera lifecycle ----------------------------------------------------
 function setStatus(msg, isError) {
@@ -115,7 +95,7 @@ function stopCamera() {
   if (videoEl) videoEl.srcObject = null;
 }
 
-// Request the device camera and pipe it into the hidden <video>. We stop any
+// Request the device camera and pipe it into the visible <video>. We stop any
 // existing stream first so a fresh request honours the requested facingMode
 // (soft constraint — falls back gracefully if the device lacks that camera).
 function startCamera(facing) {
@@ -132,14 +112,19 @@ function startCamera(facing) {
   setStatus("Starting camera…", false);
   stopCamera();
   navigator.mediaDevices
-    .getUserMedia({ video: { facingMode: facingMode }, audio: false })
+    .getUserMedia({
+      video: {
+        facingMode: facingMode,
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+      },
+      audio: false,
+    })
     .then(function (stream) {
       cameraStream = stream;
-      videoEl.removeAttribute("src");
       videoEl.srcObject = stream;
       var p = videoEl.play();
       if (p && p.catch) p.catch(function () {});
-      if (freezeBtn) freezeBtn.textContent = "⏸ Freeze";
       if (demoBtn) demoBtn.style.display = "none";
       setStatus("", false);
     })
@@ -161,14 +146,13 @@ function startSample() {
   stopCamera();
   if (!sampleStream) sampleStream = makeSampleStream();
   if (sampleStream) {
-    videoEl.removeAttribute("src");
     videoEl.srcObject = sampleStream;
     videoEl.play().catch(function () {});
-    if (freezeBtn) freezeBtn.textContent = "⏸ Freeze";
     setStatus("Showing the demo picture (no camera).", false);
   }
 }
 
+// --- Modal construction --------------------------------------------------
 function buildModal() {
   var overlay = document.createElement("div");
   overlay.id = "wacky-tv-modal";
@@ -195,31 +179,13 @@ function buildModal() {
   body.className = "modal-body";
   body.style.fontFamily = "sans-serif";
 
-  // Preview canvas
-  previewCanvas = document.createElement("canvas");
-  previewCanvas.width = SCRATCH_W;
-  previewCanvas.height = SCRATCH_H;
-  previewCanvas.className = "pixelated";
-  previewCanvas.style.cssText =
-    "display:block;width:100%;max-width:512px;height:auto;background:#000;border:3px solid #000;margin:0 auto 12px;image-rendering:pixelated;";
-  previewCtx = previewCanvas.getContext("2d");
-  previewCtx.imageSmoothingEnabled = false;
-  body.appendChild(previewCanvas);
-
-  // Hidden scratch canvas for getImageData
-  scratchCanvas = document.createElement("canvas");
-  scratchCanvas.width = SCRATCH_W;
-  scratchCanvas.height = SCRATCH_H;
-  scratchCtx = scratchCanvas.getContext("2d", { willReadFrequently: true });
-  scratchCtx.imageSmoothingEnabled = false;
-
-  // Hidden video element
+  // Live preview = the camera <video> shown crisp at native resolution.
   videoEl = document.createElement("video");
-  videoEl.muted = true; // muted by default per spec
+  videoEl.muted = true; // required (with playsInline) for autoplay on iOS
   videoEl.autoplay = true;
   videoEl.playsInline = true;
-  videoEl.loop = true;
-  videoEl.style.display = "none";
+  videoEl.style.cssText =
+    "display:block;width:100%;max-width:512px;height:auto;background:#000;border:3px solid #000;border-radius:4px;margin:0 auto 12px;";
   body.appendChild(videoEl);
 
   // Status / hint line — camera permission, no-camera, https reminders.
@@ -251,22 +217,6 @@ function buildModal() {
   };
   controls.appendChild(flipBtn);
 
-  // Freeze the live feed to line up a shot, then take the photo.
-  freezeBtn = document.createElement("button");
-  freezeBtn.textContent = "⏸ Freeze";
-  styleBtn(freezeBtn);
-  freezeBtn.onclick = function () {
-    if (!videoEl) return;
-    if (videoEl.paused) {
-      videoEl.play().catch(function () {});
-      freezeBtn.textContent = "⏸ Freeze";
-    } else {
-      videoEl.pause();
-      freezeBtn.textContent = "▶ Live";
-    }
-  };
-  controls.appendChild(freezeBtn);
-
   // Hidden until the camera fails; lets you keep playing with the demo feed.
   demoBtn = document.createElement("button");
   demoBtn.textContent = "▶ Demo";
@@ -277,36 +227,22 @@ function buildModal() {
 
   body.appendChild(controls);
 
-  // Effect selector
-  var effectRow = document.createElement("div");
-  effectRow.style.cssText = "margin-bottom:12px;";
-  var label = document.createElement("label");
-  label.textContent = "Effect: ";
-  label.style.cssText = "font-weight:bold;margin-right:6px;";
-  var select = document.createElement("select");
-  select.style.cssText =
-    "padding:4px 8px;border:2px solid #000;border-radius:4px;background:#fff;";
-  KiddoPaint.WackyTV.EFFECTS.forEach(function (e) {
-    var opt = document.createElement("option");
-    opt.value = e;
-    opt.textContent = e;
-    select.appendChild(opt);
-  });
-  select.onchange = function () {
-    currentEffect = select.value;
-  };
-  effectRow.appendChild(label);
-  effectRow.appendChild(select);
-  body.appendChild(effectRow);
-
   // Capture button
   var captureBtn = document.createElement("button");
   captureBtn.textContent = "📸 Take photo → picture";
   styleBtn(captureBtn);
   captureBtn.style.background = "linear-gradient(180deg,#ffd166,#ffa500)";
   captureBtn.style.fontSize = "1.1em";
+  captureBtn.style.width = "100%";
   captureBtn.onclick = captureFrame;
   body.appendChild(captureBtn);
+
+  // Hint: effects now live in the existing Mixer tool, post-capture.
+  var hint = document.createElement("div");
+  hint.style.cssText =
+    "margin-top:10px;font-size:0.85em;color:#555;text-align:center;";
+  hint.textContent = "Tip: after you snap, use the Mixer tool for wacky effects!";
+  body.appendChild(hint);
 
   content.appendChild(header);
   content.appendChild(body);
@@ -320,42 +256,42 @@ function styleBtn(btn) {
     "padding:6px 14px;border:3px solid #000;border-radius:4px;background:#fff;font-weight:bold;cursor:pointer;font-family:inherit;";
 }
 
-// --- Render loop ---------------------------------------------------------
-function tick(now) {
-  if (!modalEl || modalEl.style.display === "none") return;
-  rafHandle = requestAnimationFrame(tick);
-  if (now - lastTick < TICK_MS) return;
-  lastTick = now;
-
-  // Only draw if the video has frames. readyState >= 2 = HAVE_CURRENT_DATA.
-  if (!videoEl || videoEl.readyState < 2 || videoEl.videoWidth === 0) return;
-
-  try {
-    scratchCtx.drawImage(videoEl, 0, 0, SCRATCH_W, SCRATCH_H);
-    var raw = scratchCtx.getImageData(0, 0, SCRATCH_W, SCRATCH_H);
-    var effected = KiddoPaint.WackyTV.applyEffect(raw, currentEffect);
-    previewCtx.putImageData(effected, 0, 0);
-    lastEffectedImageData = effected;
-  } catch (e) {
-    // CORS / decode glitch — skip this frame rather than killing the loop.
-    console.warn("WackyTV tick skipped:", e && e.message);
-  }
-}
-
+// --- Capture -------------------------------------------------------------
+// Grab the current camera frame at its native resolution and paste it into
+// the main picture, then close so the kid lands back on the canvas.
 function captureFrame() {
-  if (!lastEffectedImageData) return;
-  KiddoPaint.WackyTV.pasteImageDataToMain(lastEffectedImageData);
+  if (!videoEl || videoEl.readyState < 2 || !videoEl.videoWidth) {
+    setStatus("Camera isn't ready yet — give it a second.", true);
+    return;
+  }
+  var w = videoEl.videoWidth;
+  var h = videoEl.videoHeight;
+  var off = document.createElement("canvas");
+  off.width = w;
+  off.height = h;
+  var octx = off.getContext("2d", { willReadFrequently: true });
+  octx.drawImage(videoEl, 0, 0, w, h);
+
+  var frame;
+  try {
+    frame = octx.getImageData(0, 0, w, h);
+  } catch (e) {
+    // Tainted canvas (cross-origin demo source, etc.) — can't read pixels.
+    setStatus("Couldn't read the photo (security).", true);
+    return;
+  }
+
+  KiddoPaint.WackyTV.pasteImageDataToMain(frame);
   if (KiddoPaint.Sounds && typeof KiddoPaint.Sounds.stamp === "function") {
     KiddoPaint.Sounds.stamp();
   }
+  closeModal();
 }
 
 // --- Open / close --------------------------------------------------------
 function openModal() {
   if (!modalEl) modalEl = buildModal();
   modalEl.style.display = "flex";
-  lastTick = 0;
-  rafHandle = requestAnimationFrame(tick);
   // Ask for the camera as soon as the modal opens — this is a photo tool, so
   // the live feed should be there waiting. Permission prompt happens here.
   startCamera(facingMode);
@@ -364,8 +300,6 @@ function openModal() {
 function closeModal() {
   if (!modalEl) return;
   modalEl.style.display = "none";
-  if (rafHandle) cancelAnimationFrame(rafHandle);
-  rafHandle = null;
   if (videoEl) videoEl.pause();
   // Release the camera so the hardware indicator light turns off.
   stopCamera();
