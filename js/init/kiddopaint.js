@@ -237,7 +237,7 @@ KiddoPaint.ToolDescriptions = {
   ColorMe: "Fill in a coloring-book page with colors.",
   Undo: "Undo your last change.",
   Redo: "Redo what you undid.",
-  "Wacky TV": "Play a video with live Mixer effects, then snap a frame.",
+  "Wacky Cam": "Take a photo with the camera (add wacky effects!), then draw on it.",
 
   // --- Submenu option descriptions (shown in the status bar on hover) ---
   // The status bar reads any hovered [title]; submenu buttons set title = option name,

@@ -88,7 +88,7 @@ import "../js/tools/mixer-zoomin.js";
 import "../js/tools/wholefx.js";
 import "../js/tools/colorme.js";
 
-// Wacky TV (additive — modal-based, does not register as a Toolbox tool)
+// Wacky Cam (additive — modal-based camera, does not register as a Toolbox tool)
 import "../js/wackytv/effect-adapter.js";
 import "../js/wackytv/capture.js";
 import "../js/wackytv/wacky-tv.js";

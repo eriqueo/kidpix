@@ -1,8 +1,15 @@
-// Wacky TV — modal UI: video element → effect adapter → preview → capture.
+// Wacky Cam — modal UI: live camera → effect adapter → preview → take photo.
+//
+// The device camera (getUserMedia) feeds a hidden <video>; the render loop
+// samples it, applies the selected Mixer-style effect, and the capture button
+// freezes the current frame into the main picture so kids can draw on it.
 //
 // Lives alongside the legacy tool engine but does not register itself as a
 // Toolbox tool. The toolbar button just opens a modal; pointer events on the
 // main canvas still go to whichever Kid Pix tool was last selected.
+//
+// NOTE: the internal namespace stays KiddoPaint.WackyTV for continuity with
+// the toolbar wiring and tests; only the user-facing tool is now a camera.
 
 window.KiddoPaint = window.KiddoPaint || {};
 KiddoPaint.WackyTV = KiddoPaint.WackyTV || {};
@@ -19,9 +26,10 @@ var TICK_MS = 66;
 KiddoPaint.WackyTV.SCRATCH_W = SCRATCH_W;
 KiddoPaint.WackyTV.SCRATCH_H = SCRATCH_H;
 
-// --- Procedural CC0 sample ----------------------------------------------
-// Generated on demand from a canvas + captureStream(). Two bouncing colour
-// squares so there's enough motion / colour variety to see effects working.
+// --- Procedural CC0 sample (no-camera fallback) -------------------------
+// Generated on demand from a canvas + captureStream(). Used only when the
+// real camera can't start (desktop with no webcam, blocked permission), so
+// the tool still does *something* and the effects remain visible.
 function makeSampleStream() {
   var c = document.createElement("canvas");
   c.width = 320;
@@ -81,6 +89,85 @@ var previewCtx = null;
 var videoEl = null;
 var sampleStream = null; // kept alive across opens
 var lastEffectedImageData = null;
+var cameraStream = null; // live getUserMedia stream (stopped on close)
+var facingMode = "user"; // "user" = selfie, "environment" = rear
+var statusEl = null; // permission / no-camera hint line
+var demoBtn = null; // fallback button, shown only if the camera fails
+var freezeBtn = null; // live/freeze toggle, relabelled on state change
+
+// --- Camera lifecycle ----------------------------------------------------
+function setStatus(msg, isError) {
+  if (!statusEl) return;
+  statusEl.textContent = msg || "";
+  statusEl.style.display = msg ? "block" : "none";
+  statusEl.style.background = isError ? "#ffd6d6" : "#fff3cd";
+}
+
+// Stop all live tracks so the camera indicator light turns off. Safe to call
+// when no stream is open.
+function stopCamera() {
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(function (t) {
+      t.stop();
+    });
+    cameraStream = null;
+  }
+  if (videoEl) videoEl.srcObject = null;
+}
+
+// Request the device camera and pipe it into the hidden <video>. We stop any
+// existing stream first so a fresh request honours the requested facingMode
+// (soft constraint — falls back gracefully if the device lacks that camera).
+function startCamera(facing) {
+  facingMode = facing || facingMode;
+
+  // getUserMedia only exists in a secure context (https or localhost). On a
+  // plain http:// LAN address (e.g. testing on an iPad) it's undefined.
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    setStatus("Camera needs https (or localhost). This page can't open it.", true);
+    if (demoBtn) demoBtn.style.display = "";
+    return;
+  }
+
+  setStatus("Starting camera…", false);
+  stopCamera();
+  navigator.mediaDevices
+    .getUserMedia({ video: { facingMode: facingMode }, audio: false })
+    .then(function (stream) {
+      cameraStream = stream;
+      videoEl.removeAttribute("src");
+      videoEl.srcObject = stream;
+      var p = videoEl.play();
+      if (p && p.catch) p.catch(function () {});
+      if (freezeBtn) freezeBtn.textContent = "⏸ Freeze";
+      if (demoBtn) demoBtn.style.display = "none";
+      setStatus("", false);
+    })
+    .catch(function (err) {
+      var name = err && err.name;
+      if (name === "NotAllowedError" || name === "SecurityError") {
+        setStatus("Camera blocked. Allow it in your browser, then tap Start.", true);
+      } else if (name === "NotFoundError" || name === "OverconstrainedError") {
+        setStatus("No camera found on this device.", true);
+      } else {
+        setStatus("Couldn't start the camera: " + ((err && err.message) || name), true);
+      }
+      if (demoBtn) demoBtn.style.display = "";
+    });
+}
+
+// No-camera fallback: drive the preview from the procedural sample stream.
+function startSample() {
+  stopCamera();
+  if (!sampleStream) sampleStream = makeSampleStream();
+  if (sampleStream) {
+    videoEl.removeAttribute("src");
+    videoEl.srcObject = sampleStream;
+    videoEl.play().catch(function () {});
+    if (freezeBtn) freezeBtn.textContent = "⏸ Freeze";
+    setStatus("Showing the demo picture (no camera).", false);
+  }
+}
 
 function buildModal() {
   var overlay = document.createElement("div");
@@ -95,7 +182,7 @@ function buildModal() {
   var header = document.createElement("div");
   header.className = "modal-header";
   var h2 = document.createElement("h2");
-  h2.textContent = "📺 Wacky TV";
+  h2.textContent = "📷 Wacky Cam";
   var closeBtn = document.createElement("button");
   closeBtn.className = "close-btn";
   closeBtn.setAttribute("aria-label", "Close");
@@ -135,54 +222,58 @@ function buildModal() {
   videoEl.style.display = "none";
   body.appendChild(videoEl);
 
+  // Status / hint line — camera permission, no-camera, https reminders.
+  statusEl = document.createElement("div");
+  statusEl.style.cssText =
+    "display:none;margin:0 0 10px;padding:6px 10px;border:2px solid #000;border-radius:4px;background:#fff3cd;font-weight:bold;text-align:center;";
+  body.appendChild(statusEl);
+
   // Controls row
   var controls = document.createElement("div");
   controls.style.cssText =
     "display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px;";
 
-  var fileBtn = document.createElement("button");
-  fileBtn.textContent = "Load a video…";
-  styleBtn(fileBtn);
-  var fileInput = document.createElement("input");
-  fileInput.type = "file";
-  fileInput.accept = "video/*";
-  fileInput.style.display = "none";
-  fileInput.onchange = function (e) {
-    var f = e.target.files && e.target.files[0];
-    if (f) {
-      var url = URL.createObjectURL(f);
-      videoEl.srcObject = null;
-      videoEl.src = url;
+  // Start / retry the camera.
+  var startBtn = document.createElement("button");
+  startBtn.textContent = "📷 Start camera";
+  styleBtn(startBtn);
+  startBtn.onclick = function () {
+    startCamera(facingMode);
+  };
+  controls.appendChild(startBtn);
+
+  // Flip between selfie ("user") and rear ("environment") cameras.
+  var flipBtn = document.createElement("button");
+  flipBtn.textContent = "🔄 Flip";
+  styleBtn(flipBtn);
+  flipBtn.onclick = function () {
+    startCamera(facingMode === "user" ? "environment" : "user");
+  };
+  controls.appendChild(flipBtn);
+
+  // Freeze the live feed to line up a shot, then take the photo.
+  freezeBtn = document.createElement("button");
+  freezeBtn.textContent = "⏸ Freeze";
+  styleBtn(freezeBtn);
+  freezeBtn.onclick = function () {
+    if (!videoEl) return;
+    if (videoEl.paused) {
       videoEl.play().catch(function () {});
+      freezeBtn.textContent = "⏸ Freeze";
+    } else {
+      videoEl.pause();
+      freezeBtn.textContent = "▶ Live";
     }
   };
-  fileBtn.onclick = function () {
-    fileInput.click();
-  };
-  controls.appendChild(fileBtn);
-  controls.appendChild(fileInput);
+  controls.appendChild(freezeBtn);
 
-  var sampleBtn = document.createElement("button");
-  sampleBtn.textContent = "▶ Sample";
-  styleBtn(sampleBtn);
-  sampleBtn.onclick = function () {
-    if (!sampleStream) sampleStream = makeSampleStream();
-    if (sampleStream) {
-      videoEl.removeAttribute("src");
-      videoEl.srcObject = sampleStream;
-      videoEl.play().catch(function () {});
-    }
-  };
-  controls.appendChild(sampleBtn);
-
-  var playBtn = document.createElement("button");
-  playBtn.textContent = "⏯";
-  styleBtn(playBtn);
-  playBtn.onclick = function () {
-    if (videoEl.paused) videoEl.play().catch(function () {});
-    else videoEl.pause();
-  };
-  controls.appendChild(playBtn);
+  // Hidden until the camera fails; lets you keep playing with the demo feed.
+  demoBtn = document.createElement("button");
+  demoBtn.textContent = "▶ Demo";
+  styleBtn(demoBtn);
+  demoBtn.style.display = "none";
+  demoBtn.onclick = startSample;
+  controls.appendChild(demoBtn);
 
   body.appendChild(controls);
 
@@ -210,7 +301,7 @@ function buildModal() {
 
   // Capture button
   var captureBtn = document.createElement("button");
-  captureBtn.textContent = "📸 Capture frame → picture";
+  captureBtn.textContent = "📸 Take photo → picture";
   styleBtn(captureBtn);
   captureBtn.style.background = "linear-gradient(180deg,#ffd166,#ffa500)";
   captureBtn.style.fontSize = "1.1em";
@@ -265,6 +356,9 @@ function openModal() {
   modalEl.style.display = "flex";
   lastTick = 0;
   rafHandle = requestAnimationFrame(tick);
+  // Ask for the camera as soon as the modal opens — this is a photo tool, so
+  // the live feed should be there waiting. Permission prompt happens here.
+  startCamera(facingMode);
 }
 
 function closeModal() {
@@ -273,6 +367,8 @@ function closeModal() {
   if (rafHandle) cancelAnimationFrame(rafHandle);
   rafHandle = null;
   if (videoEl) videoEl.pause();
+  // Release the camera so the hardware indicator light turns off.
+  stopCamera();
 }
 
 KiddoPaint.WackyTV.open = openModal;
