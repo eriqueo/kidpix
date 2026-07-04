@@ -49,6 +49,9 @@ body {
   align-items: stretch;
   width: 100%;
   height: calc(100vh - 43px - 76px); /* minus title bar (40+3 border) and status bar (76) */
+  /* dvh tracks the *visible* viewport on iOS Safari (100vh includes the area behind the
+     collapsing URL bar, which pushed the status bar off-screen on phones). */
+  height: calc(100dvh - 43px - 76px);
   overflow: hidden;
 }
 
@@ -1406,5 +1409,199 @@ kbd {
   }
   @page {
     margin: 0.5in;
+  }
+}
+
+/* ================================================
+   Responsive layout
+   ================================================
+   The default layout above is the desktop frame (>=1024px): fixed side rails,
+   title bar, tall status bar. Below, two breakpoints reflow that same DOM:
+
+   - Tablet (700-1023px): keep the frame, slim it — single-column rails,
+     shorter chrome — so an iPad still gets a big canvas.
+   - Phone (<700px): the rails become edge drawers (position: fixed, slid
+     off-screen) toggled by two floating buttons that js/init/mobile-drawers.js
+     injects. The canvas takes essentially the whole screen. Title and status
+     bars are hidden.
+
+   fitCanvasToStage() needs no changes for any of this: it already refits the
+   canvas whenever #canvas-stage resizes.
+*/
+
+/* ---------- Tablet: slim the desktop frame ---------- */
+@media (max-width: 1023px) {
+  #titlebar {
+    height: 28px;
+    border-bottom-width: 2px;
+  }
+  .titlebar-text {
+    font-size: 13px;
+    padding: 1px 12px;
+  }
+  #container {
+    /* title (28+2) + status (52) */
+    height: calc(100vh - 30px - 52px);
+    height: calc(100dvh - 30px - 52px);
+  }
+  /* Single-column rails: one 64px tool column, one 48px swatch column. */
+  #mainbar {
+    width: 68px;
+  }
+  #colorbar {
+    width: 60px;
+  }
+  .currentColor {
+    height: 48px;
+  }
+  #canvas-stage {
+    padding: 10px;
+  }
+  #statusbar {
+    height: 52px;
+    padding: 0 8px;
+    gap: 8px;
+  }
+  .status-name {
+    font-size: 16px;
+  }
+  .status-desc {
+    font-size: 13px;
+    margin-left: 8px;
+  }
+  #statusbar-actions button {
+    height: 34px;
+    padding: 0 8px;
+    font-size: 12px;
+  }
+}
+
+/* ---------- Drawer toggle buttons (phone only; injected by mobile-drawers.js) ---------- */
+.drawer-toggle {
+  display: none; /* shown only inside the phone breakpoint below */
+}
+
+/* ---------- Phone: edge drawers, near-fullscreen canvas ----------
+   Matches narrow screens (portrait phones) OR short ones (landscape phones,
+   which are ~850px wide and would otherwise get the tablet frame squeezed
+   into ~390px of height). Must stay in sync with the phoneQuery in
+   js/init/mobile-drawers.js. */
+@media (max-width: 699px), (max-height: 500px) {
+  /* All chrome except the options strip goes away; the canvas owns the screen. */
+  #titlebar,
+  #statusbar {
+    display: none;
+  }
+  #container {
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  /* The rails become fixed drawers, slid fully off-screen until a body class
+     (set by mobile-drawers.js) slides them in over the canvas. Because they're
+     position: fixed they leave the flex flow, so the canvas stage gets the full
+     width whether they're open or not. */
+  #mainbar,
+  #colorbar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    height: 100dvh;
+    z-index: 40;
+    transition: transform 0.2s ease-out;
+    padding-top: calc(2px + env(safe-area-inset-top));
+    box-shadow: 0 0 18px rgba(0, 0, 0, 0.45);
+  }
+  #mainbar {
+    width: 132px; /* two 64px tool columns, same as desktop */
+    left: 0;
+    transform: translateX(calc(-100% - 20px)); /* +20px hides the shadow too */
+  }
+  #colorbar {
+    width: 104px; /* two 48px swatch columns; touch scrollbars overlay */
+    right: 0;
+    transform: translateX(calc(100% + 20px));
+  }
+  body.tools-drawer-open #mainbar {
+    transform: translateX(0);
+  }
+  body.colors-drawer-open #colorbar {
+    transform: translateX(0);
+  }
+
+  /* Bottom corners: thumb-reachable, and they float over the stage mat instead
+     of covering the options strip at the top. */
+  .drawer-toggle {
+    position: fixed;
+    bottom: calc(10px + env(safe-area-inset-bottom));
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    font-size: 26px;
+    line-height: 1;
+    padding: 0;
+    background-color: #fff;
+    border: 2px solid #333;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+    transition: left 0.2s ease-out, right 0.2s ease-out;
+  }
+  #tools-drawer-toggle {
+    left: 8px;
+  }
+  #colors-drawer-toggle {
+    right: 8px;
+  }
+  /* When a drawer is open, its toggle rides just outside the drawer edge so it
+     stays visible (as a close button) instead of being covered. */
+  body.tools-drawer-open #tools-drawer-toggle {
+    left: 140px;
+  }
+  body.colors-drawer-open #colors-drawer-toggle {
+    right: 112px;
+  }
+
+  /* Options strip: one compact horizontally-scrollable row. Note the active
+     submenu div (#genericsubmenu) also carries .subtoolbar — submenus.js swaps
+     its class from "hidden" — so this nowrap hits both the outer #subtoolbars
+     row and the inner flex container that actually holds the buttons. */
+  .subtoolbar {
+    min-height: 54px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+  .subtoolbar .tool {
+    flex: 0 0 auto;
+    width: 48px;
+    height: 48px;
+  }
+  /* Stamp buttons keep their name label but shrink to strip height. */
+  .subtoolbar .stamp-button {
+    flex: 0 0 auto;
+    width: 48px;
+    height: 54px;
+  }
+  .subtoolbar .tool img,
+  .subtoolbar .toolImg {
+    width: 40px;
+    height: 40px;
+  }
+
+  /* Slim the decorative frame so it doesn't eat canvas space. Overrides the
+     .frame-* classes at equal specificity by coming later in the sheet. */
+  #paint,
+  #paint.frame-wood,
+  #paint.frame-rainbow,
+  #paint.frame-gold,
+  #paint.frame-classic {
+    border-width: 6px;
+  }
+  #canvas-stage {
+    padding: 8px;
   }
 }
