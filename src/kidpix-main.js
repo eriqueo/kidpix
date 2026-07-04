@@ -28,6 +28,7 @@ import "../js/util/utils.js";
 import "../js/init/submenus.js";
 import "../js/init/kiddopaint.js";
 import "../js/init/file-actions.js";
+import "../js/init/mobile-drawers.js";
 
 // js/tools/*
 import "../js/tools/animbrush.js";
