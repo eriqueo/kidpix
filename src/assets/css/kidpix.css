@@ -274,8 +274,10 @@ body.small-kids-mode .small-kids-hidden {
   border-radius: 0;
 }
 
-/* Tool icons fill more of the larger button. Overrides per-<img> inline width/height. */
-.tool img {
+/* Tool icons fill more of the larger button. Overrides per-<img> inline width/height.
+   .sprite imgs are excluded: they're spritesheet crops whose 32px window (object-fit:
+   none in .sprite) must stay exact or neighboring stamps bleed into the button. */
+.tool img:not(.sprite) {
   width: 52px;
   height: 52px;
 }
@@ -1586,7 +1588,7 @@ kbd {
     width: 48px;
     height: 54px;
   }
-  .subtoolbar .tool img,
+  .subtoolbar .tool img:not(.sprite),
   .subtoolbar .toolImg {
     width: 40px;
     height: 40px;
