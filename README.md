@@ -69,9 +69,18 @@ The following sections decribe:
 
 Just browse to **<https://eriqueo.github.io/kidpix/>** !!
 
+## How to Play Offline by Installing the App (iPad, Android, desktop)
+
+Kid Pix is an installable PWA: open <https://eriqueo.github.io/kidpix/> once while
+online, add it to the home screen, and it runs with no network from then on — every
+tool, picture and sound is cached on that first visit. Install steps, update behaviour
+and limitations (first visit needs HTTPS; browsers can evict storage) are in
+[docs/pwa.md](docs/pwa.md).
+
 ## How to Play Offline via a Pre-packaged Release
 
-(Good for laptops that are too old to be let onto the Internet.)
+(Good for laptops that are too old to be let onto the Internet. The offline worker
+also registers here because `localhost` counts as secure; see [docs/pwa.md](docs/pwa.md).)
 
 1. From an internet-enabled computer, to go the Releases page <https://github.com/eriqueo/kidpix/releases> and download the latest release's tarball, eg, `kidpix-v1.0.0.tar.gz`.
 

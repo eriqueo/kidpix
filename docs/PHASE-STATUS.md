@@ -21,6 +21,7 @@ fit/DPR (responsive). **Awaiting Eric's review before WS1 (responsive canvas) / 
 | 3 | **Core pencil through the hexagon** + `LegacyToolAdapter` bridge; `?core` opt-in | `core/tools/pencil.test.ts` + `tests/parity/pencil-core.parity.spec.ts` |
 | 4 | **Core line** (proves pattern generalizes; evolved ports: `clear()`, `modified`) | `core/tools/line.test.ts` + line parity specs |
 | 6 | **Installable offline PWA** (`vite-plugin-pwa`); iOS meta; pinch-zoom locked | `yarn build` → `dist-gh/{sw.js,manifest.webmanifest}` |
+| WS2 | **Fully offline after one visit** (2026-08-29): every deploy-owned file precached (400 entries, 3.6 MiB), Safari Range-aware audio, wait-to-activate updates, build checker, offline test against the built artifacts — see [pwa.md](./pwa.md) | `yarn build` (runs `check:pwa`), `yarn test:pwa` |
 
 State: **89 unit tests pass, `tsc` clean, build clean.** Default app behavior unchanged
 (legacy engine still drives everything; core tools are opt-in via `?core`).
@@ -66,4 +67,10 @@ State: **89 unit tests pass, `tsc` clean, build clean.** Default app behavior un
    verified on this box, and it's your Nix domain). Recommended approach: nixpkgs
    `playwright-driver.browsers` + `PLAYWRIGHT_BROWSERS_PATH`, pinning `@playwright/test` to the
    nixpkgs driver version. Would fix local E2E + parity. CI covers the need meanwhile.
-- Proper purpose-`maskable` artwork (current 192/512 are upscaled from the 180 icon).
+- ~~Proper purpose-`maskable` artwork~~ — done 2026-08-29 (`pwa-maskable-512.png`, art in the safe zone).
+- **Playwright on NixOS** — resolved without a flake: set `KIDPIX_CHROMIUM=$(command -v chromium)`
+   and every Playwright config uses the system binary (`yarn test:e2e --project=chromium`,
+   `yarn test:parity`, `yarn test:pwa`). Firefox/WebKit still need CI.
+- **iPad smoke test after WS2** — install from Pages, enable Airplane Mode, confirm sounds play
+   (Range path) and Hidden Pictures / stamps load; then close the app fully after a deploy and
+   confirm the update lands on relaunch.
