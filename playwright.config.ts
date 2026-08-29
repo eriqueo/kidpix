@@ -12,6 +12,9 @@ export default defineConfig({
     trace: "on-first-retry",
     // Disable audio to prevent sounds during testing
     launchOptions: {
+      // Playwright's bundled Chromium cannot launch on NixOS (missing system
+      // libs); point KIDPIX_CHROMIUM at a system binary to run E2E locally.
+      executablePath: process.env.KIDPIX_CHROMIUM || undefined,
       args: [
         "--mute-audio",
         "--disable-audio-output",

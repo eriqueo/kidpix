@@ -55,6 +55,15 @@ jobs:
         timeout-minutes: 10
         run: yarn test:parity
 
+      # Offline PWA contract against the REAL production artifacts (dist/ and
+      # dist-gh/): `yarn build` also runs scripts/check-pwa-build.mjs.
+      - name: Build production artifacts (+ PWA build check)
+        run: yarn build
+
+      - name: Run offline PWA tests against the built artifacts
+        timeout-minutes: 10
+        run: yarn test:pwa
+
       - name: Upload E2E test results
         uses: actions/upload-artifact@v4
         if: failure()
