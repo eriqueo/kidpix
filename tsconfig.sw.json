@@ -1,0 +1,20 @@
+{
+  // Service-worker source (pwa/sw.ts) is typechecked separately from the app:
+  // it needs the WebWorker lib, and it is deployment plumbing rather than
+  // application code (see pwa/sw.ts header).
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020", "WebWorker"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "types": []
+  },
+  "include": ["pwa/sw.ts"]
+}

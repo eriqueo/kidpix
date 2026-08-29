@@ -2,7 +2,8 @@
 
 - Build: `npm run build` (vite; dual outputs: dist/ root-based, dist-gh/
   for GitHub Pages at /kidpix/). Dev: `yarn dev-app` → :5173.
-- Gate: `npm run typecheck && npm test`
+- Gate: `npm run typecheck && npm test`. `yarn build` ends with the offline-PWA
+  checker; `yarn test:pwa` exercises the built artifacts offline (docs/pwa.md).
 - Counts and baselines: run the gate — no test counts live in prose.
 - Env traps: no ESLint/Prettier by design. Live app auto-deploys from
   `main` to https://eriqueo.github.io/kidpix/ — upstream is

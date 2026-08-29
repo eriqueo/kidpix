@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build --outDir dist --base=/ && vite build --outDir dist-gh --base=/kidpix/",
+    "build": "vite build --outDir dist && vite build --outDir dist-gh --mode gh-pages && node scripts/check-pwa-build.mjs",
     "preview-release": "python3 -m http.server 8080 --directory dist",
     "preview-github-pages": "echo \"WARNING: SERVING APP AT http://localhost:8080/kidpix/ , NOTE THE /kidpix/ !! \" && python3 -m http.server 8080 --directory dist-gh",
-    "typecheck": "tsc -p tsconfig.app.json --noEmit",
+    "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.sw.json --noEmit",
     "test": "vitest run",
     "test:unit": "vitest",
     "test:unit:ui": "vitest --ui",
@@ -24,7 +24,9 @@
     "release:patch": "yarn version --patch && git push origin --tags",
     "release:minor": "yarn version --minor && git push origin --tags",
     "release:major": "yarn version --major && git push origin --tags",
-    "screenshot": "node scripts/screenshot-capture.js"
+    "screenshot": "node scripts/screenshot-capture.js",
+    "check:pwa": "node scripts/check-pwa-build.mjs",
+    "test:pwa": "playwright test --config=playwright.pwa.config.ts"
   },
   "dependencies": {},
   "devDependencies": {
@@ -37,7 +39,11 @@
     "typescript": "~5.6.2",
     "vite": "^6.4.2",
     "vite-plugin-pwa": "^1.3.0",
-    "vitest": "3.2.3"
+    "vitest": "3.2.3",
+    "workbox-core": "7.4.1",
+    "workbox-precaching": "7.4.1",
+    "workbox-range-requests": "7.4.1",
+    "workbox-routing": "7.4.1"
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }

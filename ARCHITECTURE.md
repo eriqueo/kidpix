@@ -159,7 +159,10 @@ yarn build  # Build app for both local (dist/) and GitHub Pages (dist-gh/)
 
 **Build Notes:**
 - Creates `dist/` directory for local deployment (base URL: `/`)
-- Creates `dist-gh/` directory for GitHub Pages deployment (base URL: `/kidpix/`)
+- Creates `dist-gh/` directory for GitHub Pages deployment (`--mode gh-pages`, base URL: `/kidpix/`)
+- Ends with `scripts/check-pwa-build.mjs` (also `yarn check:pwa`): the offline-PWA contract
+  for both directories — manifest/icons, base-correct registration, revisioned precache covering
+  every deployed file. See `docs/pwa.md`.
 
 ### Testing
 
@@ -169,7 +172,11 @@ yarn test:unit         # Run unit tests in watch mode
 yarn test:coverage     # Run unit tests with coverage report
 yarn test:e2e          # Run Playwright end-to-end tests (headless)
 yarn test:e2e:headed   # Run Playwright tests with visible browser
+yarn test:pwa          # Offline-PWA test against the built dist/ + dist-gh/ (run `yarn build` first)
 ```
+
+On NixOS Playwright's bundled Chromium cannot launch: prefix any Playwright command with
+`KIDPIX_CHROMIUM=$(command -v chromium)` to use the system browser (chromium project only).
 
 ### Preview Built App
 

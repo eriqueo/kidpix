@@ -69,8 +69,11 @@ add a Library line, call it from a tool.
   Drawing-output/pixel validation largely `test.skip()` (tracked upstream #84). 128 unit tests pass.
 
 ## Build & deploy
-- Vite 6, `base: "/"`, alias `@`→`/src`, `@js`→`/js`. `yarn build` produces **`dist/`** (`base=/`)
-  and **`dist-gh/`** (`base=/kidpix/` for GitHub Pages).
+- Vite 6, alias `@`→`/src`, `@js`→`/js`. `base` comes from the Vite mode (`pwa/build-contract.mjs`):
+  `yarn build` produces **`dist/`** (`base=/`) and **`dist-gh/`** (`--mode gh-pages`,
+  `base=/kidpix/` for GitHub Pages), then runs `scripts/check-pwa-build.mjs` on both.
+- Offline PWA: `pwa/sw.ts` (Workbox injectManifest) precaches every deployed file; see
+  [pwa.md](./pwa.md). `pwa/` is deployment plumbing, outside the app's architecture rules.
 - GH Actions: `build-and-deploy-all.yml` (test→build→Pages), `release.yml` (tag→tarball),
   `test.yml` (PR: vitest + Playwright chromium). **Note:** deploy URL/base assume repo name `kidpix`
   — fine for us; audit workflows for hardcoded `justinpearson` before relying on CD.

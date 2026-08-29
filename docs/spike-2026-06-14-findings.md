@@ -51,6 +51,10 @@ them off the iPad, or use Safari Web Inspector's timeline over USB.
 
 ## 2. Offline — root cause (quantified)
 
+> **Resolved 2026-08-29 (WS2):** every deploy-owned file is now precached (400 entries,
+> ≈3.6 MiB) and verified offline against the built artifacts. See [pwa.md](./pwa.md).
+> The analysis below is kept as the record of the original defect.
+
 The PWA precaches the **app shell only**: build reported `precache 8 entries (339 KiB)` — JS/CSS/
 HTML/icons. But the app ships **176 sound files + 192 images = 368 assets** that are **not
 precached**. Cause: `vite.config.ts` workbox `globPatterns` is `js,css,html,ico,svg,woff2` (excludes

@@ -16,6 +16,8 @@ export default defineConfig({
   use: {
     baseURL: "http://localhost:5173",
     launchOptions: {
+      // See playwright.config.ts: system Chromium for NixOS local runs.
+      executablePath: process.env.KIDPIX_CHROMIUM || undefined,
       args: [
         "--mute-audio",
         "--disable-audio-output",
