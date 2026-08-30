@@ -1,0 +1,55 @@
+# Active improvement queue
+
+This is the only execution queue. `backlog.txt` and `misc.txt` are ungroomed inputs,
+not authorization to implement a feature. Keep detailed architecture and historical
+rationale out of this file; link the living source instead.
+
+## 1. Make the browser test signal trustworthy
+
+User journey: As a maintainer preparing a release, I can run one Chromium smoke path
+and trust that a failure identifies a current kid-visible regression rather than an
+obsolete expectation or positional selector.
+
+Acceptance checks:
+
+- Classify each existing Chromium failure or skip as a product defect, obsolete
+  expectation, unstable selector, or intentionally unsupported behavior.
+- Cover startup, drawing with Pencil, undo, choosing a stamp, narrow-screen drawer
+  navigation, and opening every visible modal feature in a deterministic smoke path.
+- Use semantic selectors or shared UI vocabulary where available; avoid array indexes
+  whose meaning changes when tools, colors, or stamps are added.
+- The smoke command is green in local system Chromium and in pull-request CI, with each
+  intentional skip carrying a tracked reason. See [playwright.config.ts](../playwright.config.ts)
+  and [tests/e2e/](../tests/e2e/).
+
+## 2. Prove the installed app on the target iPad
+
+User journey: As a child using the home-screen app on an iPad, I can draw and reach
+important actions in portrait or landscape, relaunch offline, and receive an update
+without losing the current picture.
+
+Acceptance checks:
+
+- Record a phone/tablet portrait-and-landscape matrix for canvas coordinates, drawer
+  interactions, and reachability of status-bar actions.
+- On a physical iPad, exercise first-tap audio unlock, touch drawing, offline relaunch,
+  and the wait-to-activate update flow.
+- Treat the 1300×650 backing store and `_x`/`_y` event normalization as load-bearing;
+  presentation changes do not alter them without parity evidence.
+- Put durable install/update behavior in [docs/pwa.md](../docs/pwa.md); keep dated device
+  observations with the acceptance evidence rather than copying them into architecture docs.
+
+## 3. Establish one complete SlideShow journey
+
+User journey: As a child, I can make two pictures, arrange them into a slide show, play
+it, close it, and reopen it with the same order and settings.
+
+Acceptance checks:
+
+- Exercise create → arrange → play → close → reopen through the visible UI.
+- Verify persistence from the authoritative store, including behavior when a referenced
+  picture is missing or storage is unavailable.
+- Either test each visible promise in the UI or hide the unsupported control; do not
+  document planned behavior as shipped behavior.
+- Reconcile the resulting product contract in [docs/slideshow.md](../docs/slideshow.md)
+  and cover the journey at the browser boundary.

@@ -94,7 +94,8 @@ KiddoPaint.Settings = {
 ## Related Files
 
 - `js/init/kiddopaint.js` - Main implementation
-- `prompts-TODO/backlog.txt` - Original feature request (lines 55-127)
+- `prompts-TODO/backlog.txt` - Reconciled remaining discoverability need; the full original
+  request is preserved in git history before the project-truth rewrite
 
 ## Notes
 

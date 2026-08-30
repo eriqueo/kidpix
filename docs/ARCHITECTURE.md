@@ -1,8 +1,9 @@
-# Kid Pix — Architecture Ground Truth
+# Kid Pix — Historical Architecture Snapshot
 
-> Lay-of-the-land snapshot to inform the hexagonal/TypeScript migration. Captured 2026-06-14
-> against `eriqueo/kidpix` (forked from `justinpearson/kidpix` ← `vikrum/kidpix`).
-> Companion to [hexagonal-roadmap.md](./hexagonal-roadmap.md). Update when the seams move.
+> Retained as the 2026-06-14 lay-of-the-land that informed the hexagonal/TypeScript
+> migration. It intentionally describes the pre-migration React skeleton and other state
+> that has since changed; do not use it for current commands, counts, or work routing.
+> Current topology and source-of-truth links live in [../ARCHITECTURE.md](../ARCHITECTURE.md).
 
 ## The two worlds (hybrid, mid-migration)
 
@@ -63,10 +64,9 @@ tools call `KiddoPaint.Sounds.<name>()` (random pick + play). Known TODO: switch
 add a Library line, call it from a tool.
 
 ## Tests
-- **Vitest unit:** React context/components/hooks (mostly state, no pixels) + 4 legacy pure-JS
-  util tests (`js/util/colors.test.js`, `utils.test.js`, `keyboard-help.test.js`, `stamp-names`).
+- **Vitest unit:** pure utilities, TypeScript core/feature modules, and selected legacy modules.
 - **Playwright E2E:** drives DOM (select tool, subtools, switching, console-error monitoring).
-  Drawing-output/pixel validation largely `test.skip()` (tracked upstream #84). 128 unit tests pass.
+  Drawing-output/pixel validation in this snapshot was largely `test.skip()` (tracked upstream #84).
 
 ## Build & deploy
 - Vite 6, alias `@`→`/src`, `@js`→`/js`. `base` comes from the Vite mode (`pwa/build-contract.mjs`):

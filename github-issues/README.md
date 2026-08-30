@@ -2,11 +2,13 @@
 
 This directory contains markdown templates for creating GitHub issues.
 
-## Current Issues Ready to Create
+## Historical Issue Templates
 
-### Keyboard Shortcuts Feature (Feature 3 from backlog.txt)
+### Keyboard Shortcuts Feature (originally Feature 3 in the backlog)
 
-This feature is split into 1 parent issue and 3 sub-issues:
+These files preserve the original decomposition. The enable/disable setting and `?` help
+popup have since shipped; the remaining modifier-key documentation idea is summarized in
+`prompts-TODO/backlog.txt` and must be promoted to the active queue before implementation.
 
 1. **Parent Issue**: `parent-keyboard-shortcuts-feature.md`
    - Overview of the entire keyboard shortcuts feature
@@ -88,9 +90,9 @@ gh label create "research" --color "fbca04" --description "Research and investig
 
 ## After Creating Issues
 
-Once all issues are created on GitHub:
+If a remaining journey is promoted and these templates are reused:
 1. Update cross-references between issues (replace placeholders with actual #numbers)
-2. Consider moving `prompts-TODO/backlog.txt` Feature 3 content to `prompts-DONE/` (or archive it)
+2. Link the issue to `prompts-TODO/current.txt`; do not recreate the shipped setting/help work
 3. Track progress using GitHub's Projects feature (optional)
 4. Link issues to pull requests when implementing
 

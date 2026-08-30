@@ -1,30 +1,35 @@
-# Phase Execution Status
+# Phase Execution History
 
-Execution tracker for [hexagonal-roadmap.md](./hexagonal-roadmap.md). Updated 2026-06-14.
+Historical execution log for [hexagonal-roadmap.md](./hexagonal-roadmap.md), initiated
+2026-06-14 and reconciled through 2026-08-30. It is not a work queue; current topology and
+routing live in [../ARCHITECTURE.md](../ARCHITECTURE.md), and active priorities live in
+[../prompts-TODO/current.txt](../prompts-TODO/current.txt).
 
-## Session: portable/offline/responsive ("CD-ROM") — WS0 diagnosis done
-iPad on-device spike (2026-06-14): strong POC but very laggy; fixed-size canvas doesn't adapt to
-window; needs landscape+portrait; some tools are upstream placeholders. **WS0 (diagnose-only)
-complete** → see [spike-2026-06-14-findings.md](./spike-2026-06-14-findings.md) for measured root
-causes: per-stroke `toDataURL()`+localStorage and per-move sound (lag); only 8/376 assets precached
-(offline); absolute `/kidpix/` base + module scripts (no `file://`); fixed 1300×650 backing + no CSS
-fit/DPR (responsive). **Awaiting Eric's review before WS1 (responsive canvas) / WS2 (portable+offline)
-/ WS3 (perf).** Backing store stays 1300×650 (presentation-only fixes); parity gate must stay green.
+## Portable/offline/responsive workstream
+
+The 2026-06-14 iPad spike found synchronous per-stroke persistence, incomplete offline caching,
+and fixed presentation sizing; see
+[spike-2026-06-14-findings.md](./spike-2026-06-14-findings.md). Subsequent WS1–WS3 work landed
+responsive presentation, complete PWA precaching, debounced current-drawing persistence, and
+memory-only undo/redo. The load-bearing 1300×650 backing store remains unchanged. Physical-device
+acceptance remains an active priority in the authoritative queue linked above.
 
 ## Done (committed on `main`)
 
 | Phase | What landed | Verify |
 |---|---|---|
-| 0 | Decision docs + ADR-0001; `engineering-review` skill; **React skeleton removed** (bundle 505→312 KB); **parity harness** (`tests/parity/`, `yarn test:parity`); CD audit | `yarn test` (89), `yarn typecheck`, `yarn build` |
+| 0 | Decision docs + ADR-0001; `engineering-review` skill; **React skeleton removed** (bundle 505→312 KB); **parity harness** (`tests/parity/`, `yarn test:parity`); CD audit | `yarn test`, `yarn typecheck`, `yarn build` |
 | 1 | **Data-driven sound registry** (`core/sound/`) — add a funny sound = one line in `core/sound/custom-sounds.ts` | `core/sound/sound-registry.test.ts` |
 | 2 | **Tool contract + ports** (`core/ports.ts`) | `yarn typecheck` |
 | 3 | **Core pencil through the hexagon** + `LegacyToolAdapter` bridge; `?core` opt-in | `core/tools/pencil.test.ts` + `tests/parity/pencil-core.parity.spec.ts` |
 | 4 | **Core line** (proves pattern generalizes; evolved ports: `clear()`, `modified`) | `core/tools/line.test.ts` + line parity specs |
 | 6 | **Installable offline PWA** (`vite-plugin-pwa`); iOS meta; pinch-zoom locked | `yarn build` → `dist-gh/{sw.js,manifest.webmanifest}` |
+| WS1 | **Responsive presentation** with tablet breakpoints and phone drawers; backing store preserved | `src/assets/css/kidpix.css`, `js/init/mobile-drawers.js` |
 | WS2 | **Fully offline after one visit** (2026-08-29): every deploy-owned file precached (400 entries, 3.6 MiB), Safari Range-aware audio, wait-to-activate updates, build checker, offline test against the built artifacts — see [pwa.md](./pwa.md) | `yarn build` (runs `check:pwa`), `yarn test:pwa` |
+| WS3 | **Responsive-input performance**: in-memory bounded undo plus debounced current-drawing persistence | `js/util/display.js`, `js/init/kiddopaint.js` |
 
-State: **89 unit tests pass, `tsc` clean, build clean.** Default app behavior unchanged
-(legacy engine still drives everything; core tools are opt-in via `?core`).
+At this checkpoint the local gate passed. Default app behavior remained unchanged
+(the legacy engine still drives drawing by default; core tools are opt-in via `?core`).
 
 ## Deferred (intentional)
 - **Phase 5 (flip default to core):** only when the core path clearly beats legacy for the
@@ -39,15 +44,9 @@ State: **89 unit tests pass, `tsc` clean, build clean.** Default app behavior un
 2. ✅ **Old fork gone** — `eriqueo/kidpix_bak` returns 404 (already deleted).
 3. ✅ **README repointed** to the eriqueo fork; lineage (vikrum → justinpearson → eriqueo) and
    the TS/hexagonal direction documented.
-4. 🤖 **Parity baselines — automated, not yet run.** NixOS local can't launch Chromium (tried
-   `steam-run`; Playwright's nss/nspr preflight still fails). Solved via CI instead:
-   `.github/workflows/generate-parity-baselines.yml` (manual dispatch) generates the `@golden`
-   legacy baselines on Ubuntu, commits the PNGs, and runs the core-vs-legacy parity gate.
-   **Trigger:** `gh workflow run "Generate parity baselines"` (or the Actions tab).
-5. 📱 **iPad spike — needs your device.** Once Pages is live, install the PWA to the home screen
-   and test (a) audio-unlock on first tap, (b) touch drawing, (c) offline reload. Findings →
-   adapter constraints.
-
+4. ✅ **Parity baselines generated and committed** (`2e90b71`). The manual
+   `.github/workflows/generate-parity-baselines.yml` workflow remains the regeneration path;
+   `yarn test:parity` checks core output against the committed legacy goldens.
 ## Housekeeping — done (2026-06-14)
 - ✅ Fixed the 0s push "failures": `deploy.yml` removed (redundant + referenced a nonexistent
    script; its test-before-deploy intent moved into `build-and-deploy-all.yml`); `claude.yml`
@@ -55,22 +54,17 @@ State: **89 unit tests pass, `tsc` clean, build clean.** Default app behavior un
 - ✅ Parity gate added to `test.yml` — every PR now verifies core tools match the legacy goldens.
 - ✅ README ownership strings repointed to eriqueo.
 
-## Known issues / future builds
-- **Erasers "Black Hole" & "Count Down" are upstream placeholders** — both handlers just select
-   the plain `Eraser` and play a "todo" sound (sibling effects "Drop Out"/"Sweep" are commented
-   out in `js/submenus/eraser.js`). They erase like a normal eraser but have no special animation;
-   the effects were never implemented in this fork. NOT a regression. Implementing the real
-   black-hole/countdown animations is a good future **core-tools** build (needs design).
+## Later resolutions
 
-## Open follow-ups (genuinely need Eric / not safely automatable here)
-- **`flake.nix` dev shell for Playwright on NixOS** — deliberately NOT fabricated (can't be
-   verified on this box, and it's your Nix domain). Recommended approach: nixpkgs
-   `playwright-driver.browsers` + `PLAYWRIGHT_BROWSERS_PATH`, pinning `@playwright/test` to the
-   nixpkgs driver version. Would fix local E2E + parity. CI covers the need meanwhile.
-- ~~Proper purpose-`maskable` artwork~~ — done 2026-08-29 (`pwa-maskable-512.png`, art in the safe zone).
-- **Playwright on NixOS** — resolved without a flake: set `KIDPIX_CHROMIUM=$(command -v chromium)`
-   and every Playwright config uses the system binary (`yarn test:e2e --project=chromium`,
-   `yarn test:parity`, `yarn test:pwa`). Firefox/WebKit still need CI.
+- The Black Hole and Count Down erasers were placeholders at the initial checkpoint; their
+  dedicated effects landed in `622fa11` and `7589217`.
+- Purpose-built maskable artwork landed with WS2 (`pwa-maskable-512.png`).
+- Local Chromium Playwright runs were resolved without a flake: set `KIDPIX_CHROMIUM` to the
+  system Chromium binary. The Playwright configs share that hook for `yarn test:e2e`,
+  `yarn test:parity`, and `yarn test:pwa`; Firefox/WebKit remain CI-only.
+
+## Remaining physical-device acceptance
+
 - **iPad smoke test after WS2** — install from Pages, enable Airplane Mode, confirm sounds play
    (Range path) and Hidden Pictures / stamps load; then close the app fully after a deploy and
    confirm the update lands on relaunch.

@@ -15,7 +15,8 @@ Direction (see [`docs/`](docs/)): modernize the **engine** toward a clean, testa
 migrated **strangler-fig** style behind a bridge so the legacy engine keeps working at every step.
 React was deliberately dropped — see [ADR-0001](docs/adr/0001-no-react-strangler-fig-tool-contract.md).
 
-Already inherited from upstream: multi-undo/redo across reloads, selected-tool highlighting,
+Already inherited from upstream: multi-level undo/redo, current-drawing persistence,
+selected-tool highlighting,
 color-picker tool, expanded stamps, automatic GitHub Pages deployment.
 
 ## Background
@@ -51,8 +52,6 @@ The following sections decribe:
 - [Releasing](#releasing)
   - [Release manually](#release-manually)
 - [Tech Stack](#tech-stack)
-  - [Claude Code Development Features](#claude-code-development-features)
-  - [Git Hooks](#git-hooks)
 - [Testing](#testing)
   - [Test Commands](#test-commands)
   - [UI vs Headed vs Headless](#ui-vs-headed-vs-headless)
@@ -109,41 +108,36 @@ These instructions are for MacOS.
     - Install NodeJS: `brew install node`
       - If you get error 'command not found: brew', you need to install Homebrew following instructions at <https://brew.sh/>.
     - Install yarn: `npm install -g corepack`
-- (OPTIONAL) If you want to view the docs, you need to install the Python dependencies: `python3 -m pip install -r requirements.txt`
 
 **3. Run the app locally**
 
-- Start development server: `yarn dev-app`
-- The app should open automatically at <http://localhost:5173/>
+- Start the development server: `yarn dev`
+- Open <http://localhost:5173/>
 - The browser updates upon code changes, thanks to Vite
 
-**3. Run the tests**
+**4. Run the local gate**
 
 ```bash
-yarn test:unit
-yarn test:e2e
+yarn typecheck
+yarn test
 ```
 
-**4. Build & view the docs**
+Playwright is a separate browser-level check: `yarn test:e2e --project=chromium`.
 
-- Serve the docs: `yarn dev-docs`
-- Docs URL:
-  - Local: <http://127.0.0.1:8000/kidpix/docs/>
-  - Note: deployed docs: <https://eriqueo.github.io/kidpix/docs/>
-
-**5. Build & view the app**
+**5. Build and preview the app**
 
 - Build for production: `yarn build`
-- Preview production build: `yarn preview`
+- Preview the root-based release: `yarn preview-release`
+- Preview the GitHub Pages shape: `yarn preview-github-pages`, then open
+  <http://localhost:8080/kidpix/>
 
 ## For AI Agents
 
-If you are an AI agent, please read the "rules" files in `.cursor/rules`, and
-the AI-generated summary file `CLAUDE.md`, for guidance on how you should
-act. Then, read the feature requests in `prompts-TODO/`, and implement the
-oldest one (or `current.txt`), putting your changes into logical git commits, and submitting a
-PR (for details, see `.cursor/rules/feature_workflow.md`). After merging,
-move completed feature-request files into `prompts-DONE/`.
+Read [AGENTS.md](AGENTS.md) first, then use [ARCHITECTURE.md](ARCHITECTURE.md) for the
+current topology and source-of-truth map. Work only from the active priorities in
+[prompts-TODO/current.txt](prompts-TODO/current.txt); the other files in `prompts-TODO/`
+are ungroomed inputs, not implementation instructions. Do not commit, push, merge, or
+deploy unless the user explicitly requests that external state change.
 
 ## Releasing
 
@@ -181,39 +175,14 @@ this runs, eg, `npm version minor && git push origin --tags` from package.json, 
 ## Tech Stack
 
 **Current Implementation:**
-- **Runtime**: Modular JavaScript (ES5/ES6) loaded via script tags
-- **Build Tool**: Vite 6.3.5 for development server and asset serving
+- **Runtime**: One modular JavaScript application with additive TypeScript core/feature modules
+- **Build Tool**: Vite 6 for development, dual production builds, and PWA packaging
 - **Package Manager**: Yarn 1.22.22
-- **Testing**: Vitest (unit) + Playwright (e2e) configured but not yet used for JS files
+- **Testing**: Vitest unit tests + Playwright E2E, pixel-parity, and offline-PWA suites
 - **Deployment**: GitHub Actions → GitHub Pages
-- **Claude Code Integration**: Browser error monitoring with Playwright MCP allows Claude Code to view browser console errors directly
-
-**Future Migration Target:**
-- **Framework**: React 18 with TypeScript
-- **Code Quality**: ESLint + Prettier with git hooks (no Husky dependency)
-
-### Claude Code Development Features
-
-This project includes special features for AI-assisted development using Claude Code:
-
-- **Real-time Error Monitoring**: Browser runtime errors accessible via Playwright MCP
-- **Direct Browser Access**: Monitor console messages without webserver middleware
-- **Full Console Access**: View all console messages, not just errors
-
-**Note for Claude Code Users**: Use Playwright MCP tools to navigate to the application and monitor browser console messages directly for debugging.
-
-### Git Hooks
-
-This project uses git hooks to ensure code quality:
-
-- **Pre-commit**: Runs ESLint and Prettier on staged files
-- **Commit-msg**: Validates commit message format using conventional commits
-
-The hooks are configured by running `git config core.hooksPath .githooks` (step 3 in Development Setup above).
-
-For detailed development information, see [Maintainer Documentation](doc/maintainer/).
-
-**Note for AI Agents**: Read `CLAUDE.md` for complete development workflow guidance including Playwright MCP error monitoring setup.
+- **Architecture direction**: no-React strangler-fig migration around typed ports; see
+  [ADR-0001](docs/adr/0001-no-react-strangler-fig-tool-contract.md)
+- **Formatting/linting**: no ESLint or Prettier by design
 
 ## Testing
 
@@ -247,7 +216,8 @@ Our end-to-end tests use a **per-tool architecture** where each drawing tool has
 - `tool-switching.spec.ts`, `canvas-functionality.spec.ts` - Integration tests
 - `shared/` - Common test utilities and fixtures
 
-This enables parallel test execution and focused debugging. See [Testing Guide](doc/maintainer/testing-guide.md) for detailed information.
+This enables parallel test execution and focused debugging. The runnable configuration is
+[playwright.config.ts](playwright.config.ts).
 
 ## Legacy Information
 
@@ -278,7 +248,7 @@ Instructions for Mac.
 (On local laptop -- no internet connection required!)
 
 - cd into kidpix dir
-- yarn dev-app
+- yarn dev
 - open localhost:5173 in browser
 
 ### How to Change Code (OLD)

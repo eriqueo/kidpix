@@ -8,7 +8,9 @@
 
 ## Description
 
-Research and document how SHIFT, ALT/OPTION, CMD, and CTRL modifier keys affect each tool. Some documentation already exists for CMD and CTRL keys (see prompts-TODO/backlog.txt), but SHIFT and ALT need investigation.
+Research and document how SHIFT, ALT/OPTION, CMD, and CTRL modifier keys affect each tool.
+The living backlog now carries only the reconciled remaining need; older CMD/CTRL claims are
+available in git history and must be verified against current code before reuse.
 
 ## Acceptance Criteria
 
@@ -31,7 +33,7 @@ Create a new file: `doc/keyboard-shortcuts-reference.md`
 # KidPix Keyboard Shortcuts Reference
 
 ## Single-Key Shortcuts
-[List from backlog.txt]
+[List verified from current shortcut dispatch]
 
 ## Modifier Keys
 
@@ -39,10 +41,10 @@ Create a new file: `doc/keyboard-shortcuts-reference.md`
 [Organized by tool]
 
 ### CTRL Key (Control)
-[Verified and expanded from backlog.txt]
+[Verified against current code]
 
 ### CMD Key (Command / Meta on macOS)
-[Verified and expanded from backlog.txt]
+[Verified against current code]
 
 ### ALT Key (Option on macOS)
 [Research and document]
@@ -242,7 +244,7 @@ var multiplier = ev.shiftKey ? 2 : 1;
 - [ ] All 4 modifier keys documented (SHIFT, CTRL, CMD, ALT)
 - [ ] All tools researched and documented
 - [ ] Code references added (file:line)
-- [ ] Verified existing documentation from backlog.txt
+- [ ] Compared historical backlog claims with current code
 - [ ] Brief version suitable for help popup
 - [ ] Detailed version for reference
 - [ ] Tested at least 5 tools manually to verify accuracy
