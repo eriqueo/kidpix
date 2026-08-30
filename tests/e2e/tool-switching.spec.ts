@@ -9,7 +9,14 @@ import {
 } from "./shared/tool-helpers";
 import { TOOL_DEFINITIONS } from "./shared/test-fixtures";
 
-test.describe.skip("Tool Switching and Persistence Tests", () => {
+// Tool buttons rebuild the submenu and re-highlight fixed default indices on every
+// click (js/init/kiddopaint.js init_tool_bar, js/init/submenus.js show_generic_submenu).
+// Remembering a tool's last subtool is not implemented, so the four persistence tests
+// below are skipped individually; the two switching tests exercise shipped behavior.
+const REMEMBERED_SUBTOOL_UNIMPLEMENTED =
+  "remember-last-subtool not implemented: tool click resets subtool highlight to defaults (js/init/kiddopaint.js init_tool_bar)";
+
+test.describe("Tool Switching and Persistence Tests", () => {
   test.beforeEach(async ({ page }) => {
     await initializeKidPix(page);
   });
@@ -21,7 +28,10 @@ test.describe.skip("Tool Switching and Persistence Tests", () => {
     for (const toolDef of TOOL_DEFINITIONS) {
       await selectTool(page, toolDef.id);
 
-      if (toolDef.hasSubtools) {
+      // Text renders its subtools in #texttoolbar, not #genericsubmenu
+      // (js/init/kiddopaint.js text handler; see text.spec.ts), so the generic
+      // subtool helper does not apply to it.
+      if (toolDef.hasSubtools && toolDef.id !== "text") {
         const subtoolButtons = await getSubtools(page);
         const subtoolCount = await subtoolButtons.count();
 
@@ -36,6 +46,7 @@ test.describe.skip("Tool Switching and Persistence Tests", () => {
   });
 
   test("tool state persistence across switches", async ({ page }) => {
+    test.skip(true, REMEMBERED_SUBTOOL_UNIMPLEMENTED);
     const consoleErrors = setupConsoleErrorMonitoring(page);
 
     // Select pencil and configure subtools
@@ -71,6 +82,7 @@ test.describe.skip("Tool Switching and Persistence Tests", () => {
   });
 
   test("brush subtool persistence", async ({ page }) => {
+    test.skip(true, REMEMBERED_SUBTOOL_UNIMPLEMENTED);
     const consoleErrors = setupConsoleErrorMonitoring(page);
 
     // Select Brush and choose Tree brush (index 5)
@@ -96,6 +108,7 @@ test.describe.skip("Tool Switching and Persistence Tests", () => {
   test("multi-selection tool persistence (pencil and line)", async ({
     page,
   }) => {
+    test.skip(true, REMEMBERED_SUBTOOL_UNIMPLEMENTED);
     const consoleErrors = setupConsoleErrorMonitoring(page);
 
     // Configure pencil with specific size and texture
@@ -139,6 +152,7 @@ test.describe.skip("Tool Switching and Persistence Tests", () => {
   });
 
   test("all tools roundtrip test", async ({ page }) => {
+    test.skip(true, REMEMBERED_SUBTOOL_UNIMPLEMENTED);
     const consoleErrors = setupConsoleErrorMonitoring(page);
 
     // Configure each tool with alternate subtools

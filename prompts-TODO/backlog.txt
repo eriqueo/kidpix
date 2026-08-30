@@ -7,8 +7,10 @@ a verified user journey into `current.txt` before implementation.
 ## Persist selected UI state across reloads
 
 Remaining idea: restore the selected tool, each tool's selected subtools, current color,
-and palette after a page reload. Tools already remember their subtool choices while the app
-stays open.
+and palette after a page reload. Tools do not currently remember their subtool choices even
+while the app stays open: each tool click rebuilds the submenu and re-highlights fixed defaults
+(`js/init/kiddopaint.js` init_tool_bar). The four persistence cases in
+`tests/e2e/tool-switching.spec.ts` are skipped with that reason until this is promoted.
 
 The old request also asked for undo/redo across reloads. That conflicts with the current
 intentional performance boundary: undo/redo is bounded in-memory `ImageData`, while only the
