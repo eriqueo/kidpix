@@ -39,14 +39,17 @@ test.describe("Color Picker Tool Tests", () => {
     await expect(undo).toBeVisible();
     await expect(colorPicker).toBeVisible();
 
-    // Get the positions to verify ordering
-    const truckBox = await truck.boundingBox();
-    const colorPickerBox = await colorPicker.boundingBox();
-    const undoBox = await undo.boundingBox();
-
-    // Assuming vertical layout, color picker should be between truck and undo
-    expect(truckBox!.y).toBeLessThan(colorPickerBox!.y);
-    expect(colorPickerBox!.y).toBeLessThan(undoBox!.y);
+    // The responsive toolbar may place adjacent controls in separate columns or
+    // on the same row. Its stable contract is the tool order, not y geometry.
+    const toolOrder = await page.locator("#mainbar > button.tool").evaluateAll(
+      (buttons) => buttons.map((button) => button.id),
+    );
+    expect(toolOrder.indexOf("truck")).toBeLessThan(
+      toolOrder.indexOf("colorpicker"),
+    );
+    expect(toolOrder.indexOf("colorpicker")).toBeLessThan(
+      toolOrder.indexOf("undo"),
+    );
 
     assertNoConsoleErrors(consoleErrors, "eyedropper tool positioning");
   });

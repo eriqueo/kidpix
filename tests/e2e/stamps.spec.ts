@@ -14,6 +14,19 @@ import { getToolDefinition } from "./shared/test-fixtures";
 const TOOL_ID = "stamp";
 const toolDef = getToolDefinition(TOOL_ID)!;
 
+function getStampButtons(page: Parameters<typeof getSubtools>[0]) {
+  return page.locator("#genericsubmenu button.stamp-button:has(img.sprite)");
+}
+
+function getStampControl(
+  page: Parameters<typeof getSubtools>[0],
+  title: string,
+) {
+  return page.locator(
+    `#genericsubmenu button.stamp-button[title="${title}"]`,
+  );
+}
+
 test.describe("Stamp Tool Tests", () => {
   test.beforeEach(async ({ page }) => {
     await initializeKidPix(page);
@@ -22,7 +35,7 @@ test.describe("Stamp Tool Tests", () => {
   test.skip("basic tool selection and highlighting", async ({ page }) => {
     const consoleErrors = setupConsoleErrorMonitoring(page);
     await selectTool(page, TOOL_ID);
-    const subtoolButtons = await getSubtools(page);
+    const subtoolButtons = getStampButtons(page);
     await expect(subtoolButtons.nth(0)).toHaveCSS(
       "border-color",
       "rgb(255, 0, 0)",
@@ -66,15 +79,10 @@ test.describe("Stamp Tool Tests", () => {
   test("navigation buttons exist with correct labels", async ({ page }) => {
     const consoleErrors = setupConsoleErrorMonitoring(page);
     await selectTool(page, TOOL_ID);
-    const subtoolButtons = await getSubtools(page);
-    const subtoolCount = await subtoolButtons.count();
-
-    // Navigation buttons should be at the end (last 4 buttons)
-    // Order: prev row, next row, prev stamp pack, next stamp pack
-    const prevRowBtn = subtoolButtons.nth(subtoolCount - 4);
-    const nextRowBtn = subtoolButtons.nth(subtoolCount - 3);
-    const prevPackBtn = subtoolButtons.nth(subtoolCount - 2);
-    const nextPackBtn = subtoolButtons.nth(subtoolCount - 1);
+    const prevRowBtn = getStampControl(page, "prev row");
+    const nextRowBtn = getStampControl(page, "next row");
+    const prevPackBtn = getStampControl(page, "prev stamp pack");
+    const nextPackBtn = getStampControl(page, "next stamp pack");
 
     // Verify buttons exist and have correct titles
     await expect(prevRowBtn).toHaveAttribute("title", "prev row");
@@ -93,9 +101,7 @@ test.describe("Stamp Tool Tests", () => {
     const initialRow = await page.evaluate(() => window.KiddoPaint.Sprite.page);
 
     // Click next row button
-    const subtoolButtons = await getSubtools(page);
-    const subtoolCount = await subtoolButtons.count();
-    const nextRowBtn = subtoolButtons.nth(subtoolCount - 3);
+    const nextRowBtn = getStampControl(page, "next row");
     await nextRowBtn.click();
 
     // Verify row changed
@@ -113,9 +119,7 @@ test.describe("Stamp Tool Tests", () => {
     const initialRow = await page.evaluate(() => window.KiddoPaint.Sprite.page);
 
     // Click prev row button
-    const subtoolButtons = await getSubtools(page);
-    const subtoolCount = await subtoolButtons.count();
-    const prevRowBtn = subtoolButtons.nth(subtoolCount - 4);
+    const prevRowBtn = getStampControl(page, "prev row");
     await prevRowBtn.click();
 
     // Verify row changed
@@ -136,9 +140,7 @@ test.describe("Stamp Tool Tests", () => {
     );
 
     // Click next stamp pack button
-    const subtoolButtons = await getSubtools(page);
-    const subtoolCount = await subtoolButtons.count();
-    const nextPackBtn = subtoolButtons.nth(subtoolCount - 1);
+    const nextPackBtn = getStampControl(page, "next stamp pack");
     await nextPackBtn.click();
 
     // Verify sheet changed
@@ -163,9 +165,7 @@ test.describe("Stamp Tool Tests", () => {
     );
 
     // Click prev stamp pack button
-    const subtoolButtons = await getSubtools(page);
-    const subtoolCount = await subtoolButtons.count();
-    const prevPackBtn = subtoolButtons.nth(subtoolCount - 2);
+    const prevPackBtn = getStampControl(page, "prev stamp pack");
     await prevPackBtn.click();
 
     // Verify sheet changed
@@ -186,28 +186,26 @@ test.describe("Stamp Tool Tests", () => {
     await selectTool(page, TOOL_ID);
 
     // On page load, first stamp should be 'palm tree'
-    const subtoolButtons = await getSubtools(page);
+    const subtoolButtons = getStampButtons(page);
     await expect(subtoolButtons.nth(0)).toHaveAttribute("title", "palm tree");
 
     // Last stamp in row (14th stamp, index 13) should be 'coffee cup'
     await expect(subtoolButtons.nth(13)).toHaveAttribute("title", "coffee cup");
 
     // Click 'next row' button
-    const subtoolCount = await subtoolButtons.count();
-    const nextRowBtn = subtoolButtons.nth(subtoolCount - 3);
+    const nextRowBtn = getStampControl(page, "next row");
     await nextRowBtn.click();
 
     // After clicking next row, first stamp should be 'traffic light'
-    const subtoolButtons2 = await getSubtools(page);
+    const subtoolButtons2 = getStampButtons(page);
     await expect(subtoolButtons2.nth(0)).toHaveAttribute("title", "traffic light");
 
     // Click 'next stamp pack' button
-    const subtoolCount2 = await subtoolButtons2.count();
-    const nextPackBtn = subtoolButtons2.nth(subtoolCount2 - 1);
+    const nextPackBtn = getStampControl(page, "next stamp pack");
     await nextPackBtn.click();
 
     // After clicking next stamp pack, first stamp should be 'red ant'
-    const subtoolButtons3 = await getSubtools(page);
+    const subtoolButtons3 = getStampButtons(page);
     await expect(subtoolButtons3.nth(0)).toHaveAttribute("title", "red ant");
 
     assertNoConsoleErrors(consoleErrors, "stamp hover-text");
@@ -218,7 +216,7 @@ test.describe("Stamp Tool Tests", () => {
     await selectTool(page, TOOL_ID);
 
     // Verify first stamp has visible text "palm tree" inside the button
-    const subtoolButtons = await getSubtools(page);
+    const subtoolButtons = getStampButtons(page);
     const firstStampText = subtoolButtons.nth(0).locator(".stamp-name");
     await expect(firstStampText).toHaveText("palm tree");
 
@@ -227,11 +225,10 @@ test.describe("Stamp Tool Tests", () => {
     await expect(thirdStampText).toHaveText("brown dog");
 
     // Navigation buttons SHOULD now have stamp-name elements
-    const subtoolCount = await subtoolButtons.count();
-    const prevRowBtn = subtoolButtons.nth(subtoolCount - 4);
-    const nextRowBtn = subtoolButtons.nth(subtoolCount - 3);
-    const prevPackBtn = subtoolButtons.nth(subtoolCount - 2);
-    const nextPackBtn = subtoolButtons.nth(subtoolCount - 1);
+    const prevRowBtn = getStampControl(page, "prev row");
+    const nextRowBtn = getStampControl(page, "next row");
+    const prevPackBtn = getStampControl(page, "prev stamp pack");
+    const nextPackBtn = getStampControl(page, "next stamp pack");
 
     await expect(prevRowBtn.locator(".stamp-name")).toHaveText("prev row");
     await expect(nextRowBtn.locator(".stamp-name")).toHaveText("next row");
@@ -249,7 +246,9 @@ test.describe("Stamp Tool Tests", () => {
     const consoleErrors = setupConsoleErrorMonitoring(page);
     await selectTool(page, TOOL_ID);
 
-    const subtoolButtons = await getSubtools(page);
+    const subtoolButtons = page.locator(
+      "#genericsubmenu button.stamp-button",
+    );
     const subtoolCount = await subtoolButtons.count();
 
     // All stamp buttons (stamps + navigation) should have stamp-button class
@@ -398,7 +397,7 @@ test.describe("Stamp Tool Tests", () => {
     await page.waitForTimeout(200);
 
     // Get all stamp buttons (excluding clear button)
-    const subtoolButtons = await getSubtools(page);
+    const subtoolButtons = getStampButtons(page);
     const subtoolCount = await subtoolButtons.count();
 
     // Should have 17 stamps with "tree" in the name
@@ -426,7 +425,7 @@ test.describe("Stamp Tool Tests", () => {
     await searchInput.fill("tree");
     await page.waitForTimeout(200);
 
-    const subtoolButtons = await getSubtools(page);
+    const subtoolButtons = getStampButtons(page);
 
     // Click the first search result (palm tree)
     await subtoolButtons.nth(0).click();
@@ -477,7 +476,7 @@ test.describe("Stamp Tool Tests", () => {
     await page.waitForTimeout(200);
 
     // Verify we have search results (17 stamps)
-    let subtoolButtons = await getSubtools(page);
+    let subtoolButtons = getStampButtons(page);
     let subtoolCount = await subtoolButtons.count();
     expect(subtoolCount).toBe(17);
 
@@ -485,14 +484,13 @@ test.describe("Stamp Tool Tests", () => {
     await clearButton.click();
     await page.waitForTimeout(200);
 
-    // Verify we're back to default view (15 stamps + 4 nav buttons)
-    subtoolButtons = await getSubtools(page);
+    // Verify we're back to the 14 real stamps plus four navigation controls.
+    subtoolButtons = page.locator("#genericsubmenu button.stamp-button");
     subtoolCount = await subtoolButtons.count();
-    expect(subtoolCount).toBe(19); // 15 stamps + 4 nav buttons
+    expect(subtoolCount).toBe(18); // 14 stamps + 4 navigation controls
 
     // Verify navigation buttons are present
-    const lastButton = subtoolButtons.nth(subtoolCount - 1);
-    await expect(lastButton).toHaveAttribute("title", "next stamp pack");
+    await expect(getStampControl(page, "next stamp pack")).toBeVisible();
 
     assertNoConsoleErrors(consoleErrors, "clear search");
   });
@@ -547,7 +545,7 @@ test.describe("Stamp Tool Tests", () => {
     await page.waitForTimeout(200);
 
     // Get stamp buttons
-    const subtoolButtons = await getSubtools(page);
+    const subtoolButtons = getStampButtons(page);
 
     // Check first stamp (should be "palm tree")
     const firstStamp = subtoolButtons.nth(0);
@@ -567,12 +565,30 @@ test.describe("Stamp Tool Tests", () => {
     await page.waitForTimeout(200);
 
     // After clearing, there should be no <mark> elements
-    const subtoolButtonsAfterClear = await getSubtools(page);
+    const subtoolButtonsAfterClear = getStampButtons(page);
     const firstStampAfterClear = subtoolButtonsAfterClear.nth(0);
     const firstNameAfterClear = firstStampAfterClear.locator(".stamp-name");
     const highlightAfterClear = firstNameAfterClear.locator("mark");
     await expect(highlightAfterClear).toHaveCount(0);
 
     assertNoConsoleErrors(consoleErrors, "stamp name highlighting");
+  });
+
+  test("Edit Stamp remains available when the stamp submenu rebuilds", async ({
+    page,
+  }) => {
+    await selectTool(page, TOOL_ID);
+
+    const editStamp = page.locator("#editstamp");
+    await expect(editStamp).toBeVisible();
+
+    await getStampControl(page, "next row").click();
+    await expect(editStamp).toBeVisible();
+
+    await page.locator("#stamp-search").fill("tree");
+    await expect(editStamp).toBeVisible();
+
+    await page.locator("#stamp-search-clear").click();
+    await expect(editStamp).toBeVisible();
   });
 });

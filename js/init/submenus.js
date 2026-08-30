@@ -175,6 +175,15 @@ window.update_sprites_stamps = function update_sprites_stamps() {
   } else if (resultsCounter) {
     resultsCounter.textContent = "";
   }
+
+  // Rebuilds remove every submenu button, including the separately injected
+  // Stamp Editor launcher. Its owner exposes this hook so the launcher can be
+  // restored without duplicating its construction or click behavior here.
+  var ensureEditStampButton =
+    KiddoPaint.StampEditor?.Modal?.ensureEditStampButton;
+  if (typeof ensureEditStampButton === "function") {
+    ensureEditStampButton();
+  }
 };
 
 window.show_generic_submenu = function show_generic_submenu(subtoolbar) {
