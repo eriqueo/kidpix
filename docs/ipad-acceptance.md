@@ -23,23 +23,39 @@ Live app: https://eriqueo.github.io/kidpix/
    orientation.
 8. Drawers: Tools, Colors, and (phone-width only) More each open, close on an outside tap,
    and leave no mark on the canvas.
-9. Kids Mode, Print, Project, Frame, DrawMe are all reachable (status bar on iPad; More
-   sheet on phone width).
-10. SlideShow: draw, Save; draw again, Save; open SlideShow — two pictures appear. Reorder
-    with ▲/▼, Play, Close, reopen — same order and settings.
-11. Sounds play with the device muted-switch on and off as expected; Hidden Pictures and
+9. Kids Mode, Print, Export PNG, Frame, DrawMe are all reachable (status bar on iPad; More
+    sheet on phone width).
+10. Sounds play with the device muted-switch on and off as expected; Hidden Pictures and
     stamps load.
 
-## C. Offline relaunch
+## C. Custom Hidden Pictures
 
-12. Airplane Mode on. Force-quit. Relaunch from the home screen. It loads and draws.
-13. Still offline: open SlideShow. Saved pictures still appear. Sounds still play (Range
-    path, see [pwa.md](./pwa.md)).
+11. Choose Eraser → **Add Picture Here**, then select a normal picture from Photos or Files.
+    The button and status bar confirm that the processed picture joined Hidden Pictures.
+12. Start erasing without selecting another option. The uploaded picture appears in the
+    black-and-white pixelated style.
+13. Force-quit and relaunch. Tap **Hidden Pictures** repeatedly and confirm the added picture
+    remains in the reveal rotation. If storage was unavailable, the earlier confirmation
+    must instead have said that the picture was for that session only.
 
-## D. Update activation
+## D. Editable file round-trip
 
-14. Airplane Mode off. Open the app and leave it open after a new deploy. Nothing reloads.
-15. Force-quit. Relaunch. The new version is live and the current drawing is still there.
+14. Draw a distinct mark. Tap **Save Project**, choose **Save to Files**, and save the
+    `.kidpix` file under **On My iPad**.
+15. Change or clear the drawing. Tap **Open File**, choose that `.kidpix`, and confirm the
+    exact old picture returns. Draw another stroke and confirm it commits normally.
+16. Tap **Export PNG**, save it, then open that PNG through **Open File**. It imports as a
+    flattened picture and remains drawable.
+
+## E. Offline relaunch
+
+17. Airplane Mode on. Force-quit. Relaunch from the home screen. It loads and draws.
+18. Still offline, sounds still play (Range path, see [pwa.md](./pwa.md)).
+
+## F. Update activation
+
+19. Airplane Mode off. Open the app and leave it open after a new deploy. Nothing reloads.
+20. Force-quit. Relaunch. The new version is live and the current drawing is still there.
 
 ## Results
 

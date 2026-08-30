@@ -12,9 +12,11 @@ and what it cannot do.
    server) and `dist-gh/` (base `/kidpix/`, GitHub Pages).
 3. Every deploy-owned runtime file is precached — HTML, JS, CSS, images, spritesheets,
    audio, JSON, manifest. Nothing is "cached on first use".
-4. User data (saved pictures, undo history, ColorMe pages, slideshows, sound recordings)
-   stays in `localStorage` / IndexedDB. The worker only ever caches files that ship in
-   the build; it never touches CacheStorage with user media.
+4. User data (the current drawing, ColorMe pages, custom Hidden Pictures, sound recordings,
+   and settings) stays in `localStorage` / IndexedDB. The worker only ever caches files
+   that ship in the build; it never touches CacheStorage with user media. Hidden Pictures
+   stores only its processed PNG, keeps at most 20 custom entries, and evicts the oldest
+   custom entry when that queue is full.
 5. An update never reloads a live session. A new worker installs in the background
    and activates only after **every tab of the app is closed**.
 

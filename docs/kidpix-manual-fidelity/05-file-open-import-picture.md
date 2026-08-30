@@ -6,15 +6,19 @@ behavior, not from copyrighted assets.
 
 ## Entry points
 
-- **Toolbar**: "Open Pic" button next to Save.
+- **Toolbar**: the single "Open File" button next to Save.
 - **Keyboard**: `o` (when keyboard shortcuts are enabled).
-- **Drag-and-drop**: drop an image file onto the canvas.
+- **Picker/drop dispatch**: `.kidpix` restores an exact editable project; ordinary
+  images use the import pipeline below.
+- **Drag-and-drop**: drop a project or image file onto the canvas.
   - Plain drop → routes through this pipeline (fit + composite + undo).
   - Alt-drop → legacy behavior: hand image to the Placer tool at native size.
 
 ## Accepted formats
 
-`image/png`, `image/jpeg`, `image/gif`, `image/bmp`, `image/webp`.
+`.kidpix`, `image/png`, `image/jpeg`, `image/gif`, `image/bmp`, `image/webp`.
+When iPad Files or a cloud provider omits image MIME metadata, the same allow-list is
+applied to the filename extension. A supplied but conflicting MIME type is rejected.
 
 SVG, HEIC, and AVIF are intentionally excluded — they either taint the canvas
 (blocking later Save), animate (GIF: first frame only is composited via the

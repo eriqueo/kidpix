@@ -2,7 +2,7 @@
  * ColorMe — coloring-book paint-bucket tool.
  *
  * A coloring page is loaded straight onto the MAIN canvas (exactly like the
- * "Open Pic" import does), so it is a real, persistent part of the drawing:
+ * "Open File" image import does), so it is a real, persistent part of the drawing:
  * it survives the mouse leaving the canvas, survives reloads (main is saved to
  * localStorage), can be drawn on with any other tool, and is undoable. The
  * paint-bucket then flood-fills regions directly on main, bounded by the page's

@@ -1,0 +1,3 @@
+# Scratch drop-folder — keep the dirs, ignore their contents.
+_inbox/*
+!_inbox/.gitkeep

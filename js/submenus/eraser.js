@@ -63,6 +63,18 @@ KiddoPaint.Submenu.eraser = [
     },
   },
   {
+    name: "Add Picture Here",
+    text: "Add Picture Here",
+    handler: function () {
+      if (
+        KiddoPaint.HiddenPictures &&
+        typeof KiddoPaint.HiddenPictures.openPicker === "function"
+      ) {
+        KiddoPaint.HiddenPictures.openPicker();
+      }
+    },
+  },
+  {
     name: "White Circles",
     imgSrc: "img/eraser/tool-submenu-eraser-184.png",
     handler: function () {

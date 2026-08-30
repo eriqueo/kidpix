@@ -38,3 +38,20 @@ describe("ImageImport._fitLetterbox", () => {
     expect(r).toEqual({ x: 0, y: 0, w: 640, h: 480 });
   });
 });
+
+describe("ImageImport._isAcceptedFile", () => {
+  const accepts = () => window.KiddoPaint.ImageImport._isAcceptedFile;
+
+  it("accepts an allow-listed MIME type", () => {
+    expect(accepts()({ name: "picture.bin", type: "image/png" })).toBe(true);
+  });
+
+  it("accepts an allow-listed extension when iPad Files omits MIME", () => {
+    expect(accepts()({ name: "Cloud Picture.JPEG", type: "" })).toBe(true);
+  });
+
+  it("rejects a conflicting or unsupported supplied MIME type", () => {
+    expect(accepts()({ name: "picture.png", type: "text/html" })).toBe(false);
+    expect(accepts()({ name: "picture.svg", type: "" })).toBe(false);
+  });
+});

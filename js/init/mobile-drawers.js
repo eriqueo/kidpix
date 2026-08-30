@@ -25,7 +25,7 @@
   var TOOLS_CLASS = "tools-drawer-open";
   var COLORS_CLASS = "colors-drawer-open";
   // "More actions" sheet: reveals the hidden #statusbar (Kids Mode, Print,
-  // Project, Frame, DrawMe) as a bottom sheet. Same drawer rules as the rails.
+  // Export PNG, Frame, DrawMe) as a bottom sheet. Same drawer rules as the rails.
   var MORE_CLASS = "more-drawer-open";
   var ALL_CLASSES = [TOOLS_CLASS, COLORS_CLASS, MORE_CLASS];
 

@@ -25,7 +25,7 @@ describe("KiddoPaint.FileActions.sanitizeProject", () => {
       {
         magic: "kidpix-project",
         version: 1,
-        canvas: { width: 1, height: 1, png: PNG },
+        canvas: { width: 1300, height: 650, png: PNG },
         retainedState: { frame: "frame-wood" },
       },
       overrides,
@@ -36,32 +36,44 @@ describe("KiddoPaint.FileActions.sanitizeProject", () => {
     const safe = KiddoPaint.FileActions.sanitizeProject(valid());
     expect(safe.png).toBe(PNG);
     expect(safe.frame).toBe("frame-wood");
+    expect(safe.width).toBe(1300);
+    expect(safe.height).toBe(650);
   });
 
   it("rejects missing/wrong magic", () => {
     expect(() =>
       KiddoPaint.FileActions.sanitizeProject(valid({ magic: "nope" })),
-    ).toThrow(/not a kidpix project/);
+    ).toThrow(/not a Kid Pix project/);
   });
 
   it("rejects unknown future versions", () => {
     expect(() =>
       KiddoPaint.FileActions.sanitizeProject(valid({ version: 99 })),
-    ).toThrow(/newer than this build/);
+    ).toThrow(/newer than this Kid Pix build/);
   });
 
   it("rejects invalid version", () => {
     expect(() =>
       KiddoPaint.FileActions.sanitizeProject(valid({ version: 0 })),
-    ).toThrow(/unknown project version/);
+    ).toThrow(/Unknown project version/);
   });
 
   it("rejects non-data-url canvas images (e.g. javascript:)", () => {
     expect(() =>
       KiddoPaint.FileActions.sanitizeProject(
-        valid({ canvas: { png: "javascript:alert(1)" } }),
+        valid({
+          canvas: { width: 1300, height: 650, png: "javascript:alert(1)" },
+        }),
       ),
-    ).toThrow(/not a data URL/);
+    ).toThrow(/not a PNG/);
+  });
+
+  it("rejects canvas dimensions outside the v1 1300x650 contract", () => {
+    expect(() =>
+      KiddoPaint.FileActions.sanitizeProject(
+        valid({ canvas: { width: 640, height: 480, png: PNG } }),
+      ),
+    ).toThrow(/1300 by 650/);
   });
 
   it("drops unknown frame styles instead of applying them", () => {
@@ -74,5 +86,19 @@ describe("KiddoPaint.FileActions.sanitizeProject", () => {
   it("rejects non-object input", () => {
     expect(() => KiddoPaint.FileActions.sanitizeProject(null)).toThrow();
     expect(() => KiddoPaint.FileActions.sanitizeProject("nope")).toThrow();
+  });
+});
+
+describe("KiddoPaint.FileActions.isProjectFile", () => {
+  it("recognizes the canonical extension even when Files omits MIME", () => {
+    expect(
+      KiddoPaint.FileActions.isProjectFile({ name: "drawing.KIDPIX", type: "" }),
+    ).toBe(true);
+  });
+
+  it("leaves ordinary pictures on the image-import path", () => {
+    expect(
+      KiddoPaint.FileActions.isProjectFile({ name: "drawing.png", type: "image/png" }),
+    ).toBe(false);
   });
 });

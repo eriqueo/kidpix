@@ -154,7 +154,7 @@ for (const viewport of PHONE_VIEWPORTS) {
 const STATUS_ACTION_IDS = [
   "small-kids-toggle",
   "print-btn",
-  "project-btn",
+  "export-png-btn",
   "frame-toggle",
 ];
 

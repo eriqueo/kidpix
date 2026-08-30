@@ -168,9 +168,12 @@ import "./registry-init";
 // so the legacy tool/submenu can use them. Must come after KiddoPaint exists.
 import "./colorme-init";
 
+// Hidden Pictures bridge — owns the local processed-picture queue and connects
+// the in-app picker to the existing reveal tool shared with Doorbell.
+import "./hidden-pictures-init";
+
 // Core tools via the strangler-fig bridge (opt-in with ?core). After tools load.
 import "./core-tools-init";
-import "./slideshow/install";
 
 // DrawMe prompt-generator UI hook (kidpix-manual-fidelity/03-drawme-prompt-generator).
 // Mounts a minimal "DrawMe" button into the status bar.

@@ -118,7 +118,7 @@ window.update_sprites_stamps = function update_sprites_stamps() {
         .getElementsByTagName("button");
       var clickedButtonIndex = Array.prototype.indexOf.call(
         buttons,
-        e.target.parentNode,
+        e.currentTarget,
       );
       var spacerIndex = -1;
 
@@ -155,7 +155,7 @@ window.update_sprites_stamps = function update_sprites_stamps() {
       }
 
       // Set clicked-subtool's outline to red:
-      e.target.parentNode.style = "border-color:red; border-width: 5px";
+      e.currentTarget.style = "border-color:red; border-width: 5px";
       KiddoPaint.Sounds.submenuoption();
       localFRef(e);
     };
@@ -366,7 +366,7 @@ window.show_generic_submenu = function show_generic_submenu(subtoolbar) {
         .getElementsByTagName("button");
       var clickedButtonIndex = Array.prototype.indexOf.call(
         buttons,
-        e.target.parentNode,
+        e.currentTarget,
       );
       var spacerIndex = -1;
 
@@ -403,7 +403,7 @@ window.show_generic_submenu = function show_generic_submenu(subtoolbar) {
       }
 
       // Set clicked-subtool's outline to red:
-      e.target.parentNode.style = "border-color:red; border-width: 5px";
+      e.currentTarget.style = "border-color:red; border-width: 5px";
       KiddoPaint.Sounds.submenuoption();
       localFRef(e);
     };

@@ -12,9 +12,9 @@
  * version installs in the background and activates only once every tab of
  * the app has closed, so an update can never reload a live drawing session.
  *
- * User data (saved pictures, undo history, colorme pages, slideshows, sound
- * recordings) lives in localStorage / IndexedDB and is never fetched over the
- * network, so nothing here can copy it into CacheStorage.
+ * User data (the current drawing, ColorMe pages, custom Hidden Pictures, sound
+ * recordings, and settings) lives in localStorage / IndexedDB and is never
+ * fetched over the network, so nothing here can copy it into CacheStorage.
  */
 import { clientsClaim } from "workbox-core";
 import {

@@ -4,8 +4,8 @@ This is the only execution queue. `backlog.txt` and `misc.txt` are ungroomed inp
 not authorization to implement a feature. Keep detailed architecture and historical
 rationale out of this file; link the living source instead.
 
-State as of 2026-08-30 (deploy `f3a787e`): items 1 and 3 are shipped except the lines
-marked OPEN. Item 2 is blocked on a physical iPad; nothing more can be proven in Chromium.
+State reconciled 2026-08-30: item 1 is shipped except its line marked OPEN. Items 2–4
+retain physical-iPad checks; their Chromium evidence is not a device pass.
 
 ## 1. Make the browser test signal trustworthy
 
@@ -18,8 +18,8 @@ Acceptance checks:
 - DONE: every Chromium failure or blanket skip was classified and either repaired or
   skipped per-test with a tracked reason (`tests/e2e/tool-switching.spec.ts` names the
   unimplemented remember-last-subtool feature).
-- DONE: startup, Pencil drawing, undo, stamp choice, narrow-screen drawers, and the
-  SlideShow journey are covered; semantic selectors replace tail indexes.
+- DONE: startup, Pencil drawing, undo, stamp choice, and narrow-screen drawers are
+  covered; semantic selectors replace tail indexes.
 - OPEN: one named smoke command that runs only the deterministic subset (today the whole
   Chromium project is the smoke path, ~50 s locally). Add it only if the full run becomes
   too slow or flaky to gate on. See [playwright.config.ts](../playwright.config.ts).
@@ -42,19 +42,38 @@ Acceptance checks:
   presentation changes do not alter them without parity evidence.
 - Durable install/update behavior stays in [docs/pwa.md](../docs/pwa.md).
 
-## 3. Establish one complete SlideShow journey
+## 3. Prove saved drawings reopen for continued editing on iPad
 
-User journey: As a child, I can make two pictures, arrange them into a slide show, play
-it, close it, and reopen it with the same order and settings.
+User journey: As a child using the iPad, I can save an editable drawing to Files, open it
+later through the same obvious Open control, and continue drawing. PNG remains an explicit
+flattened export/import format.
 
 Acceptance checks:
 
-- DONE: create → arrange → play → close → reopen through the visible UI, in
-  [tests/e2e/slideshow.spec.ts](../tests/e2e/slideshow.spec.ts); saves (toolbar and `s`
-  key) feed the picture library via the `kidpix:picture-saved` event.
-- DONE: missing referenced picture is tested at the browser boundary; unsupported promises
-  (per-slide sound, audio in WebM, pruning) are hidden in the UI and listed as not shipped
-  in [docs/slideshow.md](../docs/slideshow.md).
-- OPEN: storage-unavailable behavior has a flash in the editor but no test; the library
-  has no pruning, so every save adds a full PNG. Decide a retention rule before adding a
-  delete UI.
+- AUTOMATED: toolbar Save writes versioned `.kidpix` v1 with exact 1300×650
+  pixels and frame state; Open dispatches `.kidpix` or ordinary images by file type; Export
+  PNG is separate. The iPad-sized Chromium journey saves, clears, reopens exact pixels,
+  continues through the touch Pencil path, and round-trips PNG.
+- AUTOMATED: file-capable touch browsers use the native share sheet only after
+  `navigator.canShare({files})`; cancel/rejection exposes a separate Download action rather
+  than automatically performing a second write.
+- OPEN, needs a human with the iPad: run items 14–16 in
+  [docs/ipad-acceptance.md](../docs/ipad-acceptance.md), including **On My iPad** storage.
+
+## 4. Prove custom Hidden Pictures on the target iPad
+
+User journey: As a child, I can tap **Add Picture Here**, choose an ordinary picture, see
+that Kid Pix turned it into a Hidden Picture and added it to the queue, then reveal it by
+erasing. The processed picture remains available after relaunch.
+
+Acceptance checks:
+
+- AUTOMATED: the touch-sized Chromium journey chooses a normal PNG through the real file
+  picker, verifies monochrome processing, visible confirmation, content-keyed deduplication,
+  IndexedDB hydration after reload, and an actual Hidden Pictures reveal stroke.
+- AUTOMATED: custom records use version 1, retain only the processed PNG, and form an
+  AUTO-MANAGED queue capped at 20. A distinct picture at the limit atomically evicts the
+  oldest custom entry; unavailable storage falls back to a bounded session queue and says so.
+- OPEN, needs a human with the iPad: run items 11–13 in
+  [docs/ipad-acceptance.md](../docs/ipad-acceptance.md), including Photos/Files picker and
+  home-screen relaunch behavior.

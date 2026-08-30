@@ -1,7 +1,7 @@
-// Open/Import Picture pipeline shared by the File > Open Picture... menu entry
-// and the canvas drag-and-drop entry point.
+// Ordinary-image branch of the shared Open File picker and canvas drag-and-drop path.
 //
 // Public surface (single function = one user intent):
+//   KiddoPaint.ImageImport.decodeFile(file)      -> Promise<HTMLImageElement>
 //   KiddoPaint.ImageImport.openFile(file)        -> Promise<void>
 //   KiddoPaint.ImageImport.triggerFilePicker()   -> opens the hidden <input>
 //
@@ -24,19 +24,23 @@
     "image/bmp",
     "image/webp",
   ];
+  var ACCEPTED_EXTENSION = /\.(png|jpe?g|gif|bmp|webp)$/i;
 
   // Reject obviously hostile sources at the boundary. 8000px guards against a
   // 20MP phone photo blowing memory while decoding to an ImageBitmap on a
   // low-end device.
   var MAX_SOURCE_DIMENSION = 8000;
 
-  ns.openFile = function (file) {
+  // Decode and validate once at the ordinary-image boundary. Both Open Picture
+  // and Hidden Pictures use this path so iPad Files MIME quirks, corrupt-image
+  // errors, and the 8000px source limit cannot drift apart.
+  ns.decodeFile = function (file) {
     return new Promise(function (resolve, reject) {
       if (!file) {
         reject(new Error("no file"));
         return;
       }
-      if (ACCEPTED_MIME.indexOf(file.type) === -1) {
+      if (!ns._isAcceptedFile(file)) {
         console.warn("ImageImport: unsupported file type", file.type);
         reject(new Error("unsupported file type: " + file.type));
         return;
@@ -69,8 +73,7 @@
               );
               return;
             }
-            ns._placeOnMain(img);
-            resolve();
+            resolve(img);
           } catch (err) {
             reject(err);
           }
@@ -79,6 +82,21 @@
       };
       reader.readAsDataURL(file);
     });
+  };
+
+  ns.openFile = function (file) {
+    return ns.decodeFile(file).then(function (img) {
+      ns._placeOnMain(img);
+    });
+  };
+
+  // iPad Files and some cloud providers omit MIME metadata. In that case only,
+  // accept the same allow-listed image formats by filename extension; a supplied
+  // but unsupported MIME type remains authoritative and is rejected.
+  ns._isAcceptedFile = function (file) {
+    if (!file) return false;
+    if (file.type) return ACCEPTED_MIME.indexOf(file.type) !== -1;
+    return ACCEPTED_EXTENSION.test(String(file.name || ""));
   };
 
   // Fit decoded bitmap onto the main canvas: letterbox-center, preserve aspect.

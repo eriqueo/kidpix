@@ -97,7 +97,7 @@ body {
   margin-left: 14px;
 }
 
-/* Right-of-statusbar action group (Kids Mode, Print, Project, Frame, plus the
+/* Right-of-statusbar action group (Kids Mode, Print, PNG export, Frame, plus the
    JS-mounted DrawMe button). A flex row with gaps — no hardcoded right: offsets,
    so changing a label (e.g. "Frame: Wood" -> "Frame: Rainbow") never overlaps a
    neighbor the way the old absolute-positioned magic numbers did. */
@@ -285,6 +285,14 @@ body.small-kids-mode .small-kids-hidden {
 .toolImg {
   width: 52px;
   height: 52px;
+}
+
+#genericsubmenu button[title="Add Picture Here"] {
+  width: 120px;
+  padding: 4px 8px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.1;
 }
 
 /* The selected color: biggest, boldest element in the column so it reads clearly as
@@ -1305,62 +1313,6 @@ kbd {
 }
 
 /* ================================================
-   File actions (Project modal + Print)
-   ================================================ */
-
-/* Project modal action buttons — styled to match the Kid Pix-flavored modal header. */
-.project-actions {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin: 16px 0;
-}
-
-.project-action-btn {
-  display: inline-block;
-  padding: 10px 18px;
-  background: linear-gradient(180deg, #ffd966 0%, #f1a226 100%);
-  border: 3px solid #000;
-  border-radius: 6px;
-  font-weight: bold;
-  font-size: 1.05em;
-  cursor: pointer;
-  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.3);
-  color: #000;
-  font-family: inherit;
-  text-align: center;
-  line-height: 1.2;
-  user-select: none;
-}
-
-.project-action-btn:hover {
-  background: linear-gradient(180deg, #ffe28a 0%, #ffb74d 100%);
-}
-
-.project-action-btn:active {
-  transform: translate(2px, 2px);
-  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.3);
-}
-
-.project-load-label {
-  /* Render the <label> like a button. */
-  display: inline-block;
-}
-
-.project-status {
-  margin: 8px 0;
-  font-weight: bold;
-  min-height: 1.2em;
-}
-
-.project-note {
-  margin-top: 16px;
-  color: #555;
-  font-size: 0.95em;
-  font-style: italic;
-}
-
-/* ================================================
    Print stylesheet
    ================================================
    The "printing" class is added to <body> right before window.print() and removed on
@@ -1374,7 +1326,6 @@ kbd {
   body.printing #subtoolbars,
   body.printing #statusbar,
   body.printing #titlebar,
-  body.printing #project-modal,
   body.printing #keyboard-shortcuts-popup {
     display: none !important;
   }
@@ -1641,6 +1592,9 @@ kbd {
     flex: 0 0 auto;
     width: 48px;
     height: 48px;
+  }
+  #genericsubmenu button[title="Add Picture Here"] {
+    width: 112px;
   }
   /* Stamp buttons keep their name label but shrink to strip height. */
   .subtoolbar .stamp-button {

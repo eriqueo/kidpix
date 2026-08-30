@@ -48,16 +48,16 @@
       <div id="container">
         <div id="toolbar">
           <div id="mainbar">
-            <button class="tool" id="save" title="Save">
+            <button class="tool" id="save" title="Save Project">
               <img src="img/toolbar/kp-m_27.png" class="pixelated" />
             </button>
-            <button class="tool" id="open" title="Open Picture..." style="font-size:11px; line-height:1;">
-              Open<br />Pic
+            <button class="tool" id="open" title="Open Project or Picture..." style="font-size:11px; line-height:1;">
+              Open<br />File
             </button>
             <input
               type="file"
               id="open-picture-input"
-              accept="image/png,image/jpeg,image/gif,image/bmp,image/webp"
+              accept=".kidpix,application/json,image/png,image/jpeg,image/gif,image/bmp,image/webp"
               style="display:none"
             />
             <button class="tool" id="pencil" title="Pencil">
@@ -295,38 +295,9 @@
         <div id="statusbar-actions">
           <button id="small-kids-toggle" title="Small Kids Mode: simpler tools for the youngest kids">Kids Mode: Off</button>
           <button id="print-btn" title="Print your picture">Print</button>
-          <button id="project-btn" title="Save or load a .kidpix project file">Project…</button>
+          <button id="export-png-btn" title="Export a flattened PNG picture">Export PNG</button>
+          <button id="download-fallback-btn" title="Download the file instead" hidden>Download instead</button>
           <button id="frame-toggle" title="Change the canvas frame">Frame: Wood</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Project (Save/Load .kidpix) Modal -->
-    <div id="project-modal" class="modal-overlay" style="display: none;">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>Project</h2>
-          <button class="close-btn" aria-label="Close">&times;</button>
-        </div>
-        <div class="modal-body">
-          <p>Save your whole picture as a <code>.kidpix</code> project file, or load one you saved before.</p>
-          <div class="project-actions">
-            <button id="project-save" class="project-action-btn">Save Project</button>
-            <label for="project-load-input" class="project-action-btn project-load-label">
-              Load Project…
-            </label>
-            <input
-              id="project-load-input"
-              type="file"
-              accept=".kidpix,application/json"
-              style="display: none;"
-            />
-          </div>
-          <p id="project-modal-status" class="project-status" aria-live="polite"></p>
-          <p class="project-note">
-            Tip: use the toolbar's <strong>Save</strong> button for a PNG image, or
-            <strong>Print</strong> to print your picture.
-          </p>
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 KiddoPaint.Tools.Toolbox.EraserHiddenPicture = function () {
   var tool = this;
-  this.hiddenPictures = [
+  this.bundledPictures = [
+    // <hidden-pictures:auto>
     "img/hidden-pictures/kp-h-bear.png",
     "img/hidden-pictures/kp-h-bison.png",
     "img/hidden-pictures/kp-h-corn.png",
@@ -13,19 +14,47 @@ KiddoPaint.Tools.Toolbox.EraserHiddenPicture = function () {
     "img/hidden-pictures/kp-h-magnet.png",
     "img/hidden-pictures/kp-h-moth.png",
     "img/hidden-pictures/kp-h-octopus.png",
+    // </hidden-pictures:auto>
   ];
+  this.customPictures = [];
+  this.hiddenPictures = this.bundledPictures.slice();
   this.isDown = false;
   // Bigger reveal window so uncovering the hidden picture isn't so tedious.
   this.size = 64;
   this.hiddenPattern = null;
+  this.activeSource = null;
+
+  // The reveal tool remains the single owner of the sources consumed here and
+  // by Doorbell. The browser persistence bridge hydrates only validated PNG
+  // data URLs through this method.
+  this.setCustomPictures = function (sources) {
+    tool.customPictures = sources.filter(function (source) {
+      return (
+        typeof source === "string" &&
+        source.indexOf("data:image/png;base64,") === 0
+      );
+    });
+    tool.hiddenPictures = tool.bundledPictures.concat(tool.customPictures);
+  };
+
+  this.usePicture = function (source) {
+    return new Promise(function (resolve, reject) {
+      const image = new Image();
+      image.crossOrigin = "anonymous";
+      image.onload = function () {
+        tool.hiddenPattern = makePatternFromImage(image);
+        tool.activeSource = source;
+        resolve(source);
+      };
+      image.onerror = function () {
+        reject(new Error("Hidden Picture could not be loaded"));
+      };
+      image.src = source;
+    });
+  };
 
   this.reset = function () {
-    const image = new Image();
-    image.src = tool.hiddenPictures.random();
-    image.crossOrigin = "anonymous";
-    image.onload = function () {
-      tool.hiddenPattern = makePatternFromImage(image);
-    };
+    return tool.usePicture(tool.hiddenPictures.random());
   };
 
   this.mousedown = function (ev) {

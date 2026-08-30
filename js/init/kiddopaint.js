@@ -221,7 +221,7 @@ function init_canvas_fit() {
 // status bar stays in sync with the toolbar without per-tool wiring). Options/stamps with
 // no entry fall back to just their name.
 KiddoPaint.ToolDescriptions = {
-  Save: "Save your picture.",
+  "Save Project": "Save an editable .kidpix file you can open and keep drawing.",
   Pencil: "Draw thin freehand lines.",
   Line: "Drag to draw a straight line.",
   Rectangle: "Drag to draw a rectangle.",
@@ -303,6 +303,7 @@ KiddoPaint.ToolDescriptions = {
   "Eraser Square 2": "Erase with a tiny square.",
   Firecracker: "Clear the screen in one big blast!",
   "Hidden Pictures": "Erase to uncover a hidden picture.",
+  "Add Picture Here": "Add your own picture to the Hidden Pictures queue.",
   "White Circles": "White circles gobble up your picture.",
   "Slip-Sliding Away": "Sliding doors wipe your picture away.",
   "#$%!*!!": "An explosive end to it all!",
@@ -520,11 +521,13 @@ function init_listeners(canvas) {
       KiddoPaint.Current.altColor = KiddoPaint.Colors.randomAllColor();
       KiddoPaint.Current.terColor = KiddoPaint.Colors.randomAllColor();
     } else if (e.keyCode == 83) {
-      // 's' key - save to file
-      save_to_file();
+      // 's' key - save an editable project
+      KiddoPaint.FileActions.saveProject().catch(function (err) {
+        console.warn("Save Project failed:", err && err.code ? err.code : err);
+      });
     } else if (e.keyCode == 79) {
-      // 'o' key - open picture
-      if (KiddoPaint.ImageImport) KiddoPaint.ImageImport.triggerFilePicker();
+      // 'o' key - open an editable project or ordinary picture
+      if (KiddoPaint.FileActions) KiddoPaint.FileActions.triggerOpenPicker();
     } else if (e.keyCode > 48 && e.keyCode < 58) {
       // Number keys 1-9 - set multiplier
       KiddoPaint.Current.multiplier = e.keyCode - 48;
@@ -666,14 +669,16 @@ function highlightSelectedTool(selectedToolId) {
 function init_tool_bar() {
   document.getElementById("save").addEventListener("mousedown", function () {
     KiddoPaint.Sounds.mainmenu();
-    save_to_file();
+    KiddoPaint.FileActions.saveProject().catch(function (err) {
+      console.warn("Save Project failed:", err && err.code ? err.code : err);
+    });
   });
 
   var openBtn = document.getElementById("open");
   if (openBtn) {
     openBtn.addEventListener("mousedown", function () {
       KiddoPaint.Sounds.mainmenu();
-      KiddoPaint.ImageImport.triggerFilePicker();
+      KiddoPaint.FileActions.triggerOpenPicker();
     });
   }
   var openInput = document.getElementById("open-picture-input");
@@ -681,9 +686,10 @@ function init_tool_bar() {
     openInput.addEventListener("change", function (ev) {
       var file = ev.target.files && ev.target.files[0];
       if (!file) return;
-      KiddoPaint.ImageImport.openFile(file).catch(function (err) {
-        console.warn("Open Picture failed:", err && err.message ? err.message : err);
+      KiddoPaint.FileActions.openFile(file).catch(function (err) {
+        console.warn("Open failed:", err && err.code ? err.code : err);
       });
+      openInput.value = "";
     });
   }
 
@@ -1243,37 +1249,6 @@ function mouse_wheel(ev) {
   return false;
 }
 
-function save_to_file() {
-  // jpp - always crop saved png, and remove its transparency.
-  var canvasToSave = trimAndFlattenCanvas(KiddoPaint.Display.main_canvas);
-  // orig:
-  // var canvasToSave = KiddoPaint.Current.modifiedAlt ? trimAndFlattenCanvas(KiddoPaint.Display.main_canvas) : KiddoPaint.Display.main_canvas;
-
-  var image = canvasToSave.toDataURL("image/png");
-
-  // nice format for timestamp in filename
-  // https://chat.openai.com/c/926c6bbf-c626-456e-9832-08e5088ecf2b
-  const d = new Date();
-  const formattedDate = [
-    d.getFullYear(),
-    (d.getMonth() + 1).toString().padStart(2, "0"),
-    d.getDate().toString().padStart(2, "0"),
-    d.getHours().toString().padStart(2, "0"),
-    d.getMinutes().toString().padStart(2, "0"),
-    d.getSeconds().toString().padStart(2, "0"),
-  ].join("-");
-  // old:
-  // const formattedDate = Date.now();
-
-  var a = document.createElement("a");
-  a.href = image;
-  a.download = "kidpix-" + formattedDate + ".png";
-  a.click();
-  // Every PNG save (toolbar button, 's' key) ends here; companion features
-  // (src/slideshow/install.ts) listen for this instead of hooking the button.
-  document.dispatchEvent(new CustomEvent("kidpix:picture-saved"));
-}
-
 function image_upload(ev) {
   var files = ev.dataTransfer && ev.dataTransfer.files;
   if (files && files.length > 0) {
@@ -1281,7 +1256,11 @@ function image_upload(ev) {
     // Alt-drop preserves the legacy placer-tool flow (drag-to-position the
     // image at native size). Default drop routes through the shared
     // Open/Import pipeline: decode + letterbox-fit + single undoable composite.
-    if (KiddoPaint.Current.modifiedAlt && typeof FileReader !== "undefined") {
+    if (
+      !KiddoPaint.FileActions.isProjectFile(file) &&
+      KiddoPaint.Current.modifiedAlt &&
+      typeof FileReader !== "undefined"
+    ) {
       var reader = new FileReader();
       reader.onload = function (evt) {
         var img = new Image();
@@ -1297,9 +1276,9 @@ function image_upload(ev) {
         img.src = evt.target.result;
       };
       reader.readAsDataURL(file);
-    } else if (KiddoPaint.ImageImport) {
-      KiddoPaint.ImageImport.openFile(file).catch(function (err) {
-        console.warn("drop import failed:", err && err.message ? err.message : err);
+    } else if (KiddoPaint.FileActions) {
+      KiddoPaint.FileActions.openFile(file).catch(function (err) {
+        console.warn("drop import failed:", err && err.code ? err.code : err);
       });
     }
   }

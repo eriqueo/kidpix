@@ -27,7 +27,7 @@ acceptance remains an active priority in the authoritative queue linked above.
 | WS1 | **Responsive presentation** with tablet breakpoints and phone drawers; backing store preserved | `src/assets/css/kidpix.css`, `js/init/mobile-drawers.js` |
 | WS2 | **Fully offline after one visit** (2026-08-29): every deploy-owned file precached (400 entries, 3.6 MiB), Safari Range-aware audio, wait-to-activate updates, build checker, offline test against the built artifacts — see [pwa.md](./pwa.md) | `yarn build` (runs `check:pwa`), `yarn test:pwa` |
 | WS3 | **Responsive-input performance**: in-memory bounded undo plus debounced current-drawing persistence | `js/util/display.js`, `js/init/kiddopaint.js` |
-| Q1–Q3 | **Queue wave 2026-08-30** (`a628a39`, `527d4fa`, `f3a787e`): trustworthy Chromium signal (skips per-test with reasons, semantic selectors, Edit Stamp rebuild fix); phone "More actions" sheet for status-bar actions; complete SlideShow journey wired through `kidpix:picture-saved`. Each >50 LOC slice had a fresh-eyes audit; full gate green before push | `yarn test:e2e`, `tests/e2e/{mobile-acceptance,slideshow,tool-switching}.spec.ts` |
+| Q1–Q3 | **Queue wave 2026-08-30** (`a628a39`, `527d4fa`, `f3a787e`): trustworthy Chromium signal (skips per-test with reasons, semantic selectors, Edit Stamp rebuild fix); phone "More actions" sheet for status-bar actions; a SlideShow journey that was later removed by product decision. Each >50 LOC slice had a fresh-eyes audit; full gate green before push | Git history; current checks live in the active queue |
 
 At this checkpoint the local gate passed. Default app behavior remained unchanged
 (the legacy engine still drives drawing by default; core tools are opt-in via `?core`).
@@ -63,10 +63,17 @@ At this checkpoint the local gate passed. Default app behavior remained unchange
 - Local Chromium Playwright runs were resolved without a flake: set `KIDPIX_CHROMIUM` to the
   system Chromium binary. The Playwright configs share that hook for `yarn test:e2e`,
   `yarn test:parity`, and `yarn test:pwa`; Firefox/WebKit remain CI-only.
+- SlideShow was removed after the shipped journey proved too confusing and complex for the
+  intended child workflow. Its UI, runtime, save-event seam, tests, and living product guide
+  were deleted; its old IndexedDB records were deliberately left untouched for rollback.
+- The replacement Hidden Pictures journey keeps the original reveal tool and adds one direct
+  in-app **Add Picture Here** path. Ordinary images are locally scaled and dithered, then
+  stored as versioned processed PNGs in a bounded IndexedDB queue; browser coverage exercises
+  picker, confirmation, reload hydration, and the real reveal stroke.
 
 ## Remaining physical-device acceptance
 
 - **iPad acceptance after the 2026-08-30 wave** — the full checklist and its dated results
    live in [ipad-acceptance.md](./ipad-acceptance.md). It includes the WS2 items (Airplane
    Mode sounds via the Range path, Hidden Pictures / stamps, update on relaunch) plus drawer
-   reach, the phone More sheet, and the SlideShow journey.
+   reach, the phone More sheet, custom Hidden Pictures, and editable-file save/open.

@@ -4,13 +4,14 @@ Feature record for the Kid Pix-style File menu affordances added to this fork.
 
 ## What ships
 
-Three toolbar affordances:
+One editable-file path plus explicit output actions:
 
 | Affordance        | Where                | What it does                                                                 |
 | ----------------- | -------------------- | ---------------------------------------------------------------------------- |
-| **Save Picture**  | Main toolbar (`#save`) | Existing PNG export (`js/init/kiddopaint.js` `save_to_file`). Unchanged.    |
-| **Print**         | Status bar (`#print-btn`)   | `window.print()` against a print stylesheet that isolates the canvas.  |
-| **Project…**      | Status bar (`#project-btn`) | Opens a Kid Pix-style modal with Save / Load `.kidpix` project actions. |
+| **Save Project**  | Main toolbar (`#save`) | Saves the exact editable canvas as `.kidpix`. |
+| **Open File**     | Main toolbar (`#open`) | Opens either `.kidpix` or a supported ordinary image. |
+| **Export PNG**    | Status bar (`#export-png-btn`) | Exports a cropped, flattened image for sharing outside Kid Pix. |
+| **Print**         | Status bar (`#print-btn`) | `window.print()` against a stylesheet that isolates the canvas. |
 
 ## `.kidpix` file format (v1)
 
@@ -37,9 +38,14 @@ A `.kidpix` file is a JSON document:
 The Kid Pix engine is **immediate-mode**: once a tool commits to `main_canvas`, the
 strokes, stamps and text become plain pixels. There is no retained scene graph to
 serialize. A project file is therefore essentially `version + canvasPNG + a tiny bit of
-session state` (currently just the frame style). The version field is shipped now so
-later builds can add retained state without a migration framework — pre-1.0 fan files
-are allowed to break.
+session state` (currently just the frame style). It intentionally does not retain undo,
+audio, the selected tool, or editable stamp/text objects. The version field is the
+compatibility boundary: this build continues to read every valid v1 file it writes.
+
+`.kidpix` files are **CRITICAL user-owned data**. Kid Pix delivers the file to the
+browser/Files app and retains no managed copy or cleanup timer; the person saving it owns
+its location and backup. The app's separate automatic current-drawing recovery remains
+browser site data, not a substitute for an exported project.
 
 ### Boundary sanitization (Load)
 
@@ -47,9 +53,10 @@ are allowed to break.
 the canvas:
 
 - `magic` must equal `"kidpix-project"`.
-- `version` must be a number `≥ 1` and `≤` the build's `PROJECT_VERSION`.
-- `canvas.png` must be a `data:image/` URL (decoded into an `<Image>` — non-image data
-  cannot escape into the DOM or run as script).
+- `version` must be an integer `≥ 1` and `≤` the build's `PROJECT_VERSION`.
+- Canvas width and height must be exactly 1300×650 for v1.
+- `canvas.png` must be a base64 PNG data URL and its decoded dimensions must match the
+  declared dimensions.
 - `retainedState.frame` is allow-listed against `KiddoPaint.FrameStyles`.
 
 Anything else is dropped before `applyProject` runs.
@@ -62,31 +69,39 @@ the page. `body.printing` is toggled on right before `window.print()` and cleare
 `afterprint` so the screen view is never disturbed. `print-color-adjust: exact` is set
 on the canvas so the white background fills actually render on paper across browsers.
 
-If `window.print` is missing (some in-app browsers), the Print button falls back to a
-PNG download.
+If `window.print` is missing (some in-app browsers), Print falls back to PNG export.
+
+## iPad delivery
+
+On a touch device that supports file sharing, Save and Export first verify the `File`
+payload with `navigator.canShare`, then open the native share sheet. Choose **Save to
+Files** to put it in On My iPad or iCloud Drive. If the sheet is closed or rejects the
+file, Kid Pix shows a separate **Download instead** action; it never starts an automatic
+second save. Browsers without file sharing use an ordinary download directly.
 
 ## Cross-browser smoke notes (desktop)
 
-Out of scope for sandboxed CI; please verify before merging:
+Physical browser checks still required:
 
-- [ ] Chrome (macOS / Linux) — PNG export, Print preview (single page, no white-on-white), Save+Load round-trip.
-- [ ] Safari (macOS) — same. Safari occasionally clips the print canvas when the wood frame is present; the `body.printing` class removes the frame and any border.
-- [ ] Firefox (macOS / Linux) — same.
-
-iOS Safari is explicitly **out of the minimal-viable target** (Save anchor + print
-quirks); known and accepted.
+- [ ] Physical iPad Safari / installed app — native Save to Files, reopen exact pixels,
+  and continue drawing. Use [the iPad checklist](../../docs/ipad-acceptance.md).
+- [ ] Desktop Safari and Firefox — download fallback and Print preview.
 
 ## Files
 
-- `index.html` — adds `#print-btn`, `#project-btn`, and the `#project-modal`.
-- `js/init/file-actions.js` — Print, Save/Load Project, sanitization, modal wiring.
+- `index.html` — the unified file picker plus Print and Export PNG actions.
+- `js/init/file-actions.js` — project Save/Open, PNG export, native share/download
+  delivery, Print, and boundary sanitization.
 - `src/kidpix-main.js` — imports `file-actions.js` after `init/kiddopaint.js`.
-- `src/assets/css/kidpix.css` — statusbar button layout, project action buttons, `@media print` rules.
+- `src/assets/css/kidpix.css` — status-bar button layout and `@media print` rules.
 
 ## Manual smoke
 
-1. Draw something. Click **Project…** → **Save Project**. A `kidpix-YYYY…kidpix` file downloads.
-2. Click **Save** in the main toolbar — a PNG still downloads (existing behaviour, unchanged).
-3. Click **Print**. The browser print dialog appears with only the canvas visible at page scale.
-4. Clear the canvas. Click **Project…** → **Load Project…** and pick the file from step 1. The picture restores and the frame style matches.
-5. Try loading a non-JSON file or a JSON file without `magic` — the modal shows a friendly error and the canvas is untouched.
+1. Draw something and click **Save Project**. Save the `.kidpix` file.
+2. Change or clear the canvas. Click **Open File** and choose that `.kidpix`; exact
+   pixels and the frame return, then draw another stroke.
+3. Click **Export PNG**, clear, and open that PNG; it imports as an ordinary flattened
+   picture that can also be edited.
+4. Click **Print**. The browser print dialog contains only the canvas.
+5. Try a malformed `.kidpix`; the status bar reports the error and leaves the canvas
+   untouched.

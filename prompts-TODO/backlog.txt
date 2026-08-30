@@ -22,8 +22,10 @@ change.
 
 Remaining idea: give a grown-up one place to inspect and change user settings and to clear
 app-owned persistent data. Candidate controls include keyboard shortcuts, Small Kids Mode,
-the current drawing, saved ColorMe pages, SlideShow projects, custom sounds, stamp overrides,
-and remembered selections if that feature is promoted.
+the current drawing, saved ColorMe pages, legacy SlideShow data retained after feature removal,
+custom sounds, stamp overrides,
+the bounded custom Hidden Pictures queue, and remembered selections if that feature is
+promoted.
 
 Before promotion, inventory the actual storage owners and declare retention/cleanup behavior.
 Do not implement a generic "show all localStorage" surface: current features use both

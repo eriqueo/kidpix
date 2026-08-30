@@ -1,6 +1,6 @@
 /**
  * "My Saved Pages" gallery — the separate route for reopening saved ColorMe
- * pages. A modal overlay (styled like the slideshow editor) showing each saved
+ * pages. A modal overlay showing each saved
  * page as a thumbnail: click to load it back onto the canvas and keep coloring,
  * or × to delete. Reads/writes through KiddoPaint.ColorMe.* (wired by
  * src/colorme-init.ts); all legacy globals are read lazily at click time so

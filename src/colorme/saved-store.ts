@@ -3,8 +3,8 @@
  * page they're coloring and reopen it later to keep going. Survives reloads,
  * unlike the session-only per-page snapshots in js/tools/colorme.js.
  *
- * Mirrors src/slideshow/store.ts on purpose (same dialect): a pure in-memory
- * impl for tests / IDB-less environments, and an IndexedDB adapter for prod.
+ * A pure in-memory implementation serves tests / IDB-less environments, and an
+ * IndexedDB adapter serves production.
  * Boundary validation (isSavedColoring) is applied at put() so callers can
  * trust the shapes coming back out. IndexedDB rather than localStorage because
  * each saved page is a full-canvas PNG (~1-2 MB) — many of them would blow the
