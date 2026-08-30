@@ -1423,9 +1423,10 @@ kbd {
    - Tablet (700-1023px): keep the frame, slim it — single-column rails,
      shorter chrome — so an iPad still gets a big canvas.
    - Phone (<700px): the rails become edge drawers (position: fixed, slid
-     off-screen) toggled by two floating buttons that js/init/mobile-drawers.js
+     off-screen) toggled by floating buttons that js/init/mobile-drawers.js
      injects. The canvas takes essentially the whole screen. Title and status
-     bars are hidden.
+     bars are hidden; a third "more actions" toggle reveals the status-bar
+     action group as a bottom sheet.
 
    fitCanvasToStage() needs no changes for any of this: it already refits the
    canvas whenever #canvas-stage resizes.
@@ -1564,6 +1565,65 @@ kbd {
   }
   body.colors-drawer-open #colors-drawer-toggle {
     right: 112px;
+  }
+
+  /* "More actions" sheet: the same #statusbar the tablet/desktop frame shows,
+     revealed as a fixed bottom sheet so Kids Mode / Print / Project / Frame /
+     DrawMe stay reachable. The status text rides above the actions because
+     DrawMe's only output is that text. Bottom padding reserves the band where
+     the three fixed toggles float (z-index 50 > 45), so no action button ever
+     sits underneath one. */
+  #more-drawer-toggle {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  /* A slid-out rail's close toggle (left: 140px / right: 112px) overlaps the
+     centered More toggle on narrow phones; both are z-index 50, so the later
+     More button would steal the tap. Hide it while a rail drawer is open. */
+  body.tools-drawer-open #more-drawer-toggle,
+  body.colors-drawer-open #more-drawer-toggle {
+    display: none;
+  }
+  body.more-drawer-open #statusbar {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: auto;
+    z-index: 45;
+    padding: 12px 12px calc(70px + env(safe-area-inset-bottom));
+    gap: 10px;
+    white-space: normal;
+    box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.45);
+  }
+  body.more-drawer-open #statusbar-text {
+    flex: 0 0 auto;
+    width: 100%;
+    max-height: 4.5em;
+    overflow-y: auto;
+    text-overflow: clip;
+    font-size: 14px;
+    line-height: 1.3;
+  }
+  body.more-drawer-open .status-name {
+    font-size: 15px;
+  }
+  body.more-drawer-open .status-desc {
+    font-size: 13px;
+    margin-left: 6px;
+  }
+  body.more-drawer-open #statusbar-actions {
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+  }
+  body.more-drawer-open #statusbar-actions button {
+    height: 44px;
+    padding: 0 14px;
+    font-size: 14px;
   }
 
   /* Options strip: one compact horizontally-scrollable row. Note the active

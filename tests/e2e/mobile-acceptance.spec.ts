@@ -151,16 +151,131 @@ for (const viewport of PHONE_VIEWPORTS) {
   });
 }
 
+const STATUS_ACTION_IDS = [
+  "small-kids-toggle",
+  "print-btn",
+  "project-btn",
+  "frame-toggle",
+];
+
+for (const viewport of PHONE_VIEWPORTS) {
+  test(`${viewport.name}: status-bar actions are reachable within two taps via More actions`, async ({
+    page,
+  }) => {
+    await openAtViewport(page, viewport);
+
+    // The status bar itself stays collapsed on phones; only the sheet exposes it.
+    for (const id of STATUS_ACTION_IDS) {
+      await expect(page.locator(`#${id}`)).toBeHidden();
+    }
+
+    const moreToggle = page.getByRole("button", { name: "More actions" });
+    await expect(moreToggle).toBeVisible();
+    await moreToggle.tap(); // tap 1
+    await expect(page.locator("body")).toHaveClass(/more-drawer-open/);
+
+    for (const id of STATUS_ACTION_IDS) {
+      await expect(page.locator(`#${id}`)).toBeVisible();
+      await expect(page.locator(`#${id}`)).toBeInViewport();
+    }
+    // The other two toggles must not be buried under the sheet.
+    await expect(page.getByRole("button", { name: "Tools" })).toBeInViewport();
+    await expect(page.getByRole("button", { name: "Colors" })).toBeInViewport();
+
+    await page.locator("#small-kids-toggle").tap(); // tap 2
+    await expect(page.locator("body")).toHaveClass(/small-kids-mode/);
+    await expect(page.locator("body")).not.toHaveClass(/more-drawer-open/);
+    await expect(page.locator("#small-kids-toggle")).toBeHidden();
+
+    // One drawer at a time: while a rail is open the More toggle steps aside
+    // (it would overlap the rail's close button), and opening a rail from the
+    // sheet closes the sheet.
+    const toolsToggle = page.getByRole("button", { name: "Tools" });
+    await toolsToggle.tap();
+    await expect(page.locator("body")).toHaveClass(/tools-drawer-open/);
+    await expect(moreToggle).toBeHidden();
+    await toolsToggle.tap();
+    await expect(page.locator("body")).not.toHaveClass(/tools-drawer-open/);
+    await expect(moreToggle).toBeVisible();
+    await moreToggle.tap();
+    await expect(page.locator("body")).toHaveClass(/more-drawer-open/);
+    await toolsToggle.tap();
+    await expect(page.locator("body")).toHaveClass(/tools-drawer-open/);
+    await expect(page.locator("body")).not.toHaveClass(/more-drawer-open/);
+  });
+
+  test(`${viewport.name}: DrawMe shows its prompt inside the open sheet`, async ({
+    page,
+  }) => {
+    await openAtViewport(page, viewport);
+
+    await page.getByRole("button", { name: "More actions" }).tap();
+    await expect(page.locator("body")).toHaveClass(/more-drawer-open/);
+    await page.locator("#drawme-button").tap();
+
+    // DrawMe's only output is the status text, so the sheet must stay open and
+    // show it — unlike every other action, which closes the sheet.
+    await expect(page.locator("body")).toHaveClass(/more-drawer-open/);
+    const text = page.locator("#statusbar-text");
+    await expect(text).toBeVisible();
+    await expect(text).toBeInViewport();
+    await expect(text).not.toHaveText(/^\s*$/);
+  });
+
+  test(`${viewport.name}: dismissing More actions on the canvas does not paint`, async ({
+    page,
+  }) => {
+    await openAtViewport(page, viewport);
+
+    await page.getByRole("button", { name: "More actions" }).tap();
+    await expect(page.locator("body")).toHaveClass(/more-drawer-open/);
+    const beforeDismiss = await mainCanvasInkPixels(page);
+
+    await dispatchTouchStroke(page);
+
+    await expect(page.locator("body")).not.toHaveClass(/more-drawer-open/);
+    expect(await mainCanvasInkPixels(page)).toBe(beforeDismiss);
+
+    // Drawers still work after the sheet has been used.
+    await page.getByRole("button", { name: "Tools" }).tap();
+    await expect(page.locator("body")).toHaveClass(/tools-drawer-open/);
+    await page.locator("#pencil").tap();
+    await expect(page.locator("body")).not.toHaveClass(/tools-drawer-open/);
+
+    await dispatchTouchStroke(page);
+    expect(await mainCanvasInkPixels(page)).toBeGreaterThan(beforeDismiss);
+  });
+}
+
+test("narrow phone: the open Tools toggle is not shadowed by the More toggle", async ({
+  page,
+}) => {
+  // On a 360px-wide phone the slid-out Tools close button (left 140-188px)
+  // and a centered More toggle (156-204px) would overlap; a tap on the right
+  // edge of the Tools button must close the drawer, not open the sheet.
+  await openAtViewport(page, { width: 360, height: 780 });
+
+  const toolsToggle = page.getByRole("button", { name: "Tools" });
+  await toolsToggle.tap();
+  await expect(page.locator("body")).toHaveClass(/tools-drawer-open/);
+
+  // The toggle animates `left` when the drawer opens; wait until it has slid
+  // to its open position before measuring where its right edge is.
+  await expect
+    .poll(async () => (await toolsToggle.boundingBox())!.x)
+    .toBeGreaterThanOrEqual(139);
+  const box = (await toolsToggle.boundingBox())!;
+  await page.touchscreen.tap(box.x + box.width - 4, box.y + box.height / 2);
+
+  await expect(page.locator("body")).not.toHaveClass(/tools-drawer-open/);
+  await expect(page.locator("body")).not.toHaveClass(/more-drawer-open/);
+});
+
 for (const viewport of TABLET_VIEWPORTS) {
   test(`${viewport.name}: status-bar actions stay reachable`, async ({ page }) => {
     await openAtViewport(page, viewport);
 
-    for (const id of [
-      "small-kids-toggle",
-      "print-btn",
-      "project-btn",
-      "frame-toggle",
-    ]) {
+    for (const id of STATUS_ACTION_IDS) {
       await expect(page.locator(`#${id}`)).toBeVisible();
       await expect(page.locator(`#${id}`)).toBeInViewport();
     }
