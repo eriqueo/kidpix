@@ -28,6 +28,15 @@ features that have since shipped. They are not execution queues.
   its legacy UI. Default drawing behavior remains on the legacy tool path.
 - [src/slideshow/](src/slideshow/), ColorMe, DrawMe, stamp editing, sound recording, and
   Wacky Cam are feature modules composed into the same app rather than separate frontends.
+  Legacy → feature seams are DOM events, not imports: `save_to_file()` in
+  [js/init/kiddopaint.js](js/init/kiddopaint.js) dispatches `kidpix:picture-saved` on
+  `document`, and the SlideShow installer files the `#kiddopaint` canvas on that event.
+- [js/init/mobile-drawers.js](js/init/mobile-drawers.js) owns the phone layout: Tools and
+  Colors rails plus a "More actions" sheet that exposes `#statusbar-actions` (Kids Mode,
+  Print, Project, Frame, DrawMe) on phone widths, where CSS hides the status bar. One drawer
+  is open at a time; the phone rules live in one media block in
+  [src/assets/css/kidpix.css](src/assets/css/kidpix.css). Tablet and desktop keep the status
+  bar inline. Covered by [tests/e2e/mobile-acceptance.spec.ts](tests/e2e/mobile-acceptance.spec.ts).
 - [pwa/](pwa/) and [vite.config.ts](vite.config.ts) own packaging. A build emits a root-based
   `dist/` and GitHub-Pages-based `dist-gh/`; the build checker enforces the offline precache
   contract described in [docs/pwa.md](docs/pwa.md).
@@ -90,8 +99,11 @@ deployment to render the change.
 - [docs/PHASE-STATUS.md](docs/PHASE-STATUS.md): dated execution history and remaining manual
   device work. Commands and counts in it are historical observations.
 - [docs/pwa.md](docs/pwa.md): current offline/install/update contract.
-- [docs/slideshow.md](docs/slideshow.md): SlideShow design and product contract, pending the
-  active end-to-end reconciliation in the queue.
+- [docs/slideshow.md](docs/slideshow.md): SlideShow product contract, reconciled with the
+  shipped journey on 2026-08-30; its "Not shipped" list is authoritative for what the UI
+  must not promise.
+- [docs/ipad-acceptance.md](docs/ipad-acceptance.md): the physical-iPad checklist that
+  Chromium emulation cannot replace; record dated results there.
 - [docs/reference/kid-pix-2-users-guide.md](docs/reference/kid-pix-2-users-guide.md): fidelity
   reference for original tool behavior.
 - Git history is the source for removed implementations and completed feature narratives;

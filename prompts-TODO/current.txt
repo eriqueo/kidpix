@@ -4,6 +4,9 @@ This is the only execution queue. `backlog.txt` and `misc.txt` are ungroomed inp
 not authorization to implement a feature. Keep detailed architecture and historical
 rationale out of this file; link the living source instead.
 
+State as of 2026-08-30 (deploy `f3a787e`): items 1 and 3 are shipped except the lines
+marked OPEN. Item 2 is blocked on a physical iPad; nothing more can be proven in Chromium.
+
 ## 1. Make the browser test signal trustworthy
 
 User journey: As a maintainer preparing a release, I can run one Chromium smoke path
@@ -12,15 +15,14 @@ obsolete expectation or positional selector.
 
 Acceptance checks:
 
-- Classify each existing Chromium failure or skip as a product defect, obsolete
-  expectation, unstable selector, or intentionally unsupported behavior.
-- Cover startup, drawing with Pencil, undo, choosing a stamp, narrow-screen drawer
-  navigation, and opening every visible modal feature in a deterministic smoke path.
-- Use semantic selectors or shared UI vocabulary where available; avoid array indexes
-  whose meaning changes when tools, colors, or stamps are added.
-- The smoke command is green in local system Chromium and in pull-request CI, with each
-  intentional skip carrying a tracked reason. See [playwright.config.ts](../playwright.config.ts)
-  and [tests/e2e/](../tests/e2e/).
+- DONE: every Chromium failure or blanket skip was classified and either repaired or
+  skipped per-test with a tracked reason (`tests/e2e/tool-switching.spec.ts` names the
+  unimplemented remember-last-subtool feature).
+- DONE: startup, Pencil drawing, undo, stamp choice, narrow-screen drawers, and the
+  SlideShow journey are covered; semantic selectors replace tail indexes.
+- OPEN: one named smoke command that runs only the deterministic subset (today the whole
+  Chromium project is the smoke path, ~50 s locally). Add it only if the full run becomes
+  too slow or flaky to gate on. See [playwright.config.ts](../playwright.config.ts).
 
 ## 2. Prove the installed app on the target iPad
 
@@ -30,14 +32,15 @@ without losing the current picture.
 
 Acceptance checks:
 
-- Record a phone/tablet portrait-and-landscape matrix for canvas coordinates, drawer
-  interactions, and reachability of status-bar actions.
-- On a physical iPad, exercise first-tap audio unlock, touch drawing, offline relaunch,
-  and the wait-to-activate update flow.
+- DONE (Chromium emulation only): phone/tablet portrait-and-landscape matrix for canvas
+  coordinates, drawer interactions, and status-bar action reachability, in
+  [tests/e2e/mobile-acceptance.spec.ts](../tests/e2e/mobile-acceptance.spec.ts).
+- OPEN, needs a human with the iPad: run [docs/ipad-acceptance.md](../docs/ipad-acceptance.md)
+  and record dated pass/fail there. Covers audio unlock, Pencil coordinates, rotation and
+  safe areas, drawer reach, offline relaunch, and wait-to-activate update.
 - Treat the 1300×650 backing store and `_x`/`_y` event normalization as load-bearing;
   presentation changes do not alter them without parity evidence.
-- Put durable install/update behavior in [docs/pwa.md](../docs/pwa.md); keep dated device
-  observations with the acceptance evidence rather than copying them into architecture docs.
+- Durable install/update behavior stays in [docs/pwa.md](../docs/pwa.md).
 
 ## 3. Establish one complete SlideShow journey
 
@@ -46,10 +49,12 @@ it, close it, and reopen it with the same order and settings.
 
 Acceptance checks:
 
-- Exercise create → arrange → play → close → reopen through the visible UI.
-- Verify persistence from the authoritative store, including behavior when a referenced
-  picture is missing or storage is unavailable.
-- Either test each visible promise in the UI or hide the unsupported control; do not
-  document planned behavior as shipped behavior.
-- Reconcile the resulting product contract in [docs/slideshow.md](../docs/slideshow.md)
-  and cover the journey at the browser boundary.
+- DONE: create → arrange → play → close → reopen through the visible UI, in
+  [tests/e2e/slideshow.spec.ts](../tests/e2e/slideshow.spec.ts); saves (toolbar and `s`
+  key) feed the picture library via the `kidpix:picture-saved` event.
+- DONE: missing referenced picture is tested at the browser boundary; unsupported promises
+  (per-slide sound, audio in WebM, pruning) are hidden in the UI and listed as not shipped
+  in [docs/slideshow.md](../docs/slideshow.md).
+- OPEN: storage-unavailable behavior has a flash in the editor but no test; the library
+  has no pruning, so every save adds a full PNG. Decide a retention rule before adding a
+  delete UI.
