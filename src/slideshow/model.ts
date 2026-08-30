@@ -7,6 +7,7 @@
 import {
   DEFAULT_DURATION_MS,
   DEFAULT_TRANSITION_MS,
+  type Picture,
   type PictureId,
   type Slide,
   type SlideId,
@@ -43,6 +44,27 @@ export function newSlide(
     transitionMs: partial.transitionMs ?? DEFAULT_TRANSITION_MS,
     durationMs: partial.durationMs ?? DEFAULT_DURATION_MS,
   };
+}
+
+/** A library Picture from an already-encoded canvas data URL. */
+export function newPicture(dataUrl: string, now = Date.now()): Picture {
+  const d = new Date(now);
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  const ss = String(d.getSeconds()).padStart(2, "0");
+  return {
+    id: nextId("pic"),
+    name: `Picture ${hh}:${mm}:${ss}`,
+    dataUrl,
+    createdMs: now,
+  };
+}
+
+/** The show to reopen: most recently updated, or undefined when none is saved. */
+export function latestSlideshow(all: Slideshow[]): Slideshow | undefined {
+  let best: Slideshow | undefined;
+  for (const s of all) if (!best || s.updatedMs > best.updatedMs) best = s;
+  return best;
 }
 
 function touch(s: Slideshow, slides: Slide[], now = Date.now()): Slideshow {

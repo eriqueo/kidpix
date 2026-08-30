@@ -8,6 +8,7 @@
  * Both satisfy `SlideshowStore`. Boundary validation (isPicture/isSlideshow) is
  * applied at `put*` so internal modules can trust the shapes.
  */
+import { newPicture } from "./model";
 import {
   isPicture,
   isSlideshow,
@@ -91,6 +92,55 @@ export function createMemoryStore(): SlideshowStore {
 }
 
 /* -------------------------------------------------------------------------- */
+/* Store-level policies (pure over the SlideshowStore interface; unit-tested).  */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Seed an EMPTY library from the legacy single-slot `localStorage["kiddopaint"]`
+ * save. Once any picture exists (e.g. filed by Save) the current drawing is
+ * already reachable, and re-seeding would only duplicate it.
+ */
+export async function seedFromLegacy(
+  store: SlideshowStore,
+  legacy: Pick<Storage, "getItem">,
+  now = Date.now(),
+): Promise<void> {
+  let dataUrl: string | null;
+  try {
+    dataUrl = legacy.getItem("kiddopaint");
+  } catch {
+    return;
+  }
+  if (!dataUrl) return;
+  const existing = await store.listPictures();
+  if (existing.length > 0) return;
+  await store.putPicture({
+    id: `pic-legacy-${now.toString(36)}`,
+    name: "Last saved",
+    dataUrl,
+    createdMs: now,
+  });
+}
+
+/**
+ * File a captured canvas unless it is byte-identical to the newest library
+ * picture. The dedupe key lives in the store, so it survives reloads.
+ * Returns true when a picture was filed.
+ */
+export async function filePictureIfNew(
+  store: SlideshowStore,
+  dataUrl: string,
+  now = Date.now(),
+): Promise<boolean> {
+  const all = await store.listPictures();
+  let newest: Picture | undefined;
+  for (const p of all) if (!newest || p.createdMs > newest.createdMs) newest = p;
+  if (newest && newest.dataUrl === dataUrl) return false;
+  await store.putPicture(newPicture(dataUrl, now));
+  return true;
+}
+
+/* -------------------------------------------------------------------------- */
 /* IndexedDB store (production).                                               */
 /* -------------------------------------------------------------------------- */
 
@@ -159,33 +209,14 @@ export function createIndexedDbStore(opts: IndexedDbStoreOpts = {}): SlideshowSt
     return tx<T[]>(storeName, "readonly", (s) => s.getAll() as IDBRequest<T[]>);
   }
 
-  async function importLegacyIfAny(store: SlideshowStore): Promise<void> {
-    const legacy =
-      opts.legacyStorage ??
-      (globalThis as { localStorage?: Storage }).localStorage;
-    if (!legacy) return;
-    let dataUrl: string | null;
-    try {
-      dataUrl = legacy.getItem("kiddopaint");
-    } catch {
-      return;
-    }
-    if (!dataUrl) return;
-    const existing = await store.listPictures();
-    if (existing.some((p) => p.name === "Last saved (legacy)")) return;
-    const now = Date.now();
-    await store.putPicture({
-      id: `pic-legacy-${now.toString(36)}`,
-      name: "Last saved (legacy)",
-      dataUrl,
-      createdMs: now,
-    });
-  }
-
   const store: SlideshowStore = {
     async init() {
       await openDb();
-      if (opts.importLegacy !== false) await importLegacyIfAny(store);
+      if (opts.importLegacy !== false) {
+        const legacy =
+          opts.legacyStorage ?? (globalThis as { localStorage?: Storage }).localStorage;
+        if (legacy) await seedFromLegacy(store, legacy);
+      }
     },
 
     listPictures: () => getAll<Picture>(STORE_PICTURES),

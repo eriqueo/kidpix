@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { createMemoryStore } from "./store";
+import { createMemoryStore, filePictureIfNew, seedFromLegacy } from "./store";
 import type { Picture, Slideshow } from "./types";
 
 function pic(id: string, name = id): Picture {
@@ -45,6 +45,33 @@ describe("SlideshowStore (memory)", () => {
     await expect(
       s.putSlideshow({ id: "x", name: "x", slides: [{ id: "s", pictureId: "p", transition: "BOGUS", transitionMs: 0, durationMs: 0 } as unknown as never], createdMs: 0, updatedMs: 0 } as Slideshow),
     ).rejects.toThrow(/invalid/i);
+  });
+
+  it("seedFromLegacy seeds an empty library once, named 'Last saved'", async () => {
+    const s = createMemoryStore();
+    const legacy = { getItem: (k: string) => (k === "kiddopaint" ? "data:image/png;base64,LEGACY" : null) };
+    await seedFromLegacy(s, legacy);
+    await seedFromLegacy(s, legacy);
+    const all = await s.listPictures();
+    expect(all).toHaveLength(1);
+    expect(all[0]).toMatchObject({ name: "Last saved", dataUrl: "data:image/png;base64,LEGACY" });
+  });
+
+  it("seedFromLegacy leaves a non-empty library alone", async () => {
+    const s = createMemoryStore();
+    await s.putPicture(pic("a"));
+    await seedFromLegacy(s, { getItem: () => "data:image/png;base64,LEGACY" });
+    expect((await s.listPictures()).map((p) => p.id)).toEqual(["a"]);
+  });
+
+  it("filePictureIfNew skips a capture identical to the newest picture, across instances", async () => {
+    const s = createMemoryStore();
+    expect(await filePictureIfNew(s, "data:1", 100)).toBe(true);
+    expect(await filePictureIfNew(s, "data:1", 200)).toBe(false);
+    expect(await filePictureIfNew(s, "data:2", 300)).toBe(true);
+    // Same bytes as an OLDER picture still file: only the newest is the dedupe key.
+    expect(await filePictureIfNew(s, "data:1", 400)).toBe(true);
+    expect(await s.listPictures()).toHaveLength(3);
   });
 
   it("totalSoundBytes sums all stored sound blob lengths", async () => {

@@ -2,6 +2,8 @@ import { describe, it, expect } from "vitest";
 import {
   appendSlide,
   insertSlide,
+  latestSlideshow,
+  newPicture,
   newSlide,
   newSlideshow,
   removeSlide,
@@ -73,5 +75,21 @@ describe("SlideshowModel", () => {
     expect(out).not.toBe(s);
     expect(s.slides).toHaveLength(3);
     expect(out.slides).toHaveLength(4);
+  });
+
+  it("newPicture yields a valid, uniquely-identified library Picture", () => {
+    const a = newPicture("data:image/png;base64,AAA", now);
+    const b = newPicture("data:image/png;base64,AAA", now);
+    expect(a.id).not.toBe(b.id);
+    expect(a).toMatchObject({ dataUrl: "data:image/png;base64,AAA", createdMs: now });
+    expect(a.name).toMatch(/^Picture \d\d:\d\d:\d\d$/);
+  });
+
+  it("latestSlideshow picks the most recently updated show (reopen rule)", () => {
+    expect(latestSlideshow([])).toBeUndefined();
+    const older = { ...newSlideshow("old", now), updatedMs: now + 10 };
+    const newer = { ...newSlideshow("new", now), updatedMs: now + 20 };
+    expect(latestSlideshow([older, newer])?.name).toBe("new");
+    expect(latestSlideshow([newer, older])?.name).toBe("new");
   });
 });

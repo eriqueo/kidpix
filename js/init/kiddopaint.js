@@ -1269,6 +1269,9 @@ function save_to_file() {
   a.href = image;
   a.download = "kidpix-" + formattedDate + ".png";
   a.click();
+  // Every PNG save (toolbar button, 's' key) ends here; companion features
+  // (src/slideshow/install.ts) listen for this instead of hooking the button.
+  document.dispatchEvent(new CustomEvent("kidpix:picture-saved"));
 }
 
 function image_upload(ev) {
