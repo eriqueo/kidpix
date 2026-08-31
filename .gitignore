@@ -10,17 +10,17 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+.pnp.*
+.yarn/install-state.gz
 dist
 dist-gh
 dist-ssr
-dist-gh/
 *.local
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
@@ -35,9 +35,6 @@ playwright-report/
 test-results/
 coverage/
 tests/screenshots/
-
-# MkDocs build output
-site/
 
 # Python virtual environments
 .venv/
