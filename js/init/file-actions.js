@@ -193,37 +193,8 @@
       });
   }
 
-  function applyFrameStyle(className) {
-    var paint = document.getElementById("paint");
-    var button = document.getElementById("frame-toggle");
-    var styles = KiddoPaint.FrameStyles || [];
-    if (!paint) return;
-    styles.forEach(function (style) {
-      paint.classList.remove(style.cls);
-    });
-    paint.classList.add(className);
-    try {
-      localStorage.setItem("kiddopaint_frame", className);
-    } catch (error) {}
-    if (button) {
-      for (var i = 0; i < styles.length; i++) {
-        if (styles[i].cls === className) {
-          button.textContent = "Frame: " + styles[i].label;
-          break;
-        }
-      }
-    }
-    if (typeof window.fitCanvasToStage === "function") {
-      window.fitCanvasToStage();
-    }
-  }
-
   function currentFrameStyle() {
-    try {
-      return localStorage.getItem("kiddopaint_frame");
-    } catch (error) {
-      return null;
-    }
+    return KiddoPaint.Frames ? KiddoPaint.Frames.current() : null;
   }
 
   function createProject(canvas, frame, createdAt) {
@@ -388,7 +359,9 @@
         display.clearMain();
         display.main_context.drawImage(image, 0, 0);
         display.saveToLocalStorage();
-        if (project.frame) applyFrameStyle(project.frame);
+        if (project.frame && KiddoPaint.Frames) {
+          KiddoPaint.Frames.apply(project.frame);
+        }
         setStatus("Project opened. Keep drawing!");
         resolve();
       };

@@ -141,34 +141,63 @@ KiddoPaint.FrameStyles = [
   { cls: "frame-gold", label: "Gold" },
   { cls: "frame-classic", label: "Classic" },
 ];
-function init_frame_toggle() {
-  var paint = document.getElementById("paint");
-  var btn = document.getElementById("frame-toggle");
-  if (!paint || !btn) return;
+KiddoPaint.Frames = (function () {
+  var STORAGE_KEY = "kiddopaint_frame";
   var styles = KiddoPaint.FrameStyles;
   var idx = 0;
-  try {
-    var saved = localStorage.getItem("kiddopaint_frame");
+
+  function indexOf(className) {
     for (var i = 0; i < styles.length; i++) {
-      if (styles[i].cls === saved) idx = i;
+      if (styles[i].cls === className) return i;
     }
-  } catch (e) {}
-  function apply() {
+    return -1;
+  }
+
+  function current() {
+    try {
+      return localStorage.getItem(STORAGE_KEY);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function apply(className) {
+    var nextIdx = indexOf(className);
+    if (nextIdx < 0) return false;
+    idx = nextIdx;
+    var paint = document.getElementById("paint");
+    var btn = document.getElementById("frame-toggle");
+    if (!paint) return false;
     styles.forEach(function (s) {
       paint.classList.remove(s.cls);
     });
     paint.classList.add(styles[idx].cls);
-    btn.textContent = "Frame: " + styles[idx].label;
+    if (btn) btn.textContent = "Frame: " + styles[idx].label;
     try {
-      localStorage.setItem("kiddopaint_frame", styles[idx].cls);
+      localStorage.setItem(STORAGE_KEY, styles[idx].cls);
     } catch (e) {}
     fitCanvasToStage();
+    return true;
   }
-  btn.addEventListener("click", function () {
-    idx = (idx + 1) % styles.length;
-    apply();
-  });
-  apply();
+
+  function init() {
+    var paint = document.getElementById("paint");
+    var btn = document.getElementById("frame-toggle");
+    if (!paint || !btn) return;
+    var saved = current();
+    idx = indexOf(saved);
+    if (idx < 0) idx = 0;
+    btn.addEventListener("click", function () {
+      apply(styles[(idx + 1) % styles.length].cls);
+    });
+    apply(styles[idx].cls);
+  }
+
+  return { apply: apply, current: current, init: init };
+})();
+
+function init_frame_toggle() {
+  KiddoPaint.Frames.init();
 }
 
 // Size the canvas (#paint content box) to the largest 1300x650 (2:1) box that fits inside

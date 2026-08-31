@@ -123,6 +123,38 @@ test("iPad-sized Save and Open round-trip an editable .kidpix project", async ({
   expect(undoDepth.after).toBeGreaterThan(undoDepth.before);
 });
 
+test("opening a project keeps the frame toggle cycle in sync", async ({ page }) => {
+  await initializeKidPix(page);
+
+  await page.evaluate(async () => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 1300;
+    canvas.height = 650;
+    const project = {
+      magic: "kidpix-project",
+      version: 1,
+      createdAt: new Date(0).toISOString(),
+      canvas: {
+        width: canvas.width,
+        height: canvas.height,
+        png: canvas.toDataURL("image/png"),
+      },
+      retainedState: { frame: "frame-gold" },
+    };
+    await (window as any).KiddoPaint.FileActions.openFile(
+      new File([JSON.stringify(project)], "gold-frame.kidpix", {
+        type: "application/json",
+      }),
+    );
+  });
+
+  await expect(page.locator("#paint")).toHaveClass(/frame-gold/);
+  await expect(page.locator("#frame-toggle")).toHaveText("Frame: Gold");
+  await page.locator("#frame-toggle").click();
+  await expect(page.locator("#paint")).toHaveClass(/frame-classic/);
+  await expect(page.locator("#frame-toggle")).toHaveText("Frame: Classic");
+});
+
 test("Save Project lets the artist choose the .kidpix filename", async ({ page }) => {
   await initializeKidPix(page);
 
