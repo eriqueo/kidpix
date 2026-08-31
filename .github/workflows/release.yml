@@ -25,14 +25,6 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Set up Python for MkDocs
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install MkDocs
-        run: pip install mkdocs
-
       - name: Build application
         run: yarn build
 
@@ -47,9 +39,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: kidpix-${{ github.ref_name }}.tar.gz
-          name: "Justin's KidPix fork ${{ github.ref_name }} - Release"
+          name: "Kid Pix ${{ github.ref_name }}"
           body: |
-            My fork of vikrum's HTML/JS re-implementation of the public-domain 1989 Kid Pix program.
+            A maintained fork of vikrum's HTML/JS reimplementation of the 1989 Kid Pix drawing app.
 
             ## How to Run
             1. Download the `kidpix-${{ github.ref_name }}.tar.gz` file below

@@ -219,48 +219,6 @@ Our end-to-end tests use a **per-tool architecture** where each drawing tool has
 This enables parallel test execution and focused debugging. The runnable configuration is
 [playwright.config.ts](playwright.config.ts).
 
-## Legacy Information
-
-### One-time Install (OLD)
-
-Required for both playing and changing code.
-
-Instructions for Mac.
-
-- install npm:
-  - install homebrew from https://brew.sh/
-  - restart terminal
-  - `brew install node` -- to get npm
-- install my kidpix fork:
-  - option 1: git clone https://github.com/eriqueo/kidpix.git
-  - option 2: download tarball from https://github.com/eriqueo/kidpix
-    - if tarball: you'll also be able to make code local code changes, but not push them to back to the git repo.
-  - cd kidpix (or kidpix-main if used tarball)
-  - `./build.sh`
-    - if error: `js-beautify.js - "No such file or directory"` - need to 'npm install' :
-    - npm install
-      - if error message `Run install -g npm@10.5.2`, ok to do it.
-    - now should have package-lock.json.
-  - now should be able to run locally, see below.
-
-### How to Play (OLD)
-
-(On local laptop -- no internet connection required!)
-
-- cd into kidpix dir
-- yarn dev
-- open localhost:5173 in browser
-
-### How to Change Code (OLD)
-
-- cd into kidpix dir
-- change code in js/ directory as desired
-- Vite will auto-reload the browser with changes
-- important: if changed assets (like png stamp packs) may need to clear browser cache:
-  - can tell if you hover over an asset in Elements inspector pane to get a preview, and you'll see it's the old one
-  - chrome settings > search for cache > delete browing history & files from last hour
-- should see code changes reflected!
-
 ## Original Documentation
 
 ### Original README
