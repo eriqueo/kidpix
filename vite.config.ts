@@ -1,6 +1,25 @@
-import { defineConfig } from "vite";
+import { readFileSync } from "node:fs";
+import { defineConfig, type Plugin } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 import { BASE_BY_MODE, PRECACHE_GLOB, PRECACHE_MAX_FILE_BYTES } from "./pwa/build-contract.mjs";
+
+function legalFilesPlugin(): Plugin {
+  return {
+    name: "kidpix-legal-files",
+    generateBundle() {
+      for (const [sourceName, outputName] of [
+        ["LICENSE", "LICENSE.txt"],
+        ["NOTICE", "NOTICE.txt"],
+      ]) {
+        this.emitFile({
+          type: "asset",
+          fileName: outputName,
+          source: readFileSync(new URL(sourceName, import.meta.url)),
+        });
+      }
+    },
+  };
+}
 
 // React was removed (ADR-0001); the app is the legacy engine loaded via
 // src/kidpix-main.js. New work is plain TS under core/ ports/ adapters/.
@@ -18,6 +37,9 @@ export default defineConfig(({ mode }) => {
     base,
     publicDir: "src/assets", // Copy src/assets to build output
     plugins: [
+      // Keep the root legal files authoritative while shipping them in both
+      // standalone release archives and the fully offline Pages build.
+      legalFilesPlugin(),
       // Installable, fully-offline PWA (Phase 6 / WS2). The worker source is
       // pwa/sw.ts (injectManifest): Workbox injects the revisioned precache
       // list generated from the actual build output, and the worker adds the
@@ -76,12 +98,6 @@ export default defineConfig(({ mode }) => {
         input: {
           main: "index.html",
         },
-      },
-    },
-    resolve: {
-      alias: {
-        "@": "/src",
-        "@js": "/js",
       },
     },
   };

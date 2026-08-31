@@ -26,7 +26,7 @@ export const BUILD_TARGETS = [
  * is added to the precache by vite-plugin-pwa itself; listing `webmanifest`
  * here too would produce a duplicate entry and invalidate the worker.
  */
-export const PRECACHE_GLOB = "**/*.{js,css,html,png,gif,ico,svg,woff2,mp3,m4a,json}";
+export const PRECACHE_GLOB = "**/*.{js,css,html,txt,png,gif,ico,svg,woff2,mp3,m4a,json}";
 
 /**
  * Largest runtime file in the production output measured 2026-08-29: 413 KB
