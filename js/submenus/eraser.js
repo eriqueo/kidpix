@@ -63,14 +63,14 @@ KiddoPaint.Submenu.eraser = [
     },
   },
   {
-    name: "Add Picture Here",
-    text: "Add Picture Here",
+    name: "My Hidden Pictures",
+    text: "My Hidden Pictures",
     handler: function () {
       if (
         KiddoPaint.HiddenPictures &&
-        typeof KiddoPaint.HiddenPictures.openPicker === "function"
+        typeof KiddoPaint.HiddenPictures.openLibrary === "function"
       ) {
-        KiddoPaint.HiddenPictures.openPicker();
+        KiddoPaint.HiddenPictures.openLibrary();
       }
     },
   },

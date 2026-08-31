@@ -303,7 +303,7 @@ KiddoPaint.ToolDescriptions = {
   "Eraser Square 2": "Erase with a tiny square.",
   Firecracker: "Clear the screen in one big blast!",
   "Hidden Pictures": "Erase to uncover a hidden picture.",
-  "Add Picture Here": "Add your own picture to the Hidden Pictures queue.",
+  "My Hidden Pictures": "Add, use, or delete your own Hidden Pictures.",
   "White Circles": "White circles gobble up your picture.",
   "Slip-Sliding Away": "Sliding doors wipe your picture away.",
   "#$%!*!!": "An explosive end to it all!",

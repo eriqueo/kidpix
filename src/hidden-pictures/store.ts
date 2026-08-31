@@ -27,6 +27,7 @@ export interface HiddenPictureStore {
   init(): Promise<void>;
   list(): Promise<HiddenPictureRecord[]>;
   addBounded(record: HiddenPictureRecord): Promise<HiddenPictureMutation>;
+  remove(id: string): Promise<HiddenPictureRecord[]>;
 }
 
 export class HiddenPictureStoreError extends Error {
@@ -95,6 +96,10 @@ export function createMemoryHiddenPictureStore(): HiddenPictureStore {
       }
       pictures.set(record.id, record);
       return { records: newestFirst([...pictures.values()]), evicted };
+    },
+    async remove(id) {
+      pictures.delete(id);
+      return newestFirst([...pictures.values()]);
     },
   };
 }
@@ -208,6 +213,24 @@ export function createIndexedDbHiddenPictureStore(
             new HiddenPictureStoreError(
               "indexeddb-operation-failed",
               transaction.error?.message || "Could not save Hidden Picture",
+            ),
+          );
+        transaction.onabort = transaction.onerror;
+      });
+    },
+    async remove(id) {
+      const db = await openDb();
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction(STORE_PICTURES, "readwrite");
+        transaction.objectStore(STORE_PICTURES).delete(id);
+        transaction.oncomplete = () => {
+          list().then(resolve, reject);
+        };
+        transaction.onerror = () =>
+          reject(
+            new HiddenPictureStoreError(
+              "indexeddb-operation-failed",
+              transaction.error?.message || "Could not delete Hidden Picture",
             ),
           );
         transaction.onabort = transaction.onerror;

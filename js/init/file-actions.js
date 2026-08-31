@@ -373,17 +373,10 @@
 
   function printDrawing() {
     if (typeof window.print !== "function") return exportPNG();
-    document.body.classList.add("printing");
-    var cleanup = function () {
-      document.body.classList.remove("printing");
-      window.removeEventListener("afterprint", cleanup);
-    };
-    window.addEventListener("afterprint", cleanup);
     try {
       window.print();
       return Promise.resolve();
     } catch (error) {
-      cleanup();
       return exportPNG();
     }
   }

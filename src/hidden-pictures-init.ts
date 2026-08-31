@@ -16,8 +16,10 @@ interface DecodedImageImport {
 
 interface HiddenPictureTool {
   hiddenPictures: string[];
+  activeSource: string | null;
   setCustomPictures(sources: string[]): void;
   usePicture(source: string): Promise<string>;
+  reset(): Promise<string>;
 }
 
 interface KiddoPaintWithHiddenPictures {
@@ -34,8 +36,10 @@ interface DitherPort {
 
 interface HiddenPicturesApi {
   ready: Promise<void>;
+  openLibrary(): void;
   openPicker(): void;
   addFromFile(file: File): Promise<void>;
+  removePicture(id: string): Promise<void>;
   getCustomPictures(): HiddenPictureRecord[];
 }
 
@@ -133,16 +137,137 @@ async function memoryFallback(): Promise<void> {
   persistent = false;
 }
 
-function setStatus(message: string, buttonText?: string): void {
+function setStatus(message: string): void {
   const status = document.getElementById("statusbar-text");
   if (status) status.textContent = message;
-  const button = document.querySelector<HTMLButtonElement>(
-    '#genericsubmenu button[title="Add Picture Here"]',
+}
+
+function selectForReveal(record: HiddenPictureRecord): Promise<string> {
+  return tool.usePicture(record.dataUrl).then(() => {
+    KP.Display.canvas.classList.value = "";
+    KP.Display.canvas.classList.add("cursor-crosshair");
+    KP.Current.tool = tool;
+    return record.dataUrl;
+  });
+}
+
+function ensureLibrary(): HTMLDivElement {
+  let overlay = document.querySelector<HTMLDivElement>("#hidden-picture-library");
+  if (overlay) return overlay;
+
+  overlay = document.createElement("div");
+  overlay.id = "hidden-picture-library";
+  overlay.className = "modal-overlay hidden-picture-library";
+  overlay.hidden = true;
+  overlay.innerHTML = `
+    <section class="modal-content" role="dialog" aria-modal="true" aria-labelledby="hidden-picture-library-title">
+      <div class="modal-header">
+        <h2 id="hidden-picture-library-title">My Hidden Pictures</h2>
+        <button type="button" class="hidden-picture-close" aria-label="Close Hidden Pictures">×</button>
+      </div>
+      <div class="modal-body">
+        <p class="hidden-picture-help">Add a photo, then erase to reveal its pixelated version.</p>
+        <div class="hidden-picture-actions">
+          <button type="button" id="hidden-picture-add-photo">Add Photo</button>
+          <button type="button" id="hidden-picture-start-erasing">Start Erasing</button>
+        </div>
+        <p id="hidden-picture-library-status" role="status" aria-live="polite"></p>
+        <div id="hidden-picture-grid" class="hidden-picture-grid"></div>
+      </div>
+    </section>`;
+  document.body.appendChild(overlay);
+
+  overlay.querySelector<HTMLButtonElement>(".hidden-picture-close")?.addEventListener(
+    "click",
+    () => closeLibrary(),
   );
-  if (button && buttonText) {
-    button.setAttribute("aria-label", "Add Picture Here");
-    button.textContent = buttonText;
+  overlay.querySelector<HTMLButtonElement>("#hidden-picture-start-erasing")?.addEventListener(
+    "click",
+    () => closeLibrary(),
+  );
+  overlay.querySelector<HTMLButtonElement>("#hidden-picture-add-photo")?.addEventListener(
+    "click",
+    () => ensureInput().click(),
+  );
+  overlay.addEventListener("click", (event) => {
+    if (event.target === overlay) closeLibrary();
+  });
+  return overlay;
+}
+
+function closeLibrary(): void {
+  const overlay = document.querySelector<HTMLDivElement>("#hidden-picture-library");
+  if (overlay) overlay.hidden = true;
+}
+
+function libraryStatus(message: string): void {
+  const status = document.querySelector<HTMLElement>("#hidden-picture-library-status");
+  if (status) status.textContent = message;
+}
+
+function renderLibrary(): void {
+  const grid = ensureLibrary().querySelector<HTMLDivElement>("#hidden-picture-grid");
+  if (!grid) return;
+  grid.replaceChildren();
+  if (customPictures.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "hidden-picture-empty";
+    empty.textContent = "No added photos yet.";
+    grid.appendChild(empty);
+    return;
   }
+
+  customPictures.forEach((record) => {
+    const card = document.createElement("article");
+    card.className = "hidden-picture-card";
+    if (tool.activeSource === record.dataUrl) card.classList.add("is-active");
+
+    const image = document.createElement("img");
+    image.src = record.dataUrl;
+    image.alt = record.title;
+    image.className = "pixelated";
+
+    const title = document.createElement("span");
+    title.textContent = record.title;
+
+    const use = document.createElement("button");
+    use.type = "button";
+    use.textContent = tool.activeSource === record.dataUrl ? "Ready" : "Use";
+    use.setAttribute("aria-label", `Use ${record.title}`);
+    use.addEventListener("click", () => {
+      void selectForReveal(record).then(() => {
+        renderLibrary();
+        libraryStatus(`${record.title} is ready. Close this window and erase.`);
+      });
+    });
+
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.textContent = "Delete";
+    remove.setAttribute("aria-label", `Delete ${record.title}`);
+    remove.addEventListener("click", () => void removePicture(record.id));
+
+    const controls = document.createElement("div");
+    controls.className = "hidden-picture-card-actions";
+    controls.append(use, remove);
+    card.append(image, title, controls);
+    grid.appendChild(card);
+  });
+}
+
+function openLibrary(): void {
+  const overlay = ensureLibrary();
+  overlay.hidden = false;
+  libraryStatus("Loading your Hidden Pictures…");
+  void api.ready.then(() => {
+    renderLibrary();
+    libraryStatus(
+      customPictures.length === 0
+        ? "Add a photo to make your first Hidden Picture."
+        : `${customPictures.length} added ${customPictures.length === 1 ? "picture" : "pictures"}.`,
+    );
+  });
+  overlay.querySelector<HTMLButtonElement>("#hidden-picture-add-photo")?.focus();
 }
 
 async function initialize(): Promise<void> {
@@ -158,7 +283,8 @@ async function initialize(): Promise<void> {
 async function addFromFile(file: File): Promise<void> {
   await api.ready;
   try {
-    setStatus("Turning your picture into a Hidden Picture…", "Adding Picture…");
+    setStatus("Turning your photo into a Hidden Picture…");
+    libraryStatus("Turning your photo into a Hidden Picture…");
     const image = await KP.ImageImport.decodeFile(file);
     const dataUrl = processPicture(image, dither);
     const record: HiddenPictureRecord = {
@@ -177,10 +303,7 @@ async function addFromFile(file: File): Promise<void> {
       mutation = await store.addBounded(record);
     }
     applyMutation(mutation);
-    await tool.usePicture(record.dataUrl);
-    KP.Display.canvas.classList.value = "";
-    KP.Display.canvas.classList.add("cursor-crosshair");
-    KP.Current.tool = tool;
+    await selectForReveal(record);
 
     const total = tool.hiddenPictures.length;
     let message = `Picture added! It is now one of ${total} Hidden Pictures.`;
@@ -188,10 +311,40 @@ async function addFromFile(file: File): Promise<void> {
       message += " The oldest added picture was removed.";
     }
     if (!persistent) message += " It will stay for this session only.";
-    setStatus(message, "Picture Added! Add Another");
+    setStatus(message);
+    renderLibrary();
+    libraryStatus("Picture added! It is selected and ready to reveal.");
   } catch (error) {
     const reason = error instanceof Error ? error.message : "unknown error";
-    setStatus(`Could not add picture: ${reason}.`, "Try Add Picture Again");
+    setStatus(`Could not add picture: ${reason}.`);
+    libraryStatus(`Could not add picture: ${reason}.`);
+  }
+}
+
+async function removePicture(id: string): Promise<void> {
+  await api.ready;
+  const removed = customPictures.find((record) => record.id === id);
+  if (!removed) return;
+  try {
+    try {
+      customPictures = await store.remove(id);
+    } catch {
+      await memoryFallback();
+      customPictures = await store.remove(id);
+    }
+    tool.setCustomPictures(customPictures.map((record) => record.dataUrl));
+    if (tool.activeSource === removed.dataUrl) {
+      const replacement = customPictures[0];
+      if (replacement) await selectForReveal(replacement);
+      else await tool.reset();
+    }
+    renderLibrary();
+    const message = `${removed.title} deleted.`;
+    setStatus(message);
+    libraryStatus(message);
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : "unknown error";
+    libraryStatus(`Could not delete picture: ${reason}.`);
   }
 }
 
@@ -214,10 +367,12 @@ function ensureInput(): HTMLInputElement {
 
 const api: HiddenPicturesApi = {
   ready: Promise.resolve(),
+  openLibrary,
   openPicker() {
     ensureInput().click();
   },
   addFromFile,
+  removePicture,
   getCustomPictures() {
     return [...customPictures];
   },

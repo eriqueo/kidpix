@@ -315,7 +315,7 @@ body.small-kids-mode .small-kids-hidden {
   height: 52px;
 }
 
-#genericsubmenu button[title="Add Picture Here"] {
+#genericsubmenu button[title="My Hidden Pictures"] {
   width: 120px;
   padding: 4px 8px;
   font-size: 14px;
@@ -1199,6 +1199,94 @@ emj {
   -ms-user-select: text;
 }
 
+.hidden-picture-library[hidden] {
+  display: none !important;
+}
+
+.hidden-picture-library .modal-content {
+  width: min(680px, calc(100vw - 24px));
+}
+
+.hidden-picture-close,
+.hidden-picture-actions button,
+.hidden-picture-card button {
+  min-width: 48px;
+  min-height: 48px;
+  border: 3px solid #000;
+  border-radius: 5px;
+  background: #fff;
+  color: #000;
+  font: bold 16px/1.1 Arial, sans-serif;
+  touch-action: manipulation;
+}
+
+.hidden-picture-close {
+  width: 48px;
+  padding: 0;
+  font-size: 30px;
+}
+
+.hidden-picture-actions,
+.hidden-picture-card-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.hidden-picture-actions {
+  margin: 12px 0;
+}
+
+#hidden-picture-add-photo {
+  background: #ffd83d;
+}
+
+#hidden-picture-start-erasing {
+  background: #72d572;
+}
+
+#hidden-picture-library-status {
+  min-height: 1.4em;
+  font-weight: bold;
+}
+
+.hidden-picture-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 14px;
+}
+
+.hidden-picture-card {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 3px solid #000;
+  background: #eee;
+}
+
+.hidden-picture-card.is-active {
+  outline: 5px solid #72d572;
+  outline-offset: -5px;
+}
+
+.hidden-picture-card img {
+  width: 100%;
+  height: 120px;
+  object-fit: contain;
+  background: #fff;
+}
+
+.hidden-picture-card > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: bold;
+}
+
+.hidden-picture-card-actions button:last-child {
+  background: #ffb3b3;
+}
+
 /* Shortcuts sections */
 .shortcuts-section,
 .modifiers-section {
@@ -1343,53 +1431,47 @@ kbd {
 /* ================================================
    Print stylesheet
    ================================================
-   The "printing" class is added to <body> right before window.print() and removed on
-   afterprint, isolating the print rules from any accidental @media print interaction
-   when the user opens the dev tools' print preview. We hide chrome and scale just the
-   canvas to fit a single page; background fills are forced so toolbar-white canvases
-   actually render on paper.
+   Safari may snapshot the page after a transient JS class has already been removed.
+   These rules therefore apply to every print rendering: only the committed drawing
+   canvas is visible, fixed to one printable sheet. Preview/tool canvases stay hidden.
 */
 @media print {
-  body.printing #toolbar,
-  body.printing #subtoolbars,
-  body.printing #statusbar,
-  body.printing #titlebar,
-  body.printing #keyboard-shortcuts-popup {
-    display: none !important;
-  }
-  body.printing,
-  body.printing html,
-  body.printing #js-root,
-  body.printing #container,
-  body.printing #hcontainer,
-  body.printing #canvas-stage {
-    background: #fff !important;
+  html,
+  body {
+    width: 100% !important;
+    height: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
-    box-shadow: none !important;
-    border: none !important;
+    overflow: hidden !important;
   }
-  body.printing #paint {
-    border: none !important;
-    box-shadow: none !important;
-    margin: 0 auto !important;
-    padding: 0 !important;
-    background: #fff !important;
-    width: auto !important;
-    height: auto !important;
+
+  body * {
+    visibility: hidden !important;
   }
-  body.printing #kiddopaint {
+
+  canvas:not(#kiddopaint) {
+    display: none !important;
+  }
+
+  #kiddopaint {
+    visibility: visible !important;
     display: block;
-    max-width: 100%;
-    max-height: 100vh;
-    width: auto;
-    height: auto;
-    /* Force background fills (white canvas) to render on paper across browsers. */
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: 100vw !important;
+    max-height: 100vh !important;
+    object-fit: contain;
+    page-break-before: avoid;
+    page-break-after: avoid;
+    page-break-inside: avoid;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
+
   @page {
-    margin: 0.5in;
+    margin: 0.25in;
   }
 }
 
@@ -1621,7 +1703,7 @@ kbd {
     width: 48px;
     height: 48px;
   }
-  #genericsubmenu button[title="Add Picture Here"] {
+  #genericsubmenu button[title="My Hidden Pictures"] {
     width: 112px;
   }
   /* Stamp buttons keep their name label but shrink to strip height. */

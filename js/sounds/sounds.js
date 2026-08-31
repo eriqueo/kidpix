@@ -5,6 +5,82 @@
 
 KiddoPaint.Sounds.Library = {};
 KiddoPaint.Sounds.Library.enabled = true;
+KiddoPaint.Sounds.Library._priming = new WeakMap();
+
+// iPadOS grants playback per HTMLAudioElement. Prime the three sounds used by
+// the physical acceptance path during the first real touch/pointer gesture,
+// then queue any requested sound behind its silent prime. Failed play promises
+// are consumed so Safari never leaves an unhandled rejection behind.
+KiddoPaint.Sounds.Library.safePlay = function (audio) {
+  if (!audio) return Promise.resolve(false);
+  var priming = KiddoPaint.Sounds.Library._priming.get(audio);
+  if (priming) {
+    return priming.then(function () {
+      return KiddoPaint.Sounds.Library.safePlay(audio);
+    });
+  }
+  try {
+    var result = audio.play();
+    return result && typeof result.then === "function"
+      ? result.then(
+          function () { return true; },
+          function () { return false; },
+        )
+      : Promise.resolve(true);
+  } catch (error) {
+    return Promise.resolve(false);
+  }
+};
+
+KiddoPaint.Sounds.Library.primeAudio = function (audio) {
+  if (!audio) return Promise.resolve(false);
+  var existing = KiddoPaint.Sounds.Library._priming.get(audio);
+  if (existing) return existing;
+  var wasMuted = audio.muted;
+  audio.muted = true;
+  var result;
+  try {
+    result = audio.play();
+  } catch (error) {
+    audio.muted = wasMuted;
+    return Promise.resolve(false);
+  }
+  var priming = Promise.resolve(result).then(
+    function () {
+      audio.pause();
+      try { audio.currentTime = 0; } catch (error) {}
+      audio.muted = wasMuted;
+      KiddoPaint.Sounds.Library._priming.delete(audio);
+      return true;
+    },
+    function () {
+      audio.muted = wasMuted;
+      KiddoPaint.Sounds.Library._priming.delete(audio);
+      return false;
+    },
+  );
+  KiddoPaint.Sounds.Library._priming.set(audio, priming);
+  return priming;
+};
+
+KiddoPaint.Sounds.Library.unlockPrimarySounds = function () {
+  if (KiddoPaint.Sounds.Library._unlockPending) return;
+  KiddoPaint.Sounds.Library._unlockPending = true;
+  var names = ["pencil", "stamp", "eraser"];
+  Promise.all(
+    names.map(function (name) {
+      return KiddoPaint.Sounds.Library.primeAudio(
+        KiddoPaint.Sounds.Library[name] && KiddoPaint.Sounds.Library[name][0],
+      );
+    }),
+  ).then(function (results) {
+    KiddoPaint.Sounds.Library._unlockPending = false;
+    if (results.every(Boolean)) {
+      document.removeEventListener("touchstart", KiddoPaint.Sounds.Library.unlockPrimarySounds, true);
+      document.removeEventListener("pointerdown", KiddoPaint.Sounds.Library.unlockPrimarySounds, true);
+    }
+  });
+};
 
 // array to randomize
 KiddoPaint.Sounds.Library.explosion = [
@@ -236,7 +312,7 @@ KiddoPaint.Sounds.Library.playRand = function (sound) {
     );
     var s = KiddoPaint.Sounds.Library[sound][idx];
     if (s) {
-      s.play();
+      KiddoPaint.Sounds.Library.safePlay(s);
     }
   }
 };
@@ -249,7 +325,7 @@ KiddoPaint.Sounds.Library.playKey = function (key) {
     var s = KiddoPaint.Sounds.Library.english[key];
     if (s) {
       const a = new Audio(s);
-      a.play();
+      KiddoPaint.Sounds.Library.safePlay(a);
     }
   }
 };
@@ -262,7 +338,7 @@ KiddoPaint.Sounds.Library.playIdx = function (sound, idx) {
   ) {
     var s = KiddoPaint.Sounds.Library[sound][idx];
     if (s) {
-      s.play();
+      KiddoPaint.Sounds.Library.safePlay(s);
     }
   }
 };
@@ -271,7 +347,7 @@ KiddoPaint.Sounds.Library.playSingle = function (sound) {
   if (KiddoPaint.Sounds.Library.enabled && KiddoPaint.Sounds.Library[sound]) {
     var s = KiddoPaint.Sounds.Library[sound][0];
     if (s) {
-      s.play();
+      KiddoPaint.Sounds.Library.safePlay(s);
     }
   }
 };
@@ -287,10 +363,23 @@ KiddoPaint.Sounds.Library.pplaySingle = async function (sound) {
 
 function pplayAudio(audio) {
   return new Promise((res) => {
-    audio.play();
+    KiddoPaint.Sounds.Library.safePlay(audio).then(function (started) {
+      if (!started) res();
+    });
     audio.onended = res;
   });
 }
+
+document.addEventListener(
+  "touchstart",
+  KiddoPaint.Sounds.Library.unlockPrimarySounds,
+  true,
+);
+document.addEventListener(
+  "pointerdown",
+  KiddoPaint.Sounds.Library.unlockPrimarySounds,
+  true,
+);
 
 // randomzied sounds
 KiddoPaint.Sounds.explosion = function () {

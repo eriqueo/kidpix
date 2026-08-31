@@ -4,8 +4,9 @@ This is the only execution queue. `backlog.txt` and `misc.txt` are ungroomed inp
 not authorization to implement a feature. Keep detailed architecture and historical
 rationale out of this file; link the living source instead.
 
-State reconciled 2026-08-30: item 1 is shipped except its line marked OPEN. Items 2–4
-retain physical-iPad checks; their Chromium evidence is not a device pass.
+State reconciled 2026-08-31: item 1 is shipped except its line marked OPEN. The first
+physical-iPad run is recorded in [docs/ipad-acceptance.md](../docs/ipad-acceptance.md);
+items 2–4 now track its focused repair-and-retest findings.
 
 ## 1. Make the browser test signal trustworthy
 
@@ -35,9 +36,9 @@ Acceptance checks:
 - DONE (Chromium emulation only): phone/tablet portrait-and-landscape matrix for canvas
   coordinates, drawer interactions, and status-bar action reachability, in
   [tests/e2e/mobile-acceptance.spec.ts](../tests/e2e/mobile-acceptance.spec.ts).
-- OPEN, needs a human with the iPad: run [docs/ipad-acceptance.md](../docs/ipad-acceptance.md)
-  and record dated pass/fail there. Covers audio unlock, Pencil coordinates, rotation and
-  safe areas, drawer reach, offline relaunch, and the explicit save-first update action.
+- REPAIR IMPLEMENTED, OPEN DEVICE RETEST: first-touch priming now covers Pencil, Stamp, and Eraser;
+  print media unconditionally isolates the committed canvas to one page. Rerun the focused
+  subset in [docs/ipad-acceptance.md](../docs/ipad-acceptance.md) on the target iPad.
 - Treat the 1300×650 backing store and `_x`/`_y` event normalization as load-bearing;
   presentation changes do not alter them without parity evidence.
 - Durable install/update behavior stays in [docs/pwa.md](../docs/pwa.md).
@@ -57,14 +58,15 @@ Acceptance checks:
 - AUTOMATED: file-capable touch browsers use the native share sheet only after
   `navigator.canShare({files})`; cancel/rejection exposes a separate Download action rather
   than automatically performing a second write.
-- OPEN, needs a human with the iPad: run items 14–16 in
-  [docs/ipad-acceptance.md](../docs/ipad-acceptance.md), including **On My iPad** storage.
+- REPAIR IMPLEMENTED, OPEN DEVICE RETEST: Open File no longer gives iPadOS an extension/MIME
+  filter that disables `.kidpix`; strict parsing still happens at the app boundary and Save
+  still makes at most one external effect. Rerun items 16–20 and record exact filenames if
+  duplication remains.
 
 ## 4. Prove custom Hidden Pictures on the target iPad
 
-User journey: As a child, I can tap **Add Picture Here**, choose an ordinary picture, see
-that Kid Pix turned it into a Hidden Picture and added it to the queue, then reveal it by
-erasing. The processed picture remains available after relaunch.
+User journey: As a child, I can open **My Hidden Pictures**, add a photo, immediately reveal
+its pixelated version, and later use or delete it from the same simple library.
 
 Acceptance checks:
 
@@ -74,6 +76,6 @@ Acceptance checks:
 - AUTOMATED: custom records use version 1, retain only the processed PNG, and form an
   AUTO-MANAGED queue capped at 20. A distinct picture at the limit atomically evicts the
   oldest custom entry; unavailable storage falls back to a bounded session queue and says so.
-- OPEN, needs a human with the iPad: run items 11–13 in
-  [docs/ipad-acceptance.md](../docs/ipad-acceptance.md), including Photos/Files picker and
-  home-screen relaunch behavior.
+- REPAIR IMPLEMENTED, OPEN DEVICE RETEST: **My Hidden Pictures** owns add/use/delete and immediately
+  selects a newly processed photo. Photos or Camera is the acceptance path and Files is not
+  required. Rerun items 12–15.

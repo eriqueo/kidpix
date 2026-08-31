@@ -8,7 +8,9 @@ const sourcePicture = new URL("../../src/assets/pwa-192.png", import.meta.url);
 
 async function uploadPicture(page: Parameters<typeof initializeKidPix>[0]) {
   await selectTool(page, "eraser");
-  const addButton = page.getByRole("button", { name: "Add Picture Here" });
+  await page.getByRole("button", { name: "My Hidden Pictures" }).click();
+  await expect(page.getByRole("dialog", { name: "My Hidden Pictures" })).toBeVisible();
+  const addButton = page.getByRole("button", { name: "Add Photo" });
   const chooserPromise = page.waitForEvent("filechooser");
   await addButton.click();
   const chooser = await chooserPromise;
@@ -20,7 +22,10 @@ async function uploadPicture(page: Parameters<typeof initializeKidPix>[0]) {
   await expect(page.locator("#statusbar-text")).toContainText(
     "Picture added! It is now one of",
   );
-  await expect(addButton).toHaveText("Picture Added! Add Another");
+  await expect(page.locator("#hidden-picture-library-status")).toContainText(
+    "selected and ready to reveal",
+  );
+  await page.getByRole("button", { name: "Start Erasing" }).click();
 }
 
 test("an uploaded picture is dithered, queued, persisted, and revealed", async ({
@@ -90,7 +95,13 @@ test("an uploaded picture is dithered, queued, persisted, and revealed", async (
     kp.Display.clearMain();
   });
   await selectTool(page, "eraser");
-  await page.getByRole("button", { name: "Hidden Pictures" }).click();
+  await page.getByRole("button", { name: "My Hidden Pictures" }).click();
+  const restoredLibrary = page.getByRole("dialog", { name: "My Hidden Pictures" });
+  await expect(
+    restoredLibrary.getByRole("img", { name: "rainbow-picture" }),
+  ).toBeVisible();
+  await restoredLibrary.getByRole("button", { name: "Close Hidden Pictures" }).click();
+  await page.getByRole("button", { name: "Hidden Pictures", exact: true }).click();
   await expect
     .poll(() =>
       page.evaluate(() => {
@@ -178,6 +189,26 @@ test("storage failure keeps the picture for this session and says so", async ({
         await hidden.ready;
         return hidden.getCustomPictures().length;
       }),
+    )
+    .toBe(0);
+});
+
+test("the library lists and deletes added pictures", async ({ page }) => {
+  await initializeKidPix(page);
+  await uploadPicture(page);
+
+  await selectTool(page, "eraser");
+  await page.getByRole("button", { name: "My Hidden Pictures" }).click();
+  const dialog = page.getByRole("dialog", { name: "My Hidden Pictures" });
+  await expect(dialog.getByRole("img", { name: "rainbow-picture" })).toBeVisible();
+  await dialog.getByRole("button", { name: "Delete rainbow-picture" }).click();
+
+  await expect(dialog).toContainText("No added photos yet");
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        (window as any).KiddoPaint.HiddenPictures.getCustomPictures().length,
+      ),
     )
     .toBe(0);
 });

@@ -54,4 +54,15 @@ describe("HiddenPictureStore", () => {
       expect.objectContaining({ title: "Same picture, newer title", createdMs: 10 }),
     ]);
   });
+
+  it("deletes only the requested custom picture", async () => {
+    const store = createMemoryHiddenPictureStore();
+    await store.addBounded(record(1));
+    await store.addBounded(record(2));
+
+    const remaining = await store.remove(record(1).id);
+
+    expect(remaining.map((item) => item.id)).toEqual([record(2).id]);
+    expect(await store.remove(record(99).id)).toEqual(remaining);
+  });
 });

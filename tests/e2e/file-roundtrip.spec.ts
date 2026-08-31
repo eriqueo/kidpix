@@ -173,6 +173,13 @@ test("iPad-capable browsers share the .kidpix File through the native sheet", as
   expect(shared.size).toBeGreaterThan(0);
 });
 
+test("Open File leaves the native picker unfiltered so iPadOS can select .kidpix", async ({
+  page,
+}) => {
+  await initializeKidPix(page);
+  await expect(page.locator("#open-picture-input")).not.toHaveAttribute("accept");
+});
+
 test("iPad PNG export invokes native share during the user gesture", async ({
   page,
 }) => {
