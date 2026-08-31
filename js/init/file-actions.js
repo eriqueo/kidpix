@@ -12,6 +12,8 @@
   var KP_PROJECT_WIDTH = 1300;
   var KP_PROJECT_HEIGHT = 650;
   var MAX_PROJECT_BYTES = 20 * 1024 * 1024;
+  var MAX_PROJECT_NAME_LENGTH = 80;
+  var saveOperation = null;
 
   function actionError(code, message) {
     var error = new Error(message);
@@ -28,6 +30,79 @@
       String(date.getMinutes()).padStart(2, "0"),
       String(date.getSeconds()).padStart(2, "0"),
     ].join("-");
+  }
+
+  function defaultProjectName(date) {
+    return "kidpix-" + formattedDate(date);
+  }
+
+  // Parse the user-entered name once at the UI boundary. Keep it portable
+  // across Files, downloads, and desktop filesystems, then own the extension.
+  function sanitizeProjectFilename(value, fallback) {
+    var base = String(value || "")
+      .replace(/\.kidpix$/i, "")
+      .replace(/[<>:"/\\|?*\u0000-\u001f]/g, "-")
+      .trim()
+      .replace(/[. ]+$/g, "")
+      .slice(0, MAX_PROJECT_NAME_LENGTH)
+      .trim()
+      .replace(/[. ]+$/g, "");
+    if (!base) base = fallback;
+    return base + ".kidpix";
+  }
+
+  function requestProjectFilename(suggestedName) {
+    var dialog = document.getElementById("save-project-dialog");
+    var input = document.getElementById("save-project-name");
+    var cancelButton = document.getElementById("save-project-cancel");
+    var confirmButton = document.getElementById("save-project-confirm");
+    if (!dialog || !input || !cancelButton || !confirmButton) {
+      return Promise.resolve(suggestedName);
+    }
+
+    var previousFocus = document.activeElement;
+    dialog.hidden = false;
+    input.value = suggestedName;
+    input.focus();
+    input.select();
+
+    return new Promise(function (resolve) {
+      function finish(value) {
+        dialog.hidden = true;
+        cancelButton.removeEventListener("click", cancel);
+        confirmButton.removeEventListener("click", confirm);
+        dialog.removeEventListener("mousedown", outside);
+        input.removeEventListener("keydown", keydown);
+        if (previousFocus && typeof previousFocus.focus === "function") {
+          previousFocus.focus();
+        }
+        resolve(value);
+      }
+      function cancel() {
+        finish(null);
+      }
+      function confirm() {
+        finish(input.value);
+      }
+      function outside(event) {
+        if (event.target === dialog) cancel();
+      }
+      function keydown(event) {
+        // Project names are text, not global drawing shortcuts.
+        event.stopPropagation();
+        if (event.key === "Enter") {
+          event.preventDefault();
+          confirm();
+        } else if (event.key === "Escape") {
+          event.preventDefault();
+          cancel();
+        }
+      }
+      cancelButton.addEventListener("click", cancel);
+      confirmButton.addEventListener("click", confirm);
+      dialog.addEventListener("mousedown", outside);
+      input.addEventListener("keydown", keydown);
+    });
   }
 
   function setStatus(message, isError) {
@@ -166,24 +241,46 @@
   }
 
   function saveProject() {
+    // Coalesce repeated taps while the naming/share flow is open. One in-flight
+    // Save request can produce at most one externally visible file effect.
+    if (saveOperation) return saveOperation;
     var canvas = KiddoPaint.Display && KiddoPaint.Display.main_canvas;
     if (!canvas) {
       var missing = actionError("canvas_unavailable", "Nothing to save yet.");
       setStatus(missing.message, true);
       return Promise.reject(missing);
     }
-    var now = new Date();
-    var project;
-    try {
-      project = createProject(canvas, currentFrameStyle(), now);
-    } catch (error) {
-      var unreadable = actionError("canvas_unreadable", "Could not read the canvas.");
-      setStatus(unreadable.message, true);
-      return Promise.reject(unreadable);
-    }
-    var filename = "kidpix-" + formattedDate(now) + ".kidpix";
-    var blob = new Blob([JSON.stringify(project)], { type: "application/json" });
-    return deliverBlob(blob, filename, "Kid Pix project");
+    var requestedAt = new Date();
+    var fallbackName = defaultProjectName(requestedAt);
+    saveOperation = requestProjectFilename(fallbackName)
+      .then(function (chosenName) {
+        if (chosenName === null) {
+          setStatus("Save cancelled.");
+          return { delivery: "cancelled", filename: null };
+        }
+        var project;
+        try {
+          project = createProject(canvas, currentFrameStyle(), requestedAt);
+        } catch (error) {
+          var unreadable = actionError("canvas_unreadable", "Could not read the canvas.");
+          setStatus(unreadable.message, true);
+          throw unreadable;
+        }
+        var filename = sanitizeProjectFilename(chosenName, fallbackName);
+        var blob = new Blob([JSON.stringify(project)], { type: "application/json" });
+        return deliverBlob(blob, filename, "Kid Pix project");
+      })
+      .then(
+        function (result) {
+          saveOperation = null;
+          return result;
+        },
+        function (error) {
+          saveOperation = null;
+          throw error;
+        },
+      );
+    return saveOperation;
   }
 
   function canvasToPNGBlob(canvas) {
@@ -353,7 +450,9 @@
 
   function openFile(file) {
     setDownloadFallback(null);
-    var operation = isProjectFile(file)
+    var projectFile = isProjectFile(file);
+    setStatus(projectFile ? "Opening project…" : "Opening picture…");
+    var operation = projectFile
       ? loadProjectFromFile(file)
       : KiddoPaint.ImageImport.openFile(file).then(function () {
           setStatus("Picture opened. Keep drawing!");
@@ -419,6 +518,7 @@
     triggerOpenPicker: triggerOpenPicker,
     loadProjectFromFile: loadProjectFromFile,
     sanitizeProject: sanitizeProject,
+    sanitizeProjectFilename: sanitizeProjectFilename,
     isProjectFile: isProjectFile,
     PROJECT_VERSION: KP_PROJECT_VERSION,
     PROJECT_MAGIC: KP_PROJECT_MAGIC,

@@ -102,3 +102,18 @@ describe("KiddoPaint.FileActions.isProjectFile", () => {
     ).toBe(false);
   });
 });
+
+describe("KiddoPaint.FileActions.sanitizeProjectFilename", () => {
+  const sanitize = (value) =>
+    KiddoPaint.FileActions.sanitizeProjectFilename(value, "kidpix-fallback");
+
+  it("preserves an artist's readable name and owns one extension", () => {
+    expect(sanitize("Rainbow Castle")).toBe("Rainbow Castle.kidpix");
+    expect(sanitize("Rainbow Castle.KIDPIX")).toBe("Rainbow Castle.kidpix");
+  });
+
+  it("replaces filesystem separators and falls back for an empty name", () => {
+    expect(sanitize("  clouds/rain  ")).toBe("clouds-rain.kidpix");
+    expect(sanitize(" ... ")).toBe("kidpix-fallback.kidpix");
+  });
+});

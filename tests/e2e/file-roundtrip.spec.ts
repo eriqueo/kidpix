@@ -14,6 +14,16 @@ async function paintRedFixture(page: Parameters<typeof initializeKidPix>[0]) {
   });
 }
 
+async function confirmProjectSave(
+  page: Parameters<typeof initializeKidPix>[0],
+  name?: string,
+) {
+  const dialog = page.getByRole("dialog", { name: "Save Project As" });
+  await expect(dialog).toBeVisible();
+  if (name !== undefined) await dialog.getByLabel("Project name").fill(name);
+  await dialog.getByRole("button", { name: "Save to Files" }).click();
+}
+
 async function pixelAt(
   page: Parameters<typeof initializeKidPix>[0],
   x: number,
@@ -92,6 +102,7 @@ test("iPad-sized Save and Open round-trip an editable .kidpix project", async ({
 
   const downloadPromise = page.waitForEvent("download");
   await page.locator("#save").click();
+  await confirmProjectSave(page);
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toMatch(/^kidpix-.*\.kidpix$/);
   const savedPath = await download.path();
@@ -110,6 +121,35 @@ test("iPad-sized Save and Open round-trip an editable .kidpix project", async ({
 
   const undoDepth = await drawTouchStroke(page);
   expect(undoDepth.after).toBeGreaterThan(undoDepth.before);
+});
+
+test("Save Project lets the artist choose the .kidpix filename", async ({ page }) => {
+  await initializeKidPix(page);
+
+  await page.locator("#save").click();
+  const downloadPromise = page.waitForEvent("download");
+  await confirmProjectSave(page, "Rainbow Castle");
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe("Rainbow Castle.kidpix");
+  await expect(page.getByRole("dialog", { name: "Save Project As" })).toBeHidden();
+});
+
+test("cancelling the project-name dialog creates no file", async ({ page }) => {
+  await page.addInitScript(() => {
+    (window as any).__downloadClicks = 0;
+    HTMLAnchorElement.prototype.click = function () {
+      (window as any).__downloadClicks += 1;
+    };
+  });
+  await initializeKidPix(page);
+
+  await page.locator("#save").click();
+  const dialog = page.getByRole("dialog", { name: "Save Project As" });
+  await dialog.getByRole("button", { name: "Cancel" }).click();
+
+  await expect(dialog).toBeHidden();
+  expect(await page.evaluate(() => (window as any).__downloadClicks)).toBe(0);
+  await expect(page.locator("#statusbar-text")).toHaveText("Save cancelled.");
 });
 
 test("Export PNG stays explicit and its result can be opened as a picture", async ({
@@ -135,6 +175,47 @@ test("Export PNG stays explicit and its result can be opened as a picture", asyn
   await expect.poll(() => redPixelCount(page)).toBeGreaterThan(0);
 });
 
+test("ordinary PNG import starts visibly and avoids a base64 FileReader copy", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    (window as any).__imageDataUrlReads = 0;
+    const original = FileReader.prototype.readAsDataURL;
+    FileReader.prototype.readAsDataURL = function (...args) {
+      (window as any).__imageDataUrlReads += 1;
+      return original.apply(this, args as any);
+    };
+  });
+  await initializeKidPix(page);
+
+  const result = await page.evaluate(async () => {
+    const bytes = Uint8Array.from(
+      atob(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZrMEAAAAASUVORK5CYII=",
+      ),
+      (character) => character.charCodeAt(0),
+    );
+    (window as any).__imageDataUrlReads = 0;
+    const operation = (window as any).KiddoPaint.FileActions.openFile(
+      new File([bytes], "tiny.png", { type: "image/png" }),
+    );
+    const immediateStatus = document.querySelector("#statusbar-text")!.textContent;
+    await operation;
+    const canvas = document.querySelector<HTMLCanvasElement>("#kiddopaint")!;
+    return {
+      immediateStatus,
+      reads: (window as any).__imageDataUrlReads,
+      exportPrefix: canvas.toDataURL("image/png").slice(0, 22),
+    };
+  });
+
+  expect(result).toEqual({
+    immediateStatus: "Opening picture…",
+    reads: 0,
+    exportPrefix: "data:image/png;base64,",
+  });
+});
+
 test("iPad-capable browsers share the .kidpix File through the native sheet", async ({
   page,
 }) => {
@@ -153,6 +234,7 @@ test("iPad-capable browsers share the .kidpix File through the native sheet", as
       value: (data: ShareData) => {
         const file = data.files![0];
         (window as any).__sharedProject = {
+          active: navigator.userActivation.isActive,
           name: file.name,
           size: file.size,
           type: file.type,
@@ -165,9 +247,10 @@ test("iPad-capable browsers share the .kidpix File through the native sheet", as
   await paintRedFixture(page);
 
   await page.locator("#save").click();
+  await confirmProjectSave(page);
   await expect
     .poll(() => page.evaluate(() => (window as any).__sharedProject))
-    .toMatchObject({ type: "application/json" });
+    .toMatchObject({ active: true, type: "application/json" });
   const shared = await page.evaluate(() => (window as any).__sharedProject);
   expect(shared.name).toMatch(/^kidpix-.*\.kidpix$/);
   expect(shared.size).toBeGreaterThan(0);
@@ -239,6 +322,7 @@ test("closing the native share sheet requires a separate Download action", async
   await initializeKidPix(page);
 
   await page.locator("#save").click();
+  await confirmProjectSave(page);
   const fallback = page.getByRole("button", { name: "Download instead" });
   await expect(fallback).toBeVisible();
   expect(await page.evaluate(() => (window as any).__downloadClicks)).toBe(0);

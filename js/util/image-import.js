@@ -6,7 +6,7 @@
 //   KiddoPaint.ImageImport.triggerFilePicker()   -> opens the hidden <input>
 //
 // Behavior:
-//   - decode via Image + FileReader (works in all target browsers including iOS Safari)
+//   - decode via a same-origin object URL, with FileReader as a compatibility fallback
 //   - guard format (PNG/JPEG/GIF/BMP/WEBP) and max source dimension at the boundary
 //   - fit-to-canvas: letterbox-center, preserve aspect ratio (no stretch, no crop)
 //   - composite onto main canvas using existing 2D context, single undoable action
@@ -45,18 +45,14 @@
         reject(new Error("unsupported file type: " + file.type));
         return;
       }
-      var reader = new FileReader();
-      reader.onerror = function () {
-        reject(reader.error || new Error("FileReader failed"));
-      };
-      reader.onload = function (evt) {
+      function decodeSource(source, release) {
         var img = new Image();
-        // Data-URL sources are same-origin so canvas does not get tainted,
-        // which keeps Save working after an import.
         img.onerror = function () {
+          release();
           reject(new Error("decode failed (corrupt or unsupported image)"));
         };
         img.onload = function () {
+          release();
           try {
             if (
               img.naturalWidth > MAX_SOURCE_DIMENSION ||
@@ -78,7 +74,32 @@
             reject(err);
           }
         };
-        img.src = evt.target.result;
+        img.src = source;
+      }
+
+      // Blob URLs avoid the extra full-size base64 copy made by FileReader. They
+      // are same-origin, so a successfully decoded local picture remains safe to
+      // export or save from the canvas. Revoke only after load/error completes.
+      if (
+        typeof URL !== "undefined" &&
+        typeof URL.createObjectURL === "function" &&
+        typeof URL.revokeObjectURL === "function"
+      ) {
+        try {
+          var objectURL = URL.createObjectURL(file);
+          decodeSource(objectURL, function () {
+            URL.revokeObjectURL(objectURL);
+          });
+          return;
+        } catch (error) {}
+      }
+
+      var reader = new FileReader();
+      reader.onerror = function () {
+        reject(reader.error || new Error("FileReader failed"));
+      };
+      reader.onload = function (evt) {
+        decodeSource(evt.target.result, function () {});
       };
       reader.readAsDataURL(file);
     });

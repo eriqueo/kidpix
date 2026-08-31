@@ -3,6 +3,21 @@ import { initializeKidPix } from "./shared/tool-helpers";
 
 test.use({ hasTouch: true, viewport: { width: 820, height: 1180 } });
 
+test("classifies app sounds so iPad Silent Mode can mute them", async ({ page }) => {
+  await page.addInitScript(() => {
+    const session = { type: "auto" };
+    Object.defineProperty(navigator, "audioSession", {
+      configurable: true,
+      value: session,
+    });
+  });
+  await initializeKidPix(page);
+
+  expect(await page.evaluate(() => (navigator as any).audioSession.type)).toBe(
+    "transient",
+  );
+});
+
 test("the first real touch primes Pencil, Stamp, and Eraser audio without unhandled rejection", async ({
   page,
 }) => {

@@ -57,12 +57,14 @@ Live app: <https://eriqueo.github.io/kidpix/>
    If no drawer buttons appear at the iPad's width, report **OBSERVED — inline tablet layout**.
 10. Confirm **Kids Mode**, **Print**, **Export PNG**, **Frame**, and **DrawMe** are visible and
     tappable, either in the status bar or under **More actions**. **PASS** if all five are
-    reachable.
+    reachable. Then draw to every canvas edge and tap **Print**. **PASS** if only the complete
+    canvas is centered on one printed page, with no toolbar or other app controls.
 11. Use Control Center, or the side switch if the iPad has one, to test with Silent Mode off
     and then on. In each state, draw with Pencil, choose a Stamp, and erase briefly. Report
     **OBSERVED — audible** or
     **OBSERVED — silent** for each state; also report any delayed, stuck, or overlapping sound.
-    Return Silent Mode to your preferred setting.
+    **PASS** if sounds are audible with Silent Mode off and silent with it on. Return Silent
+    Mode to your preferred setting.
 
 ## C. Custom Hidden Pictures
 
@@ -79,16 +81,18 @@ Live app: <https://eriqueo.github.io/kidpix/>
 
 ## D. Editable project and ordinary picture files
 
-16. Set the frame to **Rainbow**, draw a distinctive mark, tap **Save Project**, choose
-    **Save to Files**, and save the `.kidpix` file under **On My iPad**. Record the exact
-    filename. **PASS** if the file appears in Files with a `.kidpix` extension.
+16. Set the frame to **Rainbow**, draw a distinctive mark, tap **Save Project**, change the
+    proposed project name to `Rainbow Test`, choose **Save to Files**, and save the `.kidpix`
+    file under **On My iPad**. **PASS** if the file appears as `Rainbow Test.kidpix`.
 17. Change both the drawing and the frame. Tap **Open File**, choose the saved `.kidpix`, and
     **PASS** if the exact saved drawing and Rainbow frame return. Draw another Pencil stroke;
     **PASS** if it commits normally, proving the reopened file remains editable.
 18. Force-quit and relaunch. **PASS** if the project restored in item 17, including the new
     post-open Pencil stroke, is still the current drawing.
 19. Tap **Export PNG**, save it to Files, change or clear the drawing, then open that PNG through
-    **Open File**. **PASS** if it returns as a flattened picture and accepts a new Pencil stroke.
+    **Open File**. **PASS** if Kid Pix immediately says **Opening picture…**, returns as a
+    flattened picture without appearing frozen, and accepts a new Pencil stroke. Record roughly
+    how many seconds the import takes.
 20. Start another **Save Project**, close the share sheet without saving, and inspect Kid Pix.
     **PASS** if it does not silently create a second file and instead exposes the separate
     **Download instead** action. You do not need to tap that fallback.
@@ -145,8 +149,25 @@ authoritative physical-device evidence that triggered the next repair:
   were not captured.
 - Item 19: **PASS** — PNG export, open, and continued drawing worked.
 
-After the next deployment, rerun items 2, 7, 10–15, and 16–20. Record the exact names of every
-file created by one **Save Project** action if more than one still appears.
+The deployment prompted by this run was tested in the follow-up below.
+
+## Recorded device run — 2026-08-31 follow-up
+
+Device model, iPadOS version, and deploy SHA were not supplied. This run narrowed the remaining
+physical-device work:
+
+- Item 10: **FAIL (Print)** — the canvas was off-center and not fully contained on the printed
+  page. No repeat report of toolbars or a second page was made.
+- Item 11: **FAIL** — sounds remained audible when Silent Mode was on.
+- Items 16–18: **PASS (round-trip)** — saving and reopening an editable `.kidpix` worked;
+  **MISSING** — the proposed filename could not be changed before saving.
+- Items 12–15: **PASS** — custom Hidden Pictures worked.
+- Item 19: **PASS after delay** — the PNG eventually opened, but Kid Pix appeared frozen on
+  loading for roughly ten seconds.
+- General observation: the app was usable and “pretty good,” with lag in some areas.
+
+After the next deployment, rerun items 10, 11, 16–17, and 19. Hidden Pictures does not need
+another focused retest unless one of those paths causes a regression.
 
 ## Report back
 

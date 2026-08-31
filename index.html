@@ -310,6 +310,39 @@
       Update Ready — Reload
     </button>
 
+    <div
+      id="save-project-dialog"
+      class="modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="save-project-title"
+      hidden
+    >
+      <div class="modal-content save-project-content">
+        <div class="modal-header">
+          <h2 id="save-project-title">Save Project As</h2>
+        </div>
+        <div class="save-project-body">
+          <label for="save-project-name">Project name</label>
+          <div class="save-project-name-row">
+            <input
+              id="save-project-name"
+              type="text"
+              maxlength="80"
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <span aria-hidden="true">.kidpix</span>
+          </div>
+          <p>Your drawing stays editable when you open this file again.</p>
+          <div class="save-project-actions">
+            <button id="save-project-cancel" type="button">Cancel</button>
+            <button id="save-project-confirm" type="button">Save to Files</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Keyboard Shortcuts Help Popup -->
     <div id="keyboard-shortcuts-popup" class="modal-overlay" style="display: none;">
       <div class="modal-content">

@@ -27,9 +27,11 @@ Safari.
 
 ## Decode
 
-`FileReader.readAsDataURL` → `Image` element. Data-URL sources are same-origin
-so canvas does not become tainted and Save continues to work. Source images
-larger than 8000px on either axis are rejected at the boundary.
+A local same-origin object URL → `Image` element. The URL is revoked only after load or
+decode failure, so the browser avoids a second full-size base64 copy and the canvas remains
+safe to save. Browsers without object-URL support retain `FileReader.readAsDataURL` as a
+compatibility fallback. Source images larger than 8000px on either axis are rejected at the
+boundary. The status bar says **Opening picture…** before decode begins.
 
 ## Fit-to-canvas placement
 
@@ -58,7 +60,7 @@ the rest of the pipeline.
 
 ## Out of scope (deferred unless review demands it)
 
-- Progress / cancel UI for slow decodes.
+- Percentage progress and cancel UI for slow provider reads or decodes.
 - Concurrent-import handling (last-write-wins is acceptable for a fan toy).
 - HEIC / AVIF support.
 - Animated GIF playback (first frame only).

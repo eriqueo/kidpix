@@ -7,6 +7,17 @@ KiddoPaint.Sounds.Library = {};
 KiddoPaint.Sounds.Library.enabled = true;
 KiddoPaint.Sounds.Library._priming = new WeakMap();
 
+// Current iPadOS maps the Audio Session API's transient category to AVAudioSession's
+// ambient category. That keeps these optional drawing noises audible normally
+// while allowing the hardware Silent Mode switch to mute them. Browsers without
+// the Audio Session API retain their existing behavior.
+KiddoPaint.Sounds.Library.configureAudioSession = function () {
+  try {
+    if (navigator.audioSession) navigator.audioSession.type = "transient";
+  } catch (error) {}
+};
+KiddoPaint.Sounds.Library.configureAudioSession();
+
 // iPadOS grants playback per HTMLAudioElement. Prime the three sounds used by
 // the physical acceptance path during the first real touch/pointer gesture,
 // then queue any requested sound behind its silent prime. Failed play promises
