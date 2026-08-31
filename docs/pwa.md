@@ -17,8 +17,9 @@ and what it cannot do.
    that ship in the build; it never touches CacheStorage with user media. Hidden Pictures
    stores only its processed PNG, keeps at most 20 custom entries, and evicts the oldest
    custom entry when that queue is full.
-5. An update never reloads a live session. A new worker installs in the background
-   and activates only after **every tab of the app is closed**.
+5. A complete update activates without waiting for every tab to close, but never reloads
+   or navigates a live drawing. The controlled page shows **Update Ready — Reload**;
+   choosing it flushes the current drawing before loading the new app shell.
 
 ## How it is built
 
@@ -26,11 +27,12 @@ and what it cannot do.
 |---|---|---|
 | Build contract | `pwa/build-contract.mjs` | One producer for the facts shared by the build and the checker: mode → base, precache glob, size cap, exemptions, required icons. |
 | Vite config | `vite.config.ts` | `vite build` → `dist/`; `vite build --mode gh-pages` → `dist-gh/`. Configures vite-plugin-pwa (injectManifest) and the web manifest (`id`/`start_url`/`scope` = base). |
-| Worker source | `pwa/sw.ts` | Workbox precache from the injected, revisioned manifest; Range-aware route so Safari can play cached audio (`206`); navigation fallback to `index.html`; no `skipWaiting`; deletes the pre-2026-08-29 runtime caches. Typechecked by `tsconfig.sw.json`. |
-| Registration | generated `registerSW.js` | Emitted by the plugin at the build's base and scope. |
+| Worker source | `pwa/sw.ts` | Workbox precache from the injected, revisioned manifest; Range-aware route so Safari can play cached audio (`206`); navigation fallback to `index.html`; immediate activation without client navigation; deletes the pre-2026-08-29 runtime caches. Typechecked by `tsconfig.sw.json`. |
+| Registration | `src/pwa-registration.ts` | Registers at the build base with `updateViaCache: "none"`; distinguishes first install from replacement and owns the visible, save-first reload action. |
 | Icons | `src/assets/` | `pwa-192.png`, `pwa-512.png`, `pwa-maskable-512.png`, `apple-touch-icon.png`, `favicon.ico` — all derived from the Kid Pix "guy" art in `src/assets/img/branding/`. Checked in; no image tooling in the build. |
 | Build checker | `scripts/check-pwa-build.mjs` | Last step of `yarn build` (also `yarn check:pwa`). |
 | Offline test | `tests/pwa/offline.spec.ts` | `yarn test:pwa` against the built artifacts. |
+| Update test | `tests/pwa/update.spec.ts` | Replaces a controlling old worker with each real build; proves activation, no forced reload, and the next navigation's current shell. |
 
 `manifest.webmanifest` is added to the precache by the plugin; the glob must **not** list
 `*.webmanifest` (duplicate entries invalidate the worker — the checker catches this).
@@ -45,9 +47,9 @@ into a `206`. The offline test asserts this path.
 
 ### Precache size
 
-400 entries, ≈3.6 MiB (2026-08-29). The largest runtime file is `assets/main-*.js`
-(413 KB); `PRECACHE_MAX_FILE_BYTES` is 1 MiB. If a file ever exceeds the cap Workbox
-drops it and the checker fails the build, so the cap gets raised on purpose.
+The current entry and byte totals are printed by the build checker. Each runtime file must
+remain below `PRECACHE_MAX_FILE_BYTES` (currently 1 MiB). If a file exceeds the cap,
+Workbox drops it and the checker fails the build, so the cap gets raised on purpose.
 
 Source maps (`*.map`) are deployed but not precached: DevTools fetches them, the app
 never does. They are the only exemption besides `sw.js` itself.
@@ -61,9 +63,9 @@ yarn test:pwa    # Playwright, chromium, against dist/ and dist-gh/
 
 The checker asserts, per output directory: manifest fields, `id`/`start_url`/`scope`
 equal the base, every referenced icon exists with the declared pixel size, the required
-icon set (32 favicon / 180 Apple / 192 / 512 any / 512 maskable), `index.html` and
-`registerSW.js` point at the base, no duplicate precache URLs, precache ⊇ every deployed
-file minus exemptions, size cap, and no `skipWaiting`.
+icon set (32 favicon / 180 Apple / 192 / 512 any / 512 maskable), manual registration at
+the base with worker-cache bypass, no duplicate precache URLs, precache ⊇ every deployed
+file minus exemptions, the size cap, and immediate worker activation.
 
 The offline test, per output directory: serves the build, waits for the worker to become
 active (install = precache complete), checks the precache is substantial and the legacy
@@ -101,10 +103,11 @@ workers do not run on plain `http://` LAN addresses or on `file://`. Load
 
 ## Updating
 
-When a new version is deployed, the next online launch downloads it in the background.
-It becomes active the next time the app is opened after **all its windows/tabs were
-closed**. Nothing reloads while a drawing is open. On iOS, fully close the app from the
-app switcher.
+When a new version is deployed, the next online launch downloads and activates it in the
+background. Kid Pix does not force-reload the open drawing. When **Update Ready — Reload**
+appears, tap it to save the current drawing and load the new version. A page already loaded
+from a release older than this update protocol cannot display that action; close all Kid Pix
+tabs/home-screen instances and reopen once to cross that one-time boundary.
 
 ## Limitations
 

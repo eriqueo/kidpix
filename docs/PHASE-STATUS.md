@@ -25,7 +25,7 @@ acceptance remains an active priority in the authoritative queue linked above.
 | 4 | **Core line** (proves pattern generalizes; evolved ports: `clear()`, `modified`) | `core/tools/line.test.ts` + line parity specs |
 | 6 | **Installable offline PWA** (`vite-plugin-pwa`); iOS meta; pinch-zoom locked | `yarn build` → `dist-gh/{sw.js,manifest.webmanifest}` |
 | WS1 | **Responsive presentation** with tablet breakpoints and phone drawers; backing store preserved | `src/assets/css/kidpix.css`, `js/init/mobile-drawers.js` |
-| WS2 | **Fully offline after one visit** (2026-08-29): every deploy-owned file precached (400 entries, 3.6 MiB), Safari Range-aware audio, wait-to-activate updates, build checker, offline test against the built artifacts — see [pwa.md](./pwa.md) | `yarn build` (runs `check:pwa`), `yarn test:pwa` |
+| WS2 | **Fully offline after one visit** (2026-08-29; update lifecycle repaired 2026-08-31): every deploy-owned file precached, Safari Range-aware audio, immediate activation plus explicit save-first reload, build checker, offline and old-to-new update tests against built artifacts — see [pwa.md](./pwa.md) | `yarn build` (runs `check:pwa`), `yarn test:pwa` |
 | WS3 | **Responsive-input performance**: in-memory bounded undo plus debounced current-drawing persistence | `js/util/display.js`, `js/init/kiddopaint.js` |
 | Q1–Q3 | **Queue wave 2026-08-30** (`a628a39`, `527d4fa`, `f3a787e`): trustworthy Chromium signal (skips per-test with reasons, semantic selectors, Edit Stamp rebuild fix); phone "More actions" sheet for status-bar actions; a SlideShow journey that was later removed by product decision. Each >50 LOC slice had a fresh-eyes audit; full gate green before push | Git history; current checks live in the active queue |
 
@@ -75,5 +75,5 @@ At this checkpoint the local gate passed. Default app behavior remained unchange
 
 - **iPad acceptance after the 2026-08-30 wave** — the full checklist and its dated results
    live in [ipad-acceptance.md](./ipad-acceptance.md). It includes the WS2 items (Airplane
-   Mode sounds via the Range path, Hidden Pictures / stamps, update on relaunch) plus drawer
+   Mode sounds via the Range path, Hidden Pictures / stamps, explicit update action) plus drawer
    reach, the phone More sheet, custom Hidden Pictures, and editable-file save/open.

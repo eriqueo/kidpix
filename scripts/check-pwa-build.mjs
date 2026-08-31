@@ -8,13 +8,13 @@
  *     the target's base, and every referenced icon exists with the declared
  *     pixel size (PNG) — including the required favicon / Apple / 192 / 512 /
  *     maskable set;
- *   - index.html and registerSW.js reference the manifest and worker at the
- *     target's base and scope;
+ *   - index.html loads the application entry, which manually registers the
+ *     worker at the target's base without HTTP-cache reuse;
  *   - the worker's revisioned precache has no duplicate URLs, is substantial,
  *     names only files that exist, and covers every deployed file except the
  *     documented exemptions (the worker itself and source maps);
  *   - no precached file exceeds the configured size cap;
- *   - the worker never calls skipWaiting (an update must not reload a session).
+ *   - the worker calls skipWaiting so a complete update cannot remain stranded.
  *
  * Zero dependencies so it runs under bare `node` in any workflow.
  */
@@ -110,16 +110,23 @@ function checkTarget({ outDir, base }) {
   // --- index.html + registration ------------------------------------------
   const html = read("index.html");
   if (!html.includes(`href="${base}manifest.webmanifest"`)) fail(`index.html does not link ${base}manifest.webmanifest`);
-  if (!html.includes(`src="${base}registerSW.js"`)) fail(`index.html does not load ${base}registerSW.js`);
   if (!/rel="apple-touch-icon"/.test(html)) fail("index.html lacks the apple-touch-icon link");
-  const register = read("registerSW.js");
-  if (!register.includes(`register('${base}sw.js', { scope: '${base}' })`)) {
-    fail(`registerSW.js does not register ${base}sw.js at scope ${base}`);
+  if (files.includes("registerSW.js")) fail("generated registerSW.js exists alongside the application-owned registration path");
+  const entryMatch = html.match(/<script[^>]+src="([^"]*assets\/main-[^"]+\.js)"/);
+  if (!entryMatch) {
+    fail("index.html does not load a built main entry");
+  } else {
+    const entryPath = entryMatch[1].startsWith(base) ? entryMatch[1].slice(base.length) : entryMatch[1];
+    const entry = read(entryPath);
+    if (!entry.includes("PWA_REGISTRATION_FAILED") || !/\.register\([^)]*\{scope:/.test(entry)) {
+      fail("application entry does not contain the owned service-worker registration path");
+    }
+    if (!entry.includes('updateViaCache:"none"')) fail("application registration does not bypass HTTP cache for worker updates");
   }
 
   // --- precache -----------------------------------------------------------
   const sw = read("sw.js");
-  if (/skipWaiting\(/.test(sw)) fail("sw.js calls skipWaiting() — an update could reload an active session");
+  if (!/skipWaiting\(/.test(sw)) fail("sw.js does not call skipWaiting() — an update can remain stranded behind an open client");
   const urls = precacheUrls(sw);
   if (urls.length < PRECACHE_MIN_ENTRIES) fail(`precache has ${urls.length} entries, expected at least ${PRECACHE_MIN_ENTRIES}`);
   const seen = new Set();

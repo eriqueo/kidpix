@@ -37,7 +37,7 @@ Acceptance checks:
   [tests/e2e/mobile-acceptance.spec.ts](../tests/e2e/mobile-acceptance.spec.ts).
 - OPEN, needs a human with the iPad: run [docs/ipad-acceptance.md](../docs/ipad-acceptance.md)
   and record dated pass/fail there. Covers audio unlock, Pencil coordinates, rotation and
-  safe areas, drawer reach, offline relaunch, and wait-to-activate update.
+  safe areas, drawer reach, offline relaunch, and the explicit save-first update action.
 - Treat the 1300×650 backing store and `_x`/`_y` event normalization as load-bearing;
   presentation changes do not alter them without parity evidence.
 - Durable install/update behavior stays in [docs/pwa.md](../docs/pwa.md).

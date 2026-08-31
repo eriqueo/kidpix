@@ -131,6 +131,34 @@ body.small-kids-mode #small-kids-toggle {
   border-color: #c08a00;
 }
 
+/* Only present while a newly activated worker is waiting for an explicit
+   save-first reload. Fixed positioning keeps it visible above phone drawers. */
+#pwa-update-ready-btn {
+  position: fixed;
+  top: calc(12px + env(safe-area-inset-top));
+  left: 50%;
+  z-index: 100;
+  transform: translateX(-50%);
+  min-height: 48px;
+  padding: 8px 18px;
+  font-family: Geneva, Tahoma, sans-serif;
+  font-size: 16px;
+  font-weight: bold;
+  color: #211700;
+  background: #ffe9a3;
+  border: 3px solid #805b00;
+  border-radius: 8px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+#pwa-update-ready-btn:active {
+  background: #ffd65c;
+}
+#pwa-update-ready-btn[hidden] {
+  display: none;
+}
+
 /* Small Kids Mode: simplified toolbar slice.
    Hide power tools when the body class is set. Single declarative rule —
    toggling the flag off removes every gated effect with zero JS branches. */

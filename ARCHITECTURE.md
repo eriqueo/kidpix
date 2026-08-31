@@ -36,7 +36,9 @@ features that have since shipped. They are not execution queues.
   bar inline. Covered by [tests/e2e/mobile-acceptance.spec.ts](tests/e2e/mobile-acceptance.spec.ts).
 - [pwa/](pwa/) and [vite.config.ts](vite.config.ts) own packaging. A build emits a root-based
   `dist/` and GitHub-Pages-based `dist-gh/`; the build checker enforces the offline precache
-  contract described in [docs/pwa.md](docs/pwa.md).
+  contract described in [docs/pwa.md](docs/pwa.md). `src/pwa-registration.ts` owns the
+  page side of updates: immediate worker activation never navigates a drawing, and a visible
+  action flushes current-picture persistence before an explicit reload.
 
 There is no React application. React was deliberately removed in favor of one running app
 and a strangler-fig core; the decision and constraints live in

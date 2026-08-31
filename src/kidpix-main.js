@@ -172,6 +172,10 @@ import "./colorme-init";
 // the in-app picker to the existing reveal tool shared with Doorbell.
 import "./hidden-pictures-init";
 
+// Manual PWA registration owns the visible, save-first update path. It must
+// load after display.js defines flushPersist.
+import "./pwa-registration";
+
 // Core tools via the strangler-fig bridge (opt-in with ?core). After tools load.
 import "./core-tools-init";
 

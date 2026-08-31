@@ -8,9 +8,10 @@
  * Lives outside src/ on purpose — it is deployment plumbing, not application
  * code, and the app's architecture checks do not apply to it.
  *
- * Update policy (contract §9): this worker never calls skipWaiting(). A new
- * version installs in the background and activates only once every tab of
- * the app has closed, so an update can never reload a live drawing session.
+ * Update policy (contract §9): a replacement activates as soon as its complete
+ * precache is installed. Activation and claiming do NOT navigate or reload a
+ * client; the current drawing page stays put until the child chooses the
+ * app's Update Ready action, which flushes persistence before reloading.
  *
  * User data (the current drawing, ColorMe pages, custom Hidden Pictures, sound
  * recordings, and settings) lives in localStorage / IndexedDB and is never
@@ -27,6 +28,11 @@ import { createPartialResponse } from "workbox-range-requests";
 import { NavigationRoute, registerRoute } from "workbox-routing";
 
 declare const self: ServiceWorkerGlobalScope;
+
+// Do not strand a complete replacement in "waiting" behind a long-lived iPad
+// Safari tab. This only advances the worker lifecycle; it does not reload or
+// navigate any client.
+self.skipWaiting();
 
 // Runtime caches created by the pre-2026-08-29 worker (app-shell precache +
 // CacheFirst image/audio routes). Everything is precached now, so they are
@@ -55,10 +61,8 @@ cleanupOutdatedCaches();
 // location, so it is correct for both "/" and "/kidpix/").
 registerRoute(new NavigationRoute(createHandlerBoundToURL("index.html")));
 
-// Control already-open pages as soon as this worker activates. Activation
-// itself still waits for all clients to close (no skipWaiting), so this only
-// shortens the first-install path: the very first visit becomes controlled
-// without a reload.
+// Control already-open pages as soon as this worker activates. The page-level
+// controllerchange listener then offers an explicit, save-first reload.
 clientsClaim();
 
 self.addEventListener("activate", (event) => {

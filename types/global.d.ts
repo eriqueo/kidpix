@@ -67,6 +67,7 @@ declare const KiddoPaint: {
     canvas: HTMLCanvasElement;
     context: CanvasRenderingContext2D;
     layers?: KiddoPaint.CanvasLayers;
+    flushPersist: () => void;
   };
   Colors: Record<string, unknown>;
   Cache: Record<string, unknown>;

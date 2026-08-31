@@ -26,10 +26,9 @@ export default defineConfig(({ mode }) => {
         strategies: "injectManifest",
         srcDir: "pwa",
         filename: "sw.ts",
-        // "prompt" = the worker never calls skipWaiting. An updated worker
-        // installs in the background and activates only after every tab of
-        // the app is closed, so an update can never reload a live drawing.
-        registerType: "prompt",
+        // Registration is application code so the update lifecycle has one
+        // visible, tested owner instead of a generated fire-and-forget script.
+        injectRegister: false,
         // The precache glob already covers every PNG; letting the plugin add
         // the manifest icons too produced duplicate entries (caught by
         // scripts/check-pwa-build.mjs), which invalidates the worker.

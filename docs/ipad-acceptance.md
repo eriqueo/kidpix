@@ -54,8 +54,11 @@ Live app: https://eriqueo.github.io/kidpix/
 
 ## F. Update activation
 
-19. Airplane Mode off. Open the app and leave it open after a new deploy. Nothing reloads.
-20. Force-quit. Relaunch. The new version is live and the current drawing is still there.
+19. Airplane Mode off. Draw a distinct mark, then leave the app open through a new deploy.
+    The app does not reload itself; **Update Ready — Reload** appears.
+20. Tap **Update Ready — Reload**. The new version loads and the distinct drawing is still
+    there. If the starting deploy predates this update protocol, close every Kid Pix tab and
+    home-screen instance, reopen once, and record that one-time crossover separately.
 
 ## Results
 
