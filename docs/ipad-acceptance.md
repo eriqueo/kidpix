@@ -169,6 +169,17 @@ physical-device work:
 After the next deployment, rerun items 10, 11, 16–17, and 19. Hidden Pictures does not need
 another focused retest unless one of those paths causes a regression.
 
+## Recorded device run — 2026-08-31 final confirmation
+
+Device model, iPadOS version, and deploy SHAs were not supplied. The tester confirmed the
+remaining physical-device checks passed:
+
+- Item 10: **PASS** — the complete canvas printed correctly.
+- Item 11: **PASS** — sounds respected Silent Mode.
+- Items 16–17: **PASS** — editable project naming and `.kidpix` save/open worked.
+- Item 19: **PASS** — ordinary PNG import worked.
+- Items 24–27: **PASS** — update activation completed without losing the drawing.
+
 ## Report back
 
 Copy this block into your reply and fill it in. Short notes are enough; attach screenshots for
